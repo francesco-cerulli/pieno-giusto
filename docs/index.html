@@ -654,6 +654,10 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   border: 5px solid transparent; border-top-color: var(--line); border-bottom: 0; }
 .pin.economico::after { border-top-color: var(--down); }
 .pin.caro::after { border-top-color: var(--up); }
+.pin.dubbio { color: var(--muted); border-style: dashed; background: var(--surface-2); font-weight: 500; }
+.scheda .attenzione { margin-top: 4px; padding: 5px 7px; border-radius: 6px; font-size: .78rem; line-height: 1.35;
+  background: color-mix(in srgb, var(--up) 12%, var(--surface)); color: var(--fg); text-align: left; }
+.scheda .dubbio .p { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
 .freccia { font-size: .72em; }
 .su { color: var(--up); } .giu { color: var(--down); }
 .gruppo { display: grid; place-items: center; transform: translate(-50%, -50%);
@@ -770,9 +774,21 @@ function freccia(delta) {
 }
 
 // Fasce di prezzo: il 25% più economico è "economico", il 25% più caro è "caro" (escluse le autostrade)
+// Un prezzo è "da verificare" se è molto sotto la media della provincia (segnato dallo script)
+// oppure se il gestore non lo aggiorna da più di 8 giorni.
+const MAX_GIORNI = 8;
+function giorniDa(s) { return Math.round((Date.parse(stato.aggiornato) - Date.parse(s)) / 864e5); }
+function motivoDubbio(v) {
+  if (!v) return "";
+  if (v[4]) return "Molto più basso della media della provincia: potrebbe essere un listino vecchio o un errore del gestore.";
+  if (giorniDa(v[3]) > MAX_GIORNI) return `Non aggiornato da ${giorniDa(v[3])} giorni.`;
+  return "";
+}
+function affidabile(i, c = stato.carb) { const v = i.prezzi[c]; return !!v && !motivoDubbio(v); }
+
 function calcolaSoglie() {
   for (const c of Object.keys(NOMI)) {
-    const v = stato.impianti.filter((i) => i.prezzi[c] && !i.autostrada).map((i) => i.prezzi[c][0]).sort((a, b) => a - b);
+    const v = stato.impianti.filter((i) => affidabile(i, c) && !i.autostrada).map((i) => i.prezzi[c][0]).sort((a, b) => a - b);
     stato.soglie[c] = v.length ? [v[Math.floor(v.length * .25)], v[Math.floor(v.length * .75)]] : [0, 99];
   }
 }
@@ -780,24 +796,27 @@ function fascia(p) { const [lo, hi] = stato.soglie[stato.carb]; return p <= lo ?
 
 function iconaPrezzo(i) {
   const [p, d] = i.prezzi[stato.carb];
+  if (!affidabile(i)) return L.divIcon({ className: "", iconSize: null, html: `<div class="pin dubbio" title="Prezzo da verificare">${euro(p)}?</div>` });
   return L.divIcon({ className: "", iconSize: null, html: `<div class="pin ${fascia(p)}">${euro(p)}${freccia(d)}</div>` });
 }
 
 function iconaGruppo(gruppo) {
   const figli = gruppo.getAllChildMarkers();
   let min = Infinity;
-  for (const m of figli) min = Math.min(min, m.impianto.prezzi[stato.carb][0]);
+  for (const m of figli) if (affidabile(m.impianto)) min = Math.min(min, m.impianto.prezzi[stato.carb][0]);
   const n = figli.length, lato = n < 50 ? 40 : n < 500 ? 46 : 52;
   return L.divIcon({ className: "", iconSize: null,
-    html: `<div class="gruppo" style="width:${lato}px;height:${lato}px"><div>${euro(min)}<span>${n} distr.</span></div></div>` });
+    html: `<div class="gruppo" style="width:${lato}px;height:${lato}px"><div>${min < Infinity ? euro(min) : "–"}<span>${n} distr.</span></div></div>` });
 }
 
 function scheda(i) {
   const righe = Object.keys(NOMI).filter((c) => i.prezzi[c]).map((c) => {
     const [p, d, dal, com] = i.prezzi[c];
     const v = d ? `${freccia(d)} ${d > 0 ? "+" : "−"}${cent(d)} cent dal ${dataIt(dal)}` : "invariato";
-    return `<tr class="${c === stato.carb ? "scelto" : ""}"><td>${NOMI[c]}</td>
-      <td><div class="p">${euro(p)} €</div><div class="var">${v}</div><div class="var">comunicato il ${dataIt(com)}</div></td></tr>`;
+    const dubbio = motivoDubbio(i.prezzi[c]);
+    return `<tr class="${c === stato.carb ? "scelto" : ""}${dubbio ? " dubbio" : ""}"><td>${NOMI[c]}</td>
+      <td><div class="p">${euro(p)} €</div><div class="var">${v}</div><div class="var">comunicato il ${dataIt(com)}</div>
+      ${dubbio ? `<div class="attenzione">Da verificare. ${dubbio}</div>` : ""}</td></tr>`;
   }).join("");
   const dest = `https://www.google.com/maps/dir/?api=1&destination=${i.lat},${i.lon}`;
   return `<div class="scheda"><h3>${esc(i.bandiera || i.nome)}</h3>
@@ -834,9 +853,11 @@ function aggiornaLista() {
     return;
   }
   const b = mappa.getBounds();
-  const visibili = stato.impianti.filter((i) => i.prezzi[stato.carb] && b.contains([i.lat, i.lon]));
+  const inMappa = stato.impianti.filter((i) => i.prezzi[stato.carb] && b.contains([i.lat, i.lon]));
+  const visibili = inMappa.filter((i) => affidabile(i));
   visibili.sort((a, b2) => a.prezzi[stato.carb][0] - b2.prezzi[stato.carb][0]);
-  $("conteggio").textContent = `${visibili.length} nella mappa`;
+  const esclusi = inMappa.length - visibili.length;
+  $("conteggio").textContent = `${inMappa.length} nella mappa` + (esclusi ? ` · ${esclusi} da verificare esclusi` : "");
   if (!visibili.length) { lista.innerHTML = '<li class="vuoto">Nessun distributore con questo carburante qui.</li>'; return; }
   lista.innerHTML = visibili.slice(0, 20).map((i, n) => {
     const [p, d, dal] = i.prezzi[stato.carb];
@@ -904,6 +925,7 @@ async function carica() {
     if (!ri.ok) throw new Error(ri.status);
     const dati = await ri.json();
     stato.medie = rm.ok ? await rm.json() : null;
+    stato.aggiornato = dati.aggiornato;
     stato.impianti = dati.impianti.map((r) => ({ id: r[0], nome: r[1], bandiera: r[2], indirizzo: r[3],
       comune: r[4], provincia: r[5], lat: r[6], lon: r[7], autostrada: r[8], prezzi: r[9] }));
     for (const i of stato.impianti) {

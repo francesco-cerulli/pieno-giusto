@@ -23,6 +23,8 @@ PREZZO_MIN, PREZZO_MAX = 0.3, 4.5   # fuori da qui è un errore di battitura
 MAX_GIORNI_MAPPA = 30               # prezzi più vecchi non si mostrano
 MAX_GIORNI_MEDIA = 8                # come il MIMIT per le medie
 GIORNI_STORICO = 15                 # quanti giorni guardare indietro per le variazioni
+SOGLIA_SOSPETTO = 0.15              # 15% sotto la mediana provinciale = da verificare
+MIN_IMPIANTI_MEDIANA = 10           # sotto questo numero uso la mediana nazionale
 GIORNI_ANDAMENTO = 90               # lunghezza della serie delle medie nazionali
 
 
@@ -104,7 +106,7 @@ def main():
             if eta > MAX_GIORNI_MAPPA:
                 continue
             delta, dal = variazioni.get((pid, carb), (0, None))
-            # [prezzo, variazione €, data variazione (o null), data comunicazione]
+            # [prezzo, variazione €, data variazione (o null), data comunicazione, sospetto 0/1]
             prezzi[carb] = [prezzo, delta, dal, dt.strftime("%Y-%m-%d")]
             if eta <= MAX_GIORNI_MEDIA and r["Tipo Impianto"] != "Autostradale":
                 per_provincia[r["Provincia"]][carb].append(prezzo)
@@ -114,6 +116,26 @@ def main():
         impianti.append([int(pid), nome, r["Bandiera"], " ".join(r["Indirizzo"].split()),
                          r["Comune"].title(), r["Provincia"], round(lat, 5), round(lon, 5),
                          1 if r["Tipo Impianto"] == "Autostradale" else 0, prezzi])
+
+    # --- prezzi sospetti: molto sotto la mediana della provincia ---
+    # Spesso sono listini vecchi che il gestore continua a ri-comunicare.
+    # Restano visibili nella scheda, ma non entrano in classifiche e minimi.
+    mediane = {}
+    for prov, carb_valori in per_provincia.items():
+        for carb, valori in carb_valori.items():
+            if len(valori) >= MIN_IMPIANTI_MEDIANA:
+                mediane[(prov, carb)] = sorted(valori)[len(valori) // 2]
+    nazionali = {c: sorted(v)[len(v) // 2] for c, v in
+                 ((c, [p for pc in per_provincia.values() for p in pc.get(c, [])])
+                  for c in CARBURANTI.values()) if v}
+    sospetti = 0
+    for imp in impianti:
+        for carb, dati in imp[9].items():
+            rif = mediane.get((imp[5], carb), nazionali.get(carb))
+            flag = 1 if rif and dati[0] < rif * (1 - SOGLIA_SOSPETTO) else 0
+            dati.append(flag)
+            sospetti += flag
+    print(f"Prezzi segnati come da verificare: {sospetti}")
 
     SITE_DATA.mkdir(parents=True, exist_ok=True)
     with open(SITE_DATA / "impianti.json", "w", encoding="utf-8") as f:

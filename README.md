@@ -57,6 +57,10 @@ cd docs && python -m http.server 8000  # poi apri http://localhost:8000
 - Prezzi più vecchi di 30 giorni non compaiono; per le medie si usano solo quelli degli ultimi 8 giorni,
   esclusi gli impianti autostradali.
 - Valori sotto il 60% o sopra il 160% della mediana nazionale vengono scartati come errori di battitura.
+- **Prezzi da verificare**: se un prezzo è più basso del 15% rispetto alla mediana della sua provincia
+  (spesso è un listino vecchio che il gestore continua a ri-comunicare) o non viene aggiornato da più di 8 giorni,
+  sulla mappa compare tratteggiato con "?", non entra nella classifica né nel prezzo minimo dei gruppi,
+  e la scheda del distributore spiega il motivo.
 - Sulla mappa il bordo verde indica il 25% dei distributori più economici d'Italia, quello rosso il 25% più caro.
 
 ## Prossimi passi
