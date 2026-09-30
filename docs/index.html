@@ -1,0 +1,928 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pieno Giusto</title>
+<meta name="description" content="Prezzi di benzina, gasolio, GPL e metano in tutti i distributori d'Italia, con le variazioni di prezzo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+position: absolute;
+left: 0;
+top: 0;
+}
+.leaflet-container {
+overflow: hidden;
+}
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+-webkit-user-select: none;
+-moz-user-select: none;
+user-select: none;
+-webkit-user-drag: none;
+}
+.leaflet-tile::selection {
+background: transparent;
+}
+.leaflet-safari .leaflet-tile {
+image-rendering: -webkit-optimize-contrast;
+}
+.leaflet-safari .leaflet-tile-container {
+width: 1600px;
+height: 1600px;
+-webkit-transform-origin: 0 0;
+}
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+display: block;
+}
+.leaflet-container .leaflet-overlay-pane svg {
+max-width: none !important;
+max-height: none !important;
+}
+.leaflet-container .leaflet-marker-pane img,
+.leaflet-container .leaflet-shadow-pane img,
+.leaflet-container .leaflet-tile-pane img,
+.leaflet-container img.leaflet-image-layer,
+.leaflet-container .leaflet-tile {
+max-width: none !important;
+max-height: none !important;
+width: auto;
+padding: 0;
+}
+.leaflet-container img.leaflet-tile {
+mix-blend-mode: plus-lighter;
+}
+.leaflet-container.leaflet-touch-zoom {
+-ms-touch-action: pan-x pan-y;
+touch-action: pan-x pan-y;
+}
+.leaflet-container.leaflet-touch-drag {
+-ms-touch-action: pinch-zoom;
+touch-action: none;
+touch-action: pinch-zoom;
+}
+.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
+-ms-touch-action: none;
+touch-action: none;
+}
+.leaflet-container {
+-webkit-tap-highlight-color: transparent;
+}
+.leaflet-container a {
+-webkit-tap-highlight-color: rgba(51, 181, 229, 0.4);
+}
+.leaflet-tile {
+filter: inherit;
+visibility: hidden;
+}
+.leaflet-tile-loaded {
+visibility: inherit;
+}
+.leaflet-zoom-box {
+width: 0;
+height: 0;
+-moz-box-sizing: border-box;
+box-sizing: border-box;
+z-index: 800;
+}
+.leaflet-overlay-pane svg {
+-moz-user-select: none;
+}
+.leaflet-pane         { z-index: 400; }
+.leaflet-tile-pane    { z-index: 200; }
+.leaflet-overlay-pane { z-index: 400; }
+.leaflet-shadow-pane  { z-index: 500; }
+.leaflet-marker-pane  { z-index: 600; }
+.leaflet-tooltip-pane   { z-index: 650; }
+.leaflet-popup-pane   { z-index: 700; }
+.leaflet-map-pane canvas { z-index: 100; }
+.leaflet-map-pane svg    { z-index: 200; }
+.leaflet-vml-shape {
+width: 1px;
+height: 1px;
+}
+.lvml {
+behavior: url(#default#VML);
+display: inline-block;
+position: absolute;
+}
+.leaflet-control {
+position: relative;
+z-index: 800;
+pointer-events: visiblePainted;
+pointer-events: auto;
+}
+.leaflet-top,
+.leaflet-bottom {
+position: absolute;
+z-index: 1000;
+pointer-events: none;
+}
+.leaflet-top {
+top: 0;
+}
+.leaflet-right {
+right: 0;
+}
+.leaflet-bottom {
+bottom: 0;
+}
+.leaflet-left {
+left: 0;
+}
+.leaflet-control {
+float: left;
+clear: both;
+}
+.leaflet-right .leaflet-control {
+float: right;
+}
+.leaflet-top .leaflet-control {
+margin-top: 10px;
+}
+.leaflet-bottom .leaflet-control {
+margin-bottom: 10px;
+}
+.leaflet-left .leaflet-control {
+margin-left: 10px;
+}
+.leaflet-right .leaflet-control {
+margin-right: 10px;
+}
+.leaflet-fade-anim .leaflet-popup {
+opacity: 0;
+-webkit-transition: opacity 0.2s linear;
+-moz-transition: opacity 0.2s linear;
+transition: opacity 0.2s linear;
+}
+.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
+opacity: 1;
+}
+.leaflet-zoom-animated {
+-webkit-transform-origin: 0 0;
+-ms-transform-origin: 0 0;
+transform-origin: 0 0;
+}
+svg.leaflet-zoom-animated {
+will-change: transform;
+}
+.leaflet-zoom-anim .leaflet-zoom-animated {
+-webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1);
+-moz-transition:    -moz-transform 0.25s cubic-bezier(0,0,0.25,1);
+transition:         transform 0.25s cubic-bezier(0,0,0.25,1);
+}
+.leaflet-zoom-anim .leaflet-tile,
+.leaflet-pan-anim .leaflet-tile {
+-webkit-transition: none;
+-moz-transition: none;
+transition: none;
+}
+.leaflet-zoom-anim .leaflet-zoom-hide {
+visibility: hidden;
+}
+.leaflet-interactive {
+cursor: pointer;
+}
+.leaflet-grab {
+cursor: -webkit-grab;
+cursor:    -moz-grab;
+cursor:         grab;
+}
+.leaflet-crosshair,
+.leaflet-crosshair .leaflet-interactive {
+cursor: crosshair;
+}
+.leaflet-popup-pane,
+.leaflet-control {
+cursor: auto;
+}
+.leaflet-dragging .leaflet-grab,
+.leaflet-dragging .leaflet-grab .leaflet-interactive,
+.leaflet-dragging .leaflet-marker-draggable {
+cursor: move;
+cursor: -webkit-grabbing;
+cursor:    -moz-grabbing;
+cursor:         grabbing;
+}
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-image-layer,
+.leaflet-pane > svg path,
+.leaflet-tile-container {
+pointer-events: none;
+}
+.leaflet-marker-icon.leaflet-interactive,
+.leaflet-image-layer.leaflet-interactive,
+.leaflet-pane > svg path.leaflet-interactive,
+svg.leaflet-image-layer.leaflet-interactive path {
+pointer-events: visiblePainted;
+pointer-events: auto;
+}
+.leaflet-container {
+background: #ddd;
+outline-offset: 1px;
+}
+.leaflet-container a {
+color: #0078A8;
+}
+.leaflet-zoom-box {
+border: 2px dotted #38f;
+background: rgba(255,255,255,0.5);
+}
+.leaflet-container {
+font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+font-size: 12px;
+font-size: 0.75rem;
+line-height: 1.5;
+}
+.leaflet-bar {
+box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+border-radius: 4px;
+}
+.leaflet-bar a {
+background-color: #fff;
+border-bottom: 1px solid #ccc;
+width: 26px;
+height: 26px;
+line-height: 26px;
+display: block;
+text-align: center;
+text-decoration: none;
+color: black;
+}
+.leaflet-bar a,
+.leaflet-control-layers-toggle {
+background-position: 50% 50%;
+background-repeat: no-repeat;
+display: block;
+}
+.leaflet-bar a:hover,
+.leaflet-bar a:focus {
+background-color: #f4f4f4;
+}
+.leaflet-bar a:first-child {
+border-top-left-radius: 4px;
+border-top-right-radius: 4px;
+}
+.leaflet-bar a:last-child {
+border-bottom-left-radius: 4px;
+border-bottom-right-radius: 4px;
+border-bottom: none;
+}
+.leaflet-bar a.leaflet-disabled {
+cursor: default;
+background-color: #f4f4f4;
+color: #bbb;
+}
+.leaflet-touch .leaflet-bar a {
+width: 30px;
+height: 30px;
+line-height: 30px;
+}
+.leaflet-touch .leaflet-bar a:first-child {
+border-top-left-radius: 2px;
+border-top-right-radius: 2px;
+}
+.leaflet-touch .leaflet-bar a:last-child {
+border-bottom-left-radius: 2px;
+border-bottom-right-radius: 2px;
+}
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+font: bold 18px 'Lucida Console', Monaco, monospace;
+text-indent: 1px;
+}
+.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out  {
+font-size: 22px;
+}
+.leaflet-control-layers {
+box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+background: #fff;
+border-radius: 5px;
+}
+.leaflet-control-layers-toggle {
+background-image: url(images/layers.png);
+width: 36px;
+height: 36px;
+}
+.leaflet-retina .leaflet-control-layers-toggle {
+background-image: url(images/layers-2x.png);
+background-size: 26px 26px;
+}
+.leaflet-touch .leaflet-control-layers-toggle {
+width: 44px;
+height: 44px;
+}
+.leaflet-control-layers .leaflet-control-layers-list,
+.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+display: none;
+}
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+display: block;
+position: relative;
+}
+.leaflet-control-layers-expanded {
+padding: 6px 10px 6px 6px;
+color: #333;
+background: #fff;
+}
+.leaflet-control-layers-scrollbar {
+overflow-y: scroll;
+overflow-x: hidden;
+padding-right: 5px;
+}
+.leaflet-control-layers-selector {
+margin-top: 2px;
+position: relative;
+top: 1px;
+}
+.leaflet-control-layers label {
+display: block;
+font-size: 13px;
+font-size: 1.08333em;
+}
+.leaflet-control-layers-separator {
+height: 0;
+border-top: 1px solid #ddd;
+margin: 5px -10px 5px -6px;
+}
+.leaflet-default-icon-path {
+background-image: url(images/marker-icon.png);
+}
+.leaflet-container .leaflet-control-attribution {
+background: #fff;
+background: rgba(255, 255, 255, 0.8);
+margin: 0;
+}
+.leaflet-control-attribution,
+.leaflet-control-scale-line {
+padding: 0 5px;
+color: #333;
+line-height: 1.4;
+}
+.leaflet-control-attribution a {
+text-decoration: none;
+}
+.leaflet-control-attribution a:hover,
+.leaflet-control-attribution a:focus {
+text-decoration: underline;
+}
+.leaflet-attribution-flag {
+display: inline !important;
+vertical-align: baseline !important;
+width: 1em;
+height: 0.6669em;
+}
+.leaflet-left .leaflet-control-scale {
+margin-left: 5px;
+}
+.leaflet-bottom .leaflet-control-scale {
+margin-bottom: 5px;
+}
+.leaflet-control-scale-line {
+border: 2px solid #777;
+border-top: none;
+line-height: 1.1;
+padding: 2px 5px 1px;
+white-space: nowrap;
+-moz-box-sizing: border-box;
+box-sizing: border-box;
+background: rgba(255, 255, 255, 0.8);
+text-shadow: 1px 1px #fff;
+}
+.leaflet-control-scale-line:not(:first-child) {
+border-top: 2px solid #777;
+border-bottom: none;
+margin-top: -2px;
+}
+.leaflet-control-scale-line:not(:first-child):not(:last-child) {
+border-bottom: 2px solid #777;
+}
+.leaflet-touch .leaflet-control-attribution,
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+box-shadow: none;
+}
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+border: 2px solid rgba(0,0,0,0.2);
+background-clip: padding-box;
+}
+.leaflet-popup {
+position: absolute;
+text-align: center;
+margin-bottom: 20px;
+}
+.leaflet-popup-content-wrapper {
+padding: 1px;
+text-align: left;
+border-radius: 12px;
+}
+.leaflet-popup-content {
+margin: 13px 24px 13px 20px;
+line-height: 1.3;
+font-size: 13px;
+font-size: 1.08333em;
+min-height: 1px;
+}
+.leaflet-popup-content p {
+margin: 17px 0;
+margin: 1.3em 0;
+}
+.leaflet-popup-tip-container {
+width: 40px;
+height: 20px;
+position: absolute;
+left: 50%;
+margin-top: -1px;
+margin-left: -20px;
+overflow: hidden;
+pointer-events: none;
+}
+.leaflet-popup-tip {
+width: 17px;
+height: 17px;
+padding: 1px;
+margin: -10px auto 0;
+pointer-events: auto;
+-webkit-transform: rotate(45deg);
+-moz-transform: rotate(45deg);
+-ms-transform: rotate(45deg);
+transform: rotate(45deg);
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+background: white;
+color: #333;
+box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+}
+.leaflet-container a.leaflet-popup-close-button {
+position: absolute;
+top: 0;
+right: 0;
+border: none;
+text-align: center;
+width: 24px;
+height: 24px;
+font: 16px/24px Tahoma, Verdana, sans-serif;
+color: #757575;
+text-decoration: none;
+background: transparent;
+}
+.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container a.leaflet-popup-close-button:focus {
+color: #585858;
+}
+.leaflet-popup-scrolled {
+overflow: auto;
+}
+.leaflet-oldie .leaflet-popup-content-wrapper {
+-ms-zoom: 1;
+}
+.leaflet-oldie .leaflet-popup-tip {
+width: 24px;
+margin: 0 auto;
+-ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)";
+filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678);
+}
+.leaflet-oldie .leaflet-control-zoom,
+.leaflet-oldie .leaflet-control-layers,
+.leaflet-oldie .leaflet-popup-content-wrapper,
+.leaflet-oldie .leaflet-popup-tip {
+border: 1px solid #999;
+}
+.leaflet-div-icon {
+background: #fff;
+border: 1px solid #666;
+}
+.leaflet-tooltip {
+position: absolute;
+padding: 6px;
+background-color: #fff;
+border: 1px solid #fff;
+border-radius: 3px;
+color: #222;
+white-space: nowrap;
+-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+user-select: none;
+pointer-events: none;
+box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+.leaflet-tooltip.leaflet-interactive {
+cursor: pointer;
+pointer-events: auto;
+}
+.leaflet-tooltip-top:before,
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+position: absolute;
+pointer-events: none;
+border: 6px solid transparent;
+background: transparent;
+content: "";
+}
+.leaflet-tooltip-bottom {
+margin-top: 6px;
+}
+.leaflet-tooltip-top {
+margin-top: -6px;
+}
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-top:before {
+left: 50%;
+margin-left: -6px;
+}
+.leaflet-tooltip-top:before {
+bottom: 0;
+margin-bottom: -12px;
+border-top-color: #fff;
+}
+.leaflet-tooltip-bottom:before {
+top: 0;
+margin-top: -12px;
+margin-left: -6px;
+border-bottom-color: #fff;
+}
+.leaflet-tooltip-left {
+margin-left: -6px;
+}
+.leaflet-tooltip-right {
+margin-left: 6px;
+}
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+top: 50%;
+margin-top: -6px;
+}
+.leaflet-tooltip-left:before {
+right: 0;
+margin-right: -12px;
+border-left-color: #fff;
+}
+.leaflet-tooltip-right:before {
+left: 0;
+margin-left: -12px;
+border-right-color: #fff;
+}
+@media print {
+.leaflet-control {
+-webkit-print-color-adjust: exact;
+print-color-adjust: exact;
+}
+}
+.leaflet-cluster-anim .leaflet-marker-icon{transition:transform .3s ease-out,opacity .3s ease-in}
+</style>
+<style>
+/* Layout: mappa a tutto schermo, barra comandi in alto, pannello "più economici" che sale dal basso.
+   Tipografia da cartellone stradale (Barlow Condensed) per prezzi ed etichette. */
+:root {
+  --bg: #eef0ee;          /* sfondo sotto la mappa */
+  --surface: #ffffff;
+  --surface-2: #f3f5f4;
+  --fg: #16201d;
+  --muted: #5d6b67;
+  --line: #d6dcda;
+  --accent: #0d6b5c;      /* verde petrolio */
+  --accent-fg: #ffffff;
+  --up: #c2410c;          /* prezzo in aumento */
+  --down: #15803d;        /* prezzo in calo */
+  --shadow: 0 6px 24px rgb(15 30 25 / .14);
+  --tiles: none;
+  --f-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121816; --surface: #1b2320; --surface-2: #232d29; --fg: #e8eeeb; --muted: #97a6a1;
+  --line: #33403b; --accent: #3fb8a0; --accent-fg: #07201b; --up: #fb923c; --down: #4ade80;
+  --shadow: 0 6px 24px rgb(0 0 0 / .45); --tiles: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #121816; --surface: #1b2320; --surface-2: #232d29; --fg: #e8eeeb; --muted: #97a6a1;
+  --line: #33403b; --accent: #3fb8a0; --accent-fg: #07201b; --up: #fb923c; --down: #4ade80;
+  --shadow: 0 6px 24px rgb(0 0 0 / .45); --tiles: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); color-scheme: dark; }
+
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.4 var(--f-body); overflow: hidden; }
+button, input { font: inherit; color: inherit; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#mappa { position: absolute; inset: 0; background: var(--bg); }
+.leaflet-tile-pane { filter: var(--tiles); }
+
+/* --- barra in alto --- */
+.barra { position: absolute; z-index: 1000; top: calc(env(safe-area-inset-top, 0px) + 10px);
+  left: 12px; right: 12px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; max-width: 560px; }
+.barra > * { pointer-events: auto; }
+.riga { display: flex; gap: 8px; align-items: center; }
+.marchio { font: 700 1.1rem/1 var(--f-display); letter-spacing: .02em; text-transform: uppercase;
+  background: var(--accent); color: var(--accent-fg); padding: 10px 9px; border-radius: 10px; box-shadow: var(--shadow); white-space: nowrap; }
+@media (max-width: 380px) { .marchio { display: none; } }
+.cerca { flex: 1; min-width: 0; display: flex; background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); }
+.cerca input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 9px 12px; }
+.cerca input:focus-visible { outline-offset: -2px; border-radius: 10px; }
+.btn-icona { border: 0; background: var(--surface); border-radius: 10px; box-shadow: var(--shadow);
+  width: 40px; height: 38px; display: grid; place-items: center; cursor: pointer; flex: none; }
+.btn-icona svg { width: 20px; height: 20px; stroke: var(--fg); }
+
+.carburanti { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface);
+  border-radius: 10px; box-shadow: var(--shadow); padding: 3px; gap: 3px; }
+.carburanti button { border: 0; background: transparent; border-radius: 8px; padding: 6px 4px; cursor: pointer;
+  font: 600 .95rem/1.1 var(--f-display); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.carburanti button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
+.carburanti small { display: block; font: 500 .8rem/1.2 var(--f-body); letter-spacing: 0; text-transform: none; font-variant-numeric: tabular-nums; }
+
+.avviso { background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); padding: 8px 12px; font-size: .88rem; }
+
+/* --- segnaposti con il prezzo --- */
+.pin { position: relative; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; transform: translate(-50%, -100%);
+  background: var(--surface); color: var(--fg); border: 1.5px solid var(--line); border-radius: 7px;
+  padding: 1px 6px; font: 600 14px/1.25 var(--f-display); font-variant-numeric: tabular-nums; box-shadow: 0 2px 6px rgb(0 0 0 / .18); }
+.pin.economico { border-color: var(--down); }
+.pin.caro { border-color: var(--up); }
+.pin::after { content: ""; position: absolute; left: 50%; bottom: -6px; margin-left: -5px;
+  border: 5px solid transparent; border-top-color: var(--line); border-bottom: 0; }
+.pin.economico::after { border-top-color: var(--down); }
+.pin.caro::after { border-top-color: var(--up); }
+.freccia { font-size: .72em; }
+.su { color: var(--up); } .giu { color: var(--down); }
+.gruppo { display: grid; place-items: center; transform: translate(-50%, -50%);
+  background: var(--accent); color: var(--accent-fg); border-radius: 999px; border: 2px solid var(--surface);
+  font: 600 13px/1.05 var(--f-display); text-align: center; box-shadow: 0 2px 8px rgb(0 0 0 / .25); font-variant-numeric: tabular-nums; }
+.gruppo span { display: block; font-size: 10px; opacity: .85; font-weight: 500; }
+.leaflet-div-icon { background: none; border: 0; }
+
+/* --- pannello in basso --- */
+.pannello { position: absolute; z-index: 1000; left: 0; right: 0; bottom: 0; max-width: 560px;
+  background: var(--surface); border-radius: 16px 16px 0 0; box-shadow: var(--shadow);
+  padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 10px); display: flex; flex-direction: column; max-height: 46%; }
+@media (min-width: 700px) { .pannello { left: 12px; bottom: 12px; border-radius: 16px; max-height: calc(100% - 160px); } }
+.maniglia { border: 0; background: transparent; cursor: pointer; padding: 10px 0 8px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.maniglia::before { content: ""; align-self: center; width: 38px; height: 4px; border-radius: 4px; background: var(--line); }
+.maniglia h2 { margin: 0; font: 600 1.05rem/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .05em; display: flex; justify-content: space-between; gap: 8px; }
+.maniglia h2 span { color: var(--muted); font-weight: 500; text-transform: none; letter-spacing: 0; font-family: var(--f-body); font-size: .85rem; }
+.lista { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; }
+.pannello.chiuso .lista, .pannello.chiuso .fonte { display: none; }
+.lista li button { width: 100%; border: 0; border-top: 1px solid var(--line); background: transparent; cursor: pointer;
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 9px 0; text-align: left; }
+.lista .nome { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lista .dove { color: var(--muted); font-size: .85rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lista .prezzo { grid-row: span 2; align-self: center; text-align: right; font: 600 1.35rem/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.lista .prezzo small { display: block; font: 500 .75rem/1.3 var(--f-body); }
+.vuoto { color: var(--muted); padding: 10px 0; }
+.fonte { color: var(--muted); font-size: .75rem; padding-top: 8px; border-top: 1px solid var(--line); }
+.fonte a { color: inherit; }
+
+/* --- scheda del distributore (popup) --- */
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface); color: var(--fg); box-shadow: var(--shadow); }
+.leaflet-popup-content { margin: 12px 14px; font: 14px/1.4 var(--f-body); min-width: 230px; }
+.leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
+.scheda h3 { margin: 0 0 2px; font: 600 1.15rem/1.15 var(--f-display); text-transform: uppercase; letter-spacing: .03em; padding-right: 14px; }
+.scheda .dove { color: var(--muted); font-size: .85rem; margin-bottom: 8px; }
+.scheda table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.scheda td { padding: 5px 0; border-top: 1px solid var(--line); vertical-align: top; }
+.scheda td:first-child { font: 600 .95rem/1.3 var(--f-display); text-transform: uppercase; letter-spacing: .05em; }
+.scheda .p { text-align: right; font: 600 1.2rem/1.1 var(--f-display); }
+.scheda .var { text-align: right; font-size: .78rem; color: var(--muted); }
+.scheda .scelto td { color: var(--accent); }
+.scheda .azioni { margin-top: 10px; display: flex; gap: 8px; }
+.scheda .azioni a { flex: 1; text-align: center; background: var(--accent); color: var(--accent-fg); text-decoration: none; border-radius: 8px; padding: 7px; font-weight: 600; }
+.scheda .nota { font-size: .75rem; color: var(--muted); margin-top: 6px; }
+.leaflet-control-attribution { font-size: 10px; background: color-mix(in srgb, var(--surface) 80%, transparent) !important; color: var(--muted); }
+.leaflet-control-attribution a { color: inherit; }
+.leaflet-bar a { background: var(--surface); color: var(--fg); border-color: var(--line); }
+.leaflet-bar a:hover { background: var(--surface-2); }
+.leaflet-top.leaflet-right { top: calc(env(safe-area-inset-top, 0px) + 120px); }
+@media (prefers-reduced-motion: reduce) { .leaflet-zoom-anim .leaflet-zoom-animated { transition: none !important; } }
+</style>
+
+<div id="mappa" role="region" aria-label="Mappa dei distributori"></div>
+
+<div class="barra">
+  <div class="riga">
+    <div class="marchio">Pieno Giusto</div>
+    <form class="cerca" id="cerca" role="search">
+      <label for="comune" hidden>Cerca un comune</label>
+      <input id="comune" list="comuni" placeholder="Cerca comune…" autocomplete="off">
+      <datalist id="comuni"></datalist>
+    </form>
+    <button class="btn-icona" id="vicino" type="button" aria-label="Distributori vicino a me" title="Vicino a me">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="2"/></svg>
+    </button>
+  </div>
+  <div class="carburanti" id="carburanti" role="group" aria-label="Carburante">
+    <button type="button" data-c="benzina" aria-pressed="true">Benzina<small>–</small></button>
+    <button type="button" data-c="gasolio" aria-pressed="false">Gasolio<small>–</small></button>
+    <button type="button" data-c="gpl" aria-pressed="false">GPL<small>–</small></button>
+    <button type="button" data-c="metano" aria-pressed="false">Metano<small>–</small></button>
+  </div>
+  <div class="avviso" id="avviso" hidden></div>
+</div>
+
+<section class="pannello chiuso" id="pannello">
+  <button class="maniglia" id="maniglia" type="button" aria-expanded="false" aria-controls="lista">
+    <h2>I più economici in zona <span id="conteggio">Caricamento…</span></h2>
+  </button>
+  <ol class="lista" id="lista"></ol>
+  <div class="fonte">Dati: Ministero delle Imprese e del Made in Italy — Osservatorio Prezzi Carburanti (IODL 2.0), prezzi in vigore alle 8 del <span id="data">–</span>. Frecce: ultima variazione rispetto al prezzo precedente.</div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script>
+"use strict";
+const NOMI = { benzina: "Benzina", gasolio: "Gasolio", gpl: "GPL", metano: "Metano" };
+const ZOOM_PREZZI = 12;   // da questo zoom in su si vedono i singoli prezzi
+const stato = { carb: "benzina", impianti: [], medie: null, strato: null, comuni: new Map(), soglie: {} };
+
+const $ = (id) => document.getElementById(id);
+const euro = (p) => p.toFixed(3).replace(".", ",");
+const cent = (d) => (Math.abs(d) * 100).toFixed(1).replace(".", ",").replace(",0", "");
+const dataIt = (s) => s ? s.slice(8, 10) + "/" + s.slice(5, 7) : "";
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function leggiPreferenza() { try { return localStorage.getItem("carburante"); } catch { return null; } }
+function salvaPreferenza(c) { try { localStorage.setItem("carburante", c); } catch {} }
+
+const mappa = L.map("mappa", { zoomControl: false, preferCanvas: true, minZoom: 5, maxZoom: 18 })
+  .setView([42.3, 12.6], 6);
+L.control.zoom({ position: "topright" }).addTo(mappa);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(mappa);
+
+function avviso(testo) { const a = $("avviso"); a.textContent = testo || ""; a.hidden = !testo; }
+
+function freccia(delta) {
+  if (!delta) return "";
+  return delta > 0 ? '<span class="freccia su" aria-label="in aumento">▲</span>'
+                   : '<span class="freccia giu" aria-label="in calo">▼</span>';
+}
+
+// Fasce di prezzo: il 25% più economico è "economico", il 25% più caro è "caro" (escluse le autostrade)
+function calcolaSoglie() {
+  for (const c of Object.keys(NOMI)) {
+    const v = stato.impianti.filter((i) => i.prezzi[c] && !i.autostrada).map((i) => i.prezzi[c][0]).sort((a, b) => a - b);
+    stato.soglie[c] = v.length ? [v[Math.floor(v.length * .25)], v[Math.floor(v.length * .75)]] : [0, 99];
+  }
+}
+function fascia(p) { const [lo, hi] = stato.soglie[stato.carb]; return p <= lo ? "economico" : p >= hi ? "caro" : ""; }
+
+function iconaPrezzo(i) {
+  const [p, d] = i.prezzi[stato.carb];
+  return L.divIcon({ className: "", iconSize: null, html: `<div class="pin ${fascia(p)}">${euro(p)}${freccia(d)}</div>` });
+}
+
+function iconaGruppo(gruppo) {
+  const figli = gruppo.getAllChildMarkers();
+  let min = Infinity;
+  for (const m of figli) min = Math.min(min, m.impianto.prezzi[stato.carb][0]);
+  const n = figli.length, lato = n < 50 ? 40 : n < 500 ? 46 : 52;
+  return L.divIcon({ className: "", iconSize: null,
+    html: `<div class="gruppo" style="width:${lato}px;height:${lato}px"><div>${euro(min)}<span>${n} distr.</span></div></div>` });
+}
+
+function scheda(i) {
+  const righe = Object.keys(NOMI).filter((c) => i.prezzi[c]).map((c) => {
+    const [p, d, dal, com] = i.prezzi[c];
+    const v = d ? `${freccia(d)} ${d > 0 ? "+" : "−"}${cent(d)} cent dal ${dataIt(dal)}` : "invariato";
+    return `<tr class="${c === stato.carb ? "scelto" : ""}"><td>${NOMI[c]}</td>
+      <td><div class="p">${euro(p)} €</div><div class="var">${v}</div><div class="var">comunicato il ${dataIt(com)}</div></td></tr>`;
+  }).join("");
+  const dest = `https://www.google.com/maps/dir/?api=1&destination=${i.lat},${i.lon}`;
+  return `<div class="scheda"><h3>${esc(i.bandiera || i.nome)}</h3>
+    <div class="dove">${esc(i.indirizzo)}, ${esc(i.comune)} (${esc(i.provincia)})</div>
+    <table>${righe}</table>
+    ${i.autostrada ? '<div class="nota">Impianto autostradale.</div>' : ""}
+    <div class="azioni"><a href="${dest}" target="_blank" rel="noopener">Portami qui</a></div></div>`;
+}
+
+function disegna() {
+  if (stato.strato) mappa.removeLayer(stato.strato);
+  const gruppi = L.markerClusterGroup({
+    chunkedLoading: true, showCoverageOnHover: false, spiderfyOnMaxZoom: true,
+    disableClusteringAtZoom: ZOOM_PREZZI + 1, maxClusterRadius: 90, iconCreateFunction: iconaGruppo
+  });
+  const marcatori = [];
+  for (const i of stato.impianti) {
+    if (!i.prezzi[stato.carb]) continue;
+    const m = L.marker([i.lat, i.lon], { icon: iconaPrezzo(i), title: i.bandiera });
+    m.impianto = i;
+    m.bindPopup(() => scheda(i), { maxWidth: 300, autoPanPaddingTopLeft: [16, 150], autoPanPaddingBottomRight: [16, 330] });
+    marcatori.push(m);
+  }
+  gruppi.addLayers(marcatori);
+  stato.strato = gruppi.addTo(mappa);
+  aggiornaLista();
+}
+
+function aggiornaLista() {
+  const lista = $("lista");
+  if (mappa.getZoom() < 10) {
+    lista.innerHTML = '<li class="vuoto">Avvicinati sulla mappa, cerca un comune o usa “vicino a me” per vedere la classifica.</li>';
+    $("conteggio").textContent = "";
+    return;
+  }
+  const b = mappa.getBounds();
+  const visibili = stato.impianti.filter((i) => i.prezzi[stato.carb] && b.contains([i.lat, i.lon]));
+  visibili.sort((a, b2) => a.prezzi[stato.carb][0] - b2.prezzi[stato.carb][0]);
+  $("conteggio").textContent = `${visibili.length} nella mappa`;
+  if (!visibili.length) { lista.innerHTML = '<li class="vuoto">Nessun distributore con questo carburante qui.</li>'; return; }
+  lista.innerHTML = visibili.slice(0, 20).map((i, n) => {
+    const [p, d, dal] = i.prezzi[stato.carb];
+    const v = d ? `${freccia(d)} ${cent(d)} cent · ${dataIt(dal)}` : "invariato";
+    return `<li><button type="button" data-n="${n}"><span class="nome">${esc(i.bandiera || i.nome)}</span>
+      <span class="prezzo">${euro(p)}<small>${v}</small></span>
+      <span class="dove">${esc(i.indirizzo)}, ${esc(i.comune)}</span></button></li>`;
+  }).join("");
+  lista.querySelectorAll("button").forEach((btn) => btn.addEventListener("click", () => {
+    const i = visibili[+btn.dataset.n];
+    const m = stato.strato.getLayers().find((x) => x.impianto === i);
+    if (m) stato.strato.zoomToShowLayer(m, () => m.openPopup());
+  }));
+}
+
+function aggiornaMedie() {
+  if (!stato.medie) return;
+  const s = stato.medie.nazionale, oggi = s[s.length - 1], ieri = s[s.length - 2] || {};
+  document.querySelectorAll("#carburanti button").forEach((b) => {
+    const c = b.dataset.c, p = oggi[c];
+    const d = p && ieri[c] ? p - ieri[c] : 0;
+    b.querySelector("small").innerHTML = p ? `media ${euro(p)}${Math.abs(d) >= .0005 ? " " + freccia(d) : ""}` : "–";
+  });
+}
+
+function scegliCarburante(c) {
+  stato.carb = c; salvaPreferenza(c);
+  document.querySelectorAll("#carburanti button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.c === c));
+  disegna();
+}
+
+$("carburanti").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (b && b.dataset.c !== stato.carb) scegliCarburante(b.dataset.c);
+});
+$("maniglia").addEventListener("click", () => {
+  const p = $("pannello"); const chiuso = p.classList.toggle("chiuso");
+  $("maniglia").setAttribute("aria-expanded", !chiuso);
+});
+mappa.on("moveend", aggiornaLista);
+
+function apriPannello() { $("pannello").classList.remove("chiuso"); $("maniglia").setAttribute("aria-expanded", true); }
+
+function vaiAComune(nome) {
+  const lista = stato.comuni.get(nome.trim().toLowerCase());
+  if (!lista) { avviso(`Nessun distributore trovato a “${nome}”.`); return; }
+  avviso(""); apriPannello();
+  mappa.fitBounds(L.latLngBounds(lista.map((i) => [i.lat, i.lon])).pad(.15), { maxZoom: 14 });
+  $("comune").blur();
+}
+$("cerca").addEventListener("submit", (e) => { e.preventDefault(); vaiAComune($("comune").value); });
+$("comune").addEventListener("change", (e) => { if (stato.comuni.has(e.target.value.trim().toLowerCase())) vaiAComune(e.target.value); });
+
+$("vicino").addEventListener("click", () => {
+  if (!navigator.geolocation) { avviso("Il tuo browser non condivide la posizione: cerca il comune."); return; }
+  avviso("Cerco la tua posizione…");
+  navigator.geolocation.getCurrentPosition(
+    (pos) => { avviso(""); apriPannello(); mappa.setView([pos.coords.latitude, pos.coords.longitude], 13); },
+    () => avviso("Posizione non disponibile. Controlla i permessi o cerca il comune."),
+    { enableHighAccuracy: false, timeout: 10000 });
+});
+
+async function carica() {
+  try {
+    const [ri, rm] = await Promise.all([fetch("data/impianti.json"), fetch("data/medie.json")]);
+    if (!ri.ok) throw new Error(ri.status);
+    const dati = await ri.json();
+    stato.medie = rm.ok ? await rm.json() : null;
+    stato.impianti = dati.impianti.map((r) => ({ id: r[0], nome: r[1], bandiera: r[2], indirizzo: r[3],
+      comune: r[4], provincia: r[5], lat: r[6], lon: r[7], autostrada: r[8], prezzi: r[9] }));
+    for (const i of stato.impianti) {
+      const k = i.comune.toLowerCase();
+      if (!stato.comuni.has(k)) stato.comuni.set(k, []);
+      stato.comuni.get(k).push(i);
+    }
+    const nomi = [...new Set(stato.impianti.map((i) => `${i.comune}`))].sort((a, b) => a.localeCompare(b, "it"));
+    $("comuni").innerHTML = nomi.map((n) => `<option value="${esc(n)}"></option>`).join("");
+    $("data").textContent = new Date(dati.aggiornato).toLocaleDateString("it-IT");
+    calcolaSoglie();
+    aggiornaMedie();
+    const pref = leggiPreferenza();
+    scegliCarburante(NOMI[pref] ? pref : "benzina");
+  } catch (err) {
+    $("conteggio").textContent = "";
+    avviso("Non riesco a caricare i prezzi. Riprova tra qualche minuto.");
+    console.error(err);
+  }
+}
+carica();
+</script>
