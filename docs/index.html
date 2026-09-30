@@ -586,7 +586,9 @@ print-color-adjust: exact;
 .leaflet-cluster-anim .leaflet-marker-icon{transition:transform .3s ease-out,opacity .3s ease-in}
 </style>
 <style>
-/* Layout: mappa a tutto schermo, barra comandi in alto, pannello "più economici" che sale dal basso.
+/* Layout: telefono = mappa a tutto schermo con comandi sopra e foglio dal basso;
+   tablet verticale = pannello flottante; PC/tablet orizzontale = barra laterale fissa;
+   21:9 = barra laterale + mappa + colonna con l'andamento nazionale.
    Tipografia da cartellone stradale (Barlow Condensed) per prezzi ed etichette. */
 :root {
   --bg: #eef0ee;          /* sfondo sotto la mappa */
@@ -617,13 +619,18 @@ html, body { height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.4 var(--f-body); overflow: hidden; }
 button, input { font: inherit; color: inherit; }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-#mappa { position: absolute; inset: 0; background: var(--bg); }
+#mappa { position: absolute; inset: 0; background: var(--bg); min-height: 0; }
 .leaflet-tile-pane { filter: var(--tiles); }
 
+/* --- struttura --- */
+.app { position: fixed; inset: 0; }
+.lato { position: absolute; inset: 0; z-index: 1000; pointer-events: none; display: flex; flex-direction: column;
+  justify-content: space-between; gap: 10px; padding: calc(env(safe-area-inset-top, 0px) + 10px) 12px 0; }
+.lato > * { pointer-events: auto; }
+.testa { display: flex; flex-direction: column; gap: 8px; max-width: 560px; }
+.panoramica { display: none; }
+
 /* --- barra in alto --- */
-.barra { position: absolute; z-index: 1000; top: calc(env(safe-area-inset-top, 0px) + 10px);
-  left: 12px; right: 12px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; max-width: 560px; }
-.barra > * { pointer-events: auto; }
 .riga { display: flex; gap: 8px; align-items: center; }
 .marchio { font: 700 1.1rem/1 var(--f-display); letter-spacing: .02em; text-transform: uppercase;
   background: var(--accent); color: var(--accent-fg); padding: 10px 9px; border-radius: 10px; box-shadow: var(--shadow); white-space: nowrap; }
@@ -639,6 +646,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   border-radius: 10px; box-shadow: var(--shadow); padding: 3px; gap: 3px; }
 .carburanti button { border: 0; background: transparent; border-radius: 8px; padding: 6px 4px; cursor: pointer;
   font: 600 .95rem/1.1 var(--f-display); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.carburanti button:hover { color: var(--fg); }
 .carburanti button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
 .carburanti small { display: block; font: 500 .8rem/1.2 var(--f-body); letter-spacing: 0; text-transform: none; font-variant-numeric: tabular-nums; }
 
@@ -666,19 +674,19 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .gruppo span { display: block; font-size: 10px; opacity: .85; font-weight: 500; }
 .leaflet-div-icon { background: none; border: 0; }
 
-/* --- pannello in basso --- */
-.pannello { position: absolute; z-index: 1000; left: 0; right: 0; bottom: 0; max-width: 560px;
-  background: var(--surface); border-radius: 16px 16px 0 0; box-shadow: var(--shadow);
-  padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 10px); display: flex; flex-direction: column; max-height: 46%; }
-@media (min-width: 700px) { .pannello { left: 12px; bottom: 12px; border-radius: 16px; max-height: calc(100% - 160px); } }
-.maniglia { border: 0; background: transparent; cursor: pointer; padding: 10px 0 8px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+/* --- pannello "più economici": foglio dal basso su telefono --- */
+.pannello { margin: 0 -12px; background: var(--surface); border-radius: 16px 16px 0 0; box-shadow: var(--shadow);
+  padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 10px); display: flex; flex-direction: column;
+  max-height: 46%; min-height: 0; }
+.maniglia { border: 0; background: transparent; cursor: pointer; padding: 10px 0 8px; display: flex; flex-direction: column; gap: 6px; text-align: left; width: 100%; }
 .maniglia::before { content: ""; align-self: center; width: 38px; height: 4px; border-radius: 4px; background: var(--line); }
-.maniglia h2 { margin: 0; font: 600 1.05rem/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .05em; display: flex; justify-content: space-between; gap: 8px; }
-.maniglia h2 span { color: var(--muted); font-weight: 500; text-transform: none; letter-spacing: 0; font-family: var(--f-body); font-size: .85rem; }
-.lista { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; }
+.maniglia h2 { margin: 0; font: 600 1.05rem/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .05em; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.maniglia h2 span { color: var(--muted); font-weight: 500; text-transform: none; letter-spacing: 0; font-family: var(--f-body); font-size: .85rem; text-align: right; }
+.lista { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
 .pannello.chiuso .lista, .pannello.chiuso .fonte { display: none; }
 .lista li button { width: 100%; border: 0; border-top: 1px solid var(--line); background: transparent; cursor: pointer;
-  display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 9px 0; text-align: left; }
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 9px 4px; text-align: left; border-radius: 0; }
+.lista li button:hover { background: var(--surface-2); }
 .lista .nome { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lista .dove { color: var(--muted); font-size: .85rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lista .prezzo { grid-row: span 2; align-self: center; text-align: right; font: 600 1.35rem/1 var(--f-display); font-variant-numeric: tabular-nums; }
@@ -686,6 +694,87 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .vuoto { color: var(--muted); padding: 10px 0; }
 .fonte { color: var(--muted); font-size: .75rem; padding-top: 8px; border-top: 1px solid var(--line); }
 .fonte a { color: inherit; }
+
+/* --- tablet in verticale: pannello flottante in basso a sinistra --- */
+@media (min-width: 700px) {
+  .lato { padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 0; }
+  .pannello { margin: 0 0 calc(env(safe-area-inset-bottom, 0px) + 16px); width: 420px; border-radius: 16px; max-height: calc(100% - 200px); }
+  .pannello.chiuso { width: 320px; }
+}
+
+/* --- PC, tablet in orizzontale e telefono in orizzontale: barra laterale fissa --- */
+@media (min-width: 1024px), (orientation: landscape) and (max-height: 520px) {
+  .app { display: grid; grid-template-columns: var(--lato-w, 360px) minmax(0, 1fr); }
+  #mappa { position: relative; inset: auto; grid-column: 2; grid-row: 1; }
+  .lato { position: relative; inset: auto; grid-column: 1; grid-row: 1; pointer-events: auto; min-height: 0;
+    justify-content: flex-start; gap: 14px; background: var(--surface); border-right: 1px solid var(--line);
+    padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 0 calc(env(safe-area-inset-left, 0px) + 16px); }
+  .testa { max-width: none; }
+  .marchio, .cerca, .btn-icona, .carburanti, .avviso { box-shadow: none; }
+  .cerca, .btn-icona, .carburanti, .avviso { background: var(--surface-2); }
+  .pannello, .pannello.chiuso { flex: 1; width: auto; margin: 0; max-height: none; box-shadow: none; border-radius: 0; background: transparent; padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 12px); }
+  .pannello.chiuso .lista, .pannello.chiuso .fonte { display: block; }
+  .maniglia { cursor: default; padding-top: 0; }
+  .maniglia::before { display: none; }
+  .maniglia h2 { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .maniglia h2 span { text-align: left; }
+  .riga { flex-wrap: wrap; }
+  .marchio { flex-basis: 100%; background: transparent; color: var(--accent); padding: 0 0 2px; font-size: 1.5rem; }
+  .leaflet-top.leaflet-right { top: 0; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .app { --lato-w: 300px; }
+  .lato { gap: 8px; padding-top: calc(env(safe-area-inset-top, 0px) + 8px); padding-left: calc(env(safe-area-inset-left, 0px) + 10px); padding-right: 10px; }
+  .marchio { display: none; }
+  .carburanti small { display: none; }
+  .maniglia h2 { font-size: .95rem; }
+  .lista li button { padding: 6px 2px; }
+  .lista .prezzo { font-size: 1.15rem; }
+  .fonte { display: none !important; }
+}
+@media (min-width: 1440px) {
+  body { font-size: 16px; }
+  .app { --lato-w: 400px; }
+  .lato { padding-left: 20px; padding-right: 20px; }
+}
+@media (min-width: 2400px) {
+  body { font-size: 17px; }
+  .app { --lato-w: 440px; }
+}
+
+/* --- schermi ultra-larghi (21:9): terza colonna con l'andamento --- */
+@media (min-width: 1800px) and (min-aspect-ratio: 2/1) {
+  .app { grid-template-columns: var(--lato-w) minmax(0, 1fr) clamp(340px, 16vw, 440px); }
+  .panoramica { display: flex; flex-direction: column; gap: 14px; grid-column: 3; grid-row: 1; min-height: 0; overflow-y: auto;
+    background: var(--surface); border-left: 1px solid var(--line); padding: 16px 20px; }
+}
+.panoramica h2 { margin: 0; font: 600 1.05rem/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .05em; }
+.panoramica .sotto { color: var(--muted); font-size: .8rem; margin-top: 2px; }
+.trend { border: 0; background: transparent; text-align: left; cursor: pointer; padding: 10px 0 6px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto; gap: 0 10px; }
+.trend .n { font: 600 .95rem/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.trend[aria-pressed="true"] .n { color: var(--accent); }
+.trend .v { font: 600 1.45rem/1 var(--f-display); font-variant-numeric: tabular-nums; text-align: right; }
+.trend .d { grid-column: 1 / -1; font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 1.2em; }
+.trend svg { grid-column: 1 / -1; width: 100%; height: 46px; display: block; overflow: visible; margin-top: 4px; color: var(--muted); }
+.trend[aria-pressed="true"] svg { color: var(--accent); }
+.trend svg .area { fill: currentColor; opacity: .12; }
+.trend svg .linea { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.trend svg .fine { fill: currentColor; stroke: var(--surface); stroke-width: 2; }
+.trend svg .guida { stroke: var(--line); stroke-width: 1; }
+.trend svg .cursore { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 2; }
+.zona { border-top: 1px solid var(--line); padding-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+.zona h3 { grid-column: 1 / -1; margin: 0; font: 600 1rem/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .05em; }
+.zona div span { display: block; color: var(--muted); font-size: .78rem; }
+.zona div b { font: 600 1.3rem/1.1 var(--f-display); font-variant-numeric: tabular-nums; }
+.zona .largo { grid-column: 1 / -1; color: var(--muted); font-size: .85rem; }
+
+/* --- touch: bersagli più grandi, zoom con le dita --- */
+@media (pointer: coarse) {
+  .carburanti button { min-height: 44px; }
+  .btn-icona { width: 44px; height: 44px; }
+  .cerca input { min-height: 44px; font-size: 16px; }
+  .leaflet-control-zoom { display: none; }
+}
 
 /* --- scheda del distributore (popup) --- */
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface); color: var(--fg); box-shadow: var(--shadow); }
@@ -707,17 +796,18 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .leaflet-bar a { background: var(--surface); color: var(--fg); border-color: var(--line); }
 .leaflet-bar a:hover { background: var(--surface-2); }
 .leaflet-top.leaflet-right { top: calc(env(safe-area-inset-top, 0px) + 120px); }
+@media (min-width: 700px) { .leaflet-top.leaflet-right { top: calc(env(safe-area-inset-top, 0px) + 140px); } }
 @media (prefers-reduced-motion: reduce) { .leaflet-zoom-anim .leaflet-zoom-animated { transition: none !important; } }
 </style>
 
-<div id="mappa" role="region" aria-label="Mappa dei distributori"></div>
-
-<div class="barra">
+<div class="app">
+<aside class="lato" aria-label="Ricerca e classifica">
+<div class="testa">
   <div class="riga">
     <div class="marchio">Pieno Giusto</div>
     <form class="cerca" id="cerca" role="search">
       <label for="comune" hidden>Cerca un comune</label>
-      <input id="comune" list="comuni" placeholder="Cerca comune…" autocomplete="off">
+      <input id="comune" list="comuni" placeholder="Cerca comune…" autocomplete="off" enterkeyhint="search">
       <datalist id="comuni"></datalist>
     </form>
     <button class="btn-icona" id="vicino" type="button" aria-label="Distributori vicino a me" title="Vicino a me">
@@ -740,6 +830,19 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   <ol class="lista" id="lista"></ol>
   <div class="fonte">Dati: Ministero delle Imprese e del Made in Italy — Osservatorio Prezzi Carburanti (IODL 2.0), prezzi in vigore alle 8 del <span id="data">–</span>. Frecce: ultima variazione rispetto al prezzo precedente.</div>
 </section>
+</aside>
+
+<div id="mappa" role="region" aria-label="Mappa dei distributori"></div>
+
+<aside class="panoramica" id="panoramica" aria-label="Andamento dei prezzi">
+  <div>
+    <h2>Media nazionale</h2>
+    <div class="sotto" id="periodo">–</div>
+  </div>
+  <div id="trend"></div>
+  <div class="zona" id="zona"></div>
+</aside>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
@@ -826,23 +929,41 @@ function scheda(i) {
     <div class="azioni"><a href="${dest}" target="_blank" rel="noopener">Portami qui</a></div></div>`;
 }
 
+// Layout attivo: "lato" = barra laterale fissa (PC, tablet/telefono in orizzontale)
+const MQ_LATO = matchMedia("(min-width: 1024px), (orientation: landscape) and (max-height: 520px)");
+const MQ_LARGO = matchMedia("(min-width: 1800px) and (min-aspect-ratio: 2/1)");
+
+// Quando si apre una scheda la mappa si sposta per non finire sotto i comandi sovrapposti
+function margini(m) {
+  const pop = m.getPopup(); if (!pop) return;
+  if (MQ_LATO.matches) { pop.options.autoPanPaddingTopLeft = [20, 20]; pop.options.autoPanPaddingBottomRight = [20, 20]; return; }
+  const testa = document.querySelector(".testa").getBoundingClientRect();
+  const pann = $("pannello").getBoundingClientRect();
+  const sotto = pann.left < 20 || pann.right > innerWidth / 2 ? innerHeight - pann.top + 16 : 20;
+  pop.options.autoPanPaddingTopLeft = [16, testa.bottom + 16];
+  pop.options.autoPanPaddingBottomRight = [16, sotto];
+}
+function apri(m) { stato.strato.zoomToShowLayer(m, () => { margini(m); m.openPopup(); }); }
+
 function disegna() {
   if (stato.strato) mappa.removeLayer(stato.strato);
   const gruppi = L.markerClusterGroup({
     chunkedLoading: true, showCoverageOnHover: false, spiderfyOnMaxZoom: true,
-    disableClusteringAtZoom: ZOOM_PREZZI + 1, maxClusterRadius: 90, iconCreateFunction: iconaGruppo
+    disableClusteringAtZoom: 16, maxClusterRadius: (z) => (z >= 13 ? 36 : 90), iconCreateFunction: iconaGruppo
   });
   const marcatori = [];
   for (const i of stato.impianti) {
     if (!i.prezzi[stato.carb]) continue;
     const m = L.marker([i.lat, i.lon], { icon: iconaPrezzo(i), title: i.bandiera });
     m.impianto = i;
-    m.bindPopup(() => scheda(i), { maxWidth: 300, autoPanPaddingTopLeft: [16, 150], autoPanPaddingBottomRight: [16, 330] });
+    m.on("click", () => margini(m));   // prima di bindPopup: aggiorna i margini prima dell'apertura
+    m.bindPopup(() => scheda(i), { maxWidth: 300 });
     marcatori.push(m);
   }
   gruppi.addLayers(marcatori);
   stato.strato = gruppi.addTo(mappa);
   aggiornaLista();
+  disegnaAndamento();
 }
 
 function aggiornaLista() {
@@ -859,7 +980,7 @@ function aggiornaLista() {
   const esclusi = inMappa.length - visibili.length;
   $("conteggio").textContent = `${inMappa.length} nella mappa` + (esclusi ? ` · ${esclusi} da verificare esclusi` : "");
   if (!visibili.length) { lista.innerHTML = '<li class="vuoto">Nessun distributore con questo carburante qui.</li>'; return; }
-  lista.innerHTML = visibili.slice(0, 20).map((i, n) => {
+  lista.innerHTML = visibili.slice(0, MQ_LATO.matches ? 50 : 20).map((i, n) => {
     const [p, d, dal] = i.prezzi[stato.carb];
     const v = d ? `${freccia(d)} ${cent(d)} cent · ${dataIt(dal)}` : "invariato";
     return `<li><button type="button" data-n="${n}"><span class="nome">${esc(i.bandiera || i.nome)}</span>
@@ -869,8 +990,69 @@ function aggiornaLista() {
   lista.querySelectorAll("button").forEach((btn) => btn.addEventListener("click", () => {
     const i = visibili[+btn.dataset.n];
     const m = stato.strato.getLayers().find((x) => x.impianto === i);
-    if (m) stato.strato.zoomToShowLayer(m, () => m.openPopup());
+    if (m) apri(m);
   }));
+}
+
+// --- colonna 21:9: andamento nazionale per carburante + riepilogo della zona inquadrata ---
+function disegnaAndamento() {
+  if (!stato.medie || !MQ_LARGO.matches) return;
+  const serie = stato.medie.nazionale;
+  $("periodo").textContent = `Dal ${dataIt(serie[0].giorno)} al ${dataIt(serie[serie.length - 1].giorno)} · prezzo self (GPL e metano servito)`;
+  const W = 320, H = 46;
+  $("trend").innerHTML = Object.keys(NOMI).map((c) => {
+    const punti = serie.map((g) => g[c]).filter((v) => v != null);
+    if (punti.length < 2) return "";
+    const min = Math.min(...punti), max = Math.max(...punti), span = max - min || .01;
+    const x = (k) => (k / (punti.length - 1)) * W, y = (v) => 4 + (1 - (v - min) / span) * (H - 8);
+    const linea = punti.map((v, k) => `${k ? "L" : "M"}${x(k).toFixed(1)},${y(v).toFixed(1)}`).join("");
+    const ultimo = punti[punti.length - 1], d = ultimo - punti[0];
+    const testo = Math.abs(d) < .0005 ? `stabile in ${punti.length} giorni` : `${d > 0 ? "+" : "−"}${cent(d)} cent in ${punti.length} giorni ${freccia(d)}`;
+    return `<button type="button" class="trend" data-c="${c}" aria-pressed="${c === stato.carb}">
+      <span class="n">${NOMI[c]}</span><span class="v">${euro(ultimo)}</span>
+      <span class="d" data-base="${esc(testo)}">${testo}</span>
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+        <line class="guida" x1="0" x2="${W}" y1="${H - .5}" y2="${H - .5}"/>
+        <path class="area" d="${linea}L${W},${H}L0,${H}Z"/><path class="linea" d="${linea}" vector-effect="non-scaling-stroke"/>
+        <line class="cursore" x1="0" x2="0" y1="0" y2="${H}" visibility="hidden" vector-effect="non-scaling-stroke"/>
+        <circle class="fine" cx="${W}" cy="${y(ultimo).toFixed(1)}" r="4" vector-effect="non-scaling-stroke"/>
+      </svg></button>`;
+  }).join("");
+  // passando sopra al grafico si legge il valore del giorno
+  $("trend").querySelectorAll(".trend").forEach((b) => {
+    const c = b.dataset.c, svg = b.querySelector("svg"), cur = b.querySelector(".cursore"), d = b.querySelector(".d");
+    const giorni = serie.filter((g) => g[c] != null);
+    svg.addEventListener("pointermove", (e) => {
+      const r = svg.getBoundingClientRect(), k = Math.round(((e.clientX - r.left) / r.width) * (giorni.length - 1));
+      const g = giorni[Math.max(0, Math.min(giorni.length - 1, k))];
+      const xx = (giorni.indexOf(g) / (giorni.length - 1)) * W;
+      cur.setAttribute("x1", xx); cur.setAttribute("x2", xx); cur.setAttribute("visibility", "visible");
+      d.textContent = `${dataIt(g.giorno)}: ${euro(g[c])} €`;
+    });
+    svg.addEventListener("pointerleave", () => { cur.setAttribute("visibility", "hidden"); d.innerHTML = d.dataset.base; });
+  });
+}
+$("trend").addEventListener("click", (e) => {
+  const b = e.target.closest(".trend"); if (b && b.dataset.c !== stato.carb) scegliCarburante(b.dataset.c);
+});
+
+function aggiornaZona() {
+  if (!stato.medie || !MQ_LARGO.matches) return;
+  const z = $("zona");
+  if (mappa.getZoom() < 9) { z.innerHTML = `<h3>Nella zona inquadrata</h3><div class="largo">Avvicinati sulla mappa per confrontare la zona con la media nazionale.</div>`; return; }
+  const b = mappa.getBounds(), c = stato.carb;
+  const qui = stato.impianti.filter((i) => i.prezzi[c] && b.contains([i.lat, i.lon]));
+  const ok = qui.filter((i) => affidabile(i)).map((i) => i.prezzi[c][0]).sort((a, b2) => a - b2);
+  if (!ok.length) { z.innerHTML = `<h3>Nella zona inquadrata</h3><div class="largo">Nessun prezzo di ${NOMI[c].toLowerCase()} affidabile qui.</div>`; return; }
+  const media = ok.reduce((a, v) => a + v, 0) / ok.length;
+  const naz = stato.medie.nazionale[stato.medie.nazionale.length - 1][c];
+  const diff = media - naz;
+  z.innerHTML = `<h3>Nella zona inquadrata · ${NOMI[c]}</h3>
+    <div><span>Media della zona</span><b>${euro(media)}</b></div>
+    <div><span>Rispetto all'Italia</span><b>${Math.abs(diff) < .0005 ? "uguale" : `${diff > 0 ? "+" : "−"}${cent(diff)} cent`}</b></div>
+    <div><span>Il più economico</span><b>${euro(ok[0])}</b></div>
+    <div><span>Il più caro</span><b>${euro(ok[ok.length - 1])}</b></div>
+    <div class="largo">${ok.length} prezzi affidabili${qui.length > ok.length ? `, ${qui.length - ok.length} da verificare esclusi` : ""}. Tra il più economico e il più caro ci sono ${cent(ok[ok.length - 1] - ok[0])} cent al litro: ${((ok[ok.length - 1] - ok[0]) * 50).toFixed(2).replace(".", ",")} € su un pieno da 50 litri.</div>`;
 }
 
 function aggiornaMedie() {
@@ -887,6 +1069,7 @@ function scegliCarburante(c) {
   stato.carb = c; salvaPreferenza(c);
   document.querySelectorAll("#carburanti button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.c === c));
   disegna();
+  aggiornaZona();
 }
 
 $("carburanti").addEventListener("click", (e) => {
@@ -896,7 +1079,10 @@ $("maniglia").addEventListener("click", () => {
   const p = $("pannello"); const chiuso = p.classList.toggle("chiuso");
   $("maniglia").setAttribute("aria-expanded", !chiuso);
 });
-mappa.on("moveend", aggiornaLista);
+mappa.on("moveend", () => { aggiornaLista(); aggiornaZona(); });
+new ResizeObserver(() => mappa.invalidateSize()).observe($("mappa"));
+MQ_LATO.addEventListener("change", aggiornaLista);
+MQ_LARGO.addEventListener("change", () => { disegnaAndamento(); aggiornaZona(); });
 
 function apriPannello() { $("pannello").classList.remove("chiuso"); $("maniglia").setAttribute("aria-expanded", true); }
 
