@@ -921,7 +921,7 @@ $("vicino").addEventListener("click", () => {
 
 async function carica() {
   try {
-    const [ri, rm] = await Promise.all([fetch("data/impianti.json"), fetch("data/medie.json")]);
+    const [ri, rm] = await Promise.all([fetch("data/impianti.json", { cache: "no-cache" }), fetch("data/medie.json", { cache: "no-cache" })]);
     if (!ri.ok) throw new Error(ri.status);
     const dati = await ri.json();
     stato.medie = rm.ok ? await rm.json() : null;
