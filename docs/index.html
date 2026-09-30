@@ -660,6 +660,21 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 
 .avviso { background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); padding: 8px 12px; font-size: .88rem; }
 
+/* --- installazione come app --- */
+.installa { display: flex; align-items: center; gap: 10px; background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); padding: 8px 8px 8px 12px; font-size: .88rem; }
+.installa img { width: 28px; height: 28px; border-radius: 7px; flex: none; }
+.installa p { margin: 0; flex: 1; min-width: 0; line-height: 1.3; }
+.installa .si { border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-fg); font-weight: 600; padding: 8px 12px; cursor: pointer; min-height: 38px; }
+.installa .no { border: 0; background: transparent; color: var(--muted); cursor: pointer; width: 32px; height: 32px; font-size: 1.2rem; line-height: 1; }
+.guida { position: fixed; inset: 0; z-index: 3000; background: rgb(0 0 0 / .5); display: grid; place-items: end center; padding: 16px; }
+.guida > div { background: var(--surface); color: var(--fg); border-radius: 16px; padding: 18px 18px calc(env(safe-area-inset-bottom, 0px) + 16px); width: min(460px, 100%); box-shadow: var(--shadow); }
+@media (min-width: 700px) { .guida { place-items: center; } }
+.guida h2 { margin: 0 0 10px; font: 600 1.25rem/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .04em; }
+.guida ol { margin: 0 0 14px; padding-left: 1.3em; display: grid; gap: 8px; line-height: 1.4; }
+.guida .nota { color: var(--muted); font-size: .85rem; margin: 0 0 14px; }
+.guida button { width: 100%; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-fg); font-weight: 600; padding: 11px; cursor: pointer; }
+@media (display-mode: standalone) { .installa { display: none !important; } }
+
 /* --- segnaposti con il prezzo --- */
 .pin { position: relative; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; transform: translate(-50%, -100%);
   background: var(--surface); color: var(--fg); border: 1.5px solid var(--line); border-radius: 7px;
@@ -829,6 +844,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
     <button type="button" data-c="metano" aria-pressed="false">Metano<small>–</small></button>
   </div>
   <div class="avviso" id="avviso" hidden></div>
+  <div class="installa" id="installa" hidden>
+    <img src="icone/icona-192.png" alt="">
+    <p>Tienila sul telefono come un'app</p>
+    <button type="button" class="si" id="installaSi">Installa</button>
+    <button type="button" class="no" id="installaNo" aria-label="Chiudi">×</button>
+  </div>
 </div>
 
 <section class="pannello chiuso" id="pannello">
@@ -1142,4 +1163,51 @@ async function carica() {
 }
 carica();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+// --- invito a installare l'app (solo su telefoni e tablet, non se è già installata) ---
+(() => {
+  const ua = navigator.userAgent;
+  const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(ua);
+  const installata = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  let chiuso = false; try { chiuso = localStorage.getItem("installa-chiuso") === "1"; } catch {}
+  if (installata || chiuso || !(ios || android)) return;
+  let richiesta = null;
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); richiesta = e; });
+  window.addEventListener("appinstalled", () => { $("installa").hidden = true; });
+  $("installa").hidden = false;
+
+  function guida() {
+    const safari = ios && !/CriOS|FxiOS|EdgiOS|GSA/.test(ua);
+    const passi = ios
+      ? (safari
+        ? ["Tocca il pulsante <b>Condividi</b> (il quadrato con la freccia verso l'alto), in basso o in alto a seconda del modello.",
+           "Scorri e scegli <b>Aggiungi alla schermata Home</b>.", "Tocca <b>Aggiungi</b>."]
+        : ["Su iPhone l'installazione funziona solo con <b>Safari</b>.",
+           "Copia l'indirizzo <b>francesco-cerulli.github.io/pieno-giusto</b> e aprilo in Safari.",
+           "Poi tocca <b>Condividi</b> → <b>Aggiungi alla schermata Home</b>."])
+      : ["Tocca i <b>tre puntini ⋮</b> in alto a destra.",
+         "Scegli <b>Installa app</b> (o <b>Aggiungi a schermata Home</b>).", "Conferma con <b>Installa</b>."];
+    const nota = android
+      ? "Non vedi i tre puntini o l'opzione? Probabilmente il sito si è aperto dentro la fotocamera o Google Lens: tocca <b>Apri in Chrome</b> (o l'icona del browser) e riprova da lì."
+      : "";
+    const el = document.createElement("div");
+    el.className = "guida"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
+    el.innerHTML = `<div><h2>Installa Pieno Giusto</h2><ol>${passi.map((p) => `<li>${p}</li>`).join("")}</ol>
+      ${nota ? `<p class="nota">${nota}</p>` : ""}<button type="button">Ho capito</button></div>`;
+    el.addEventListener("click", (e) => { if (e.target === el || e.target.tagName === "BUTTON") el.remove(); });
+    document.body.appendChild(el);
+    el.querySelector("button").focus();
+  }
+  $("installaSi").addEventListener("click", async () => {
+    if (richiesta) {             // Chrome su Android: finestra di installazione ufficiale
+      richiesta.prompt();
+      const { outcome } = await richiesta.userChoice; richiesta = null;
+      if (outcome === "accepted") $("installa").hidden = true;
+    } else guida();              // iPhone o browser senza installazione automatica: istruzioni
+  });
+  $("installaNo").addEventListener("click", () => {
+    $("installa").hidden = true; try { localStorage.setItem("installa-chiuso", "1"); } catch {}
+  });
+})();
 </script>
