@@ -6,7 +6,8 @@ Per ogni distributore e carburante calcola:
 
 Output:
 - docs/data/impianti.json  → distributori con prezzi e variazioni
-- docs/data/medie.json     → medie nazionali e provinciali + andamento storico
+- docs/data/medie.json     → medie nazionali e provinciali, andamento storico,
+                             tendenza (su/giù/stabile) per provincia e quanto si è rivelata affidabile
 Uso: python scripts/elabora.py
 """
 import json
@@ -26,6 +27,8 @@ GIORNI_STORICO = 15                 # quanti giorni guardare indietro per le var
 SOGLIA_SOSPETTO = 0.15              # 15% sotto la mediana provinciale = da verificare
 MIN_IMPIANTI_MEDIANA = 10           # sotto questo numero uso la mediana nazionale
 GIORNI_ANDAMENTO = 90               # lunghezza della serie delle medie nazionali
+GIORNI_TENDENZA = 3                 # la tendenza guarda gli ultimi 3 giorni...
+SOGLIA_TENDENZA = 0.005             # ...e conta solo se la media si è mossa di almeno mezzo centesimo
 
 
 def prezzi_del_giorno(giorno: str):
@@ -87,6 +90,7 @@ def main():
 
     # --- anagrafica + prezzi ---
     impianti = []
+    prov_di = {}   # id impianto -> provincia (solo impianti stradali)
     per_provincia = defaultdict(lambda: defaultdict(list))
     for r in leggi_csv(leggi_gz(RAW / "anagrafica.csv.gz")):
         try:
@@ -96,6 +100,8 @@ def main():
         if not (35 <= lat <= 48 and 6 <= lon <= 19):  # fuori dall'Italia = coordinate errate
             continue
         pid = r["idImpianto"]
+        if r["Tipo Impianto"] != "Autostradale":
+            prov_di[pid] = r["Provincia"]
         prezzi = {}
         for carb in CARBURANTI.values():
             v = attuali.get((pid, carb))
@@ -151,17 +157,58 @@ def main():
     province = {p: {c: media(v) for c, v in carb.items()} for p, carb in per_provincia.items()}
 
     andamento = []
+    serie = defaultdict(dict)   # (provincia o "IT", carburante) -> {giorno: media}
     for g in reversed(giorni[:GIORNI_ANDAMENTO]):
         gp = storico[giorni.index(g)] if giorni.index(g) < len(storico) else pulisci(prezzi_del_giorno(g))
         gd = date.fromisoformat(g)
         acc = defaultdict(list)
-        for (_, carb), (prezzo, dt) in gp.items():
+        acc_prov = defaultdict(list)
+        for (pid, carb), (prezzo, dt) in gp.items():
             if (gd - dt.date()).days <= MAX_GIORNI_MEDIA:
                 acc[carb].append(prezzo)
+                if pid in prov_di:
+                    acc_prov[(prov_di[pid], carb)].append(prezzo)
         andamento.append({"giorno": g, **{c: media(v) for c, v in acc.items()}})
+        for c, v in acc.items():
+            serie[("IT", c)][g] = sum(v) / len(v)
+        for k, v in acc_prov.items():
+            if len(v) >= MIN_IMPIANTI_MEDIANA:
+                serie[k][g] = sum(v) / len(v)
+
+    # --- tendenza: dove si sono mosse le medie negli ultimi giorni ---
+    cronologia = list(reversed(giorni[:GIORNI_ANDAMENTO]))   # dal più vecchio
+
+    def direzione(delta):
+        return "su" if delta >= SOGLIA_TENDENZA else "giu" if delta <= -SOGLIA_TENDENZA else "stabile"
+
+    tendenze = defaultdict(dict)
+    if len(cronologia) > GIORNI_TENDENZA:
+        g0, g_ieri = cronologia[-1 - GIORNI_TENDENZA], cronologia[-2]
+        for (zona, carb), s_z in serie.items():
+            if oggi in s_z and g0 in s_z:
+                d3 = s_z[oggi] - s_z[g0]
+                d1 = s_z[oggi] - s_z[g_ieri] if g_ieri in s_z else 0
+                tendenze[zona][carb] = [round(s_z[oggi], 3), round(d1, 4), round(d3, 4), direzione(d3)]
+
+    # --- affidabilità: nel passato, la direzione degli ultimi 3 giorni
+    #     si è confermata nei 3 giorni successivi? ---
+    giusti = casi = 0
+    L = H = GIORNI_TENDENZA
+    for s_z in serie.values():
+        for i in range(L, len(cronologia) - H):
+            a, b, c = cronologia[i - L], cronologia[i], cronologia[i + H]
+            if a in s_z and b in s_z and c in s_z:
+                prima, dopo = s_z[b] - s_z[a], s_z[c] - s_z[b]
+                if abs(prima) >= SOGLIA_TENDENZA and abs(dopo) >= 0.001:
+                    casi += 1
+                    giusti += (prima > 0) == (dopo > 0)
+    affidabilita = {"percentuale": round(100 * giusti / casi) if casi else None,
+                    "casi": casi, "giorni": len(cronologia), "orizzonte": H}
+    print(f"Tendenza: confermata {giusti}/{casi} volte ({affidabilita['percentuale']}%)")
 
     with open(SITE_DATA / "medie.json", "w", encoding="utf-8") as f:
-        json.dump({"aggiornato": oggi, "nazionale": andamento, "province": province},
+        json.dump({"aggiornato": oggi, "nazionale": andamento, "province": province,
+                   "tendenze": tendenze, "affidabilita": affidabilita},
                   f, ensure_ascii=False, separators=(",", ":"))
 
     cambiati = sum(1 for d, _ in variazioni.values() if d)

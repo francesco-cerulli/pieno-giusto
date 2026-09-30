@@ -61,6 +61,11 @@ cd docs && python -m http.server 8000  # poi apri http://localhost:8000
   (spesso è un listino vecchio che il gestore continua a ri-comunicare) o non viene aggiornato da più di 8 giorni,
   sulla mappa compare tratteggiato con "?", non entra nella classifica né nel prezzo minimo dei gruppi,
   e la scheda del distributore spiega il motivo.
+- **Tendenza**: per ogni provincia e carburante si confronta la media di oggi con quella di 3 giorni fa.
+  Se si è mossa di almeno mezzo centesimo la tendenza è "in aumento" o "in calo", altrimenti "stabile".
+  Ogni giorno `elabora.py` verifica sullo storico quante volte la direzione degli ultimi 3 giorni
+  si è confermata nei 3 successivi e pubblica la percentuale (all'avvio: 87% su 2.591 casi, 20 giorni di dati).
+  Non è una previsione con modello: sbaglia quando i prezzi cambiano direzione.
 - Sulla mappa il bordo verde indica il 25% dei distributori più economici d'Italia, quello rosso il 25% più caro.
 
 ## Prossimi passi

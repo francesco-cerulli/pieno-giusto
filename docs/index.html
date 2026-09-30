@@ -660,6 +660,28 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 
 .avviso { background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); padding: 8px 12px; font-size: .88rem; }
 
+/* --- tendenza: "conviene fare il pieno adesso?" --- */
+.tendenza { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px 12px;
+  margin: 0 0 2px; padding: 10px 10px 10px 12px; border-radius: 12px; background: var(--surface-2); }
+.tendenza .segno { width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center;
+  font: 700 1.35rem/1 var(--f-body); background: var(--muted); color: var(--surface); }
+.tendenza.su { background: color-mix(in srgb, var(--up) 13%, var(--surface)); }
+.tendenza.su .segno { background: var(--up); }
+.tendenza.giu { background: color-mix(in srgb, var(--down) 13%, var(--surface)); }
+.tendenza.giu .segno { background: var(--down); }
+.tendenza .testo { min-width: 0; line-height: 1.25; }
+.tendenza .titolo { font: 600 1.1rem/1.15 var(--f-display); text-transform: uppercase; letter-spacing: .03em; }
+.tendenza.su .titolo { color: var(--up); } .tendenza.giu .titolo { color: var(--down); }
+.tendenza .dove, .tendenza .numeri { display: block; font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tendenza .dove b { color: var(--fg); font-weight: 600; }
+.tendenza .consiglio { grid-column: 2 / 3; font-weight: 600; font-size: .9rem; }
+.tendenza .info { grid-column: 3; grid-row: 1 / span 2; align-self: start; border: 1px solid var(--line); background: var(--surface);
+  color: var(--muted); width: 30px; height: 30px; border-radius: 999px; cursor: pointer; font-weight: 700; }
+.tendenza .info:hover { color: var(--fg); }
+.var-su { color: var(--up); font-weight: 600; } .var-giu { color: var(--down); font-weight: 600; }
+.scheda .zona-t { margin-top: 8px; font-size: .8rem; padding: 6px 8px; border-radius: 8px; background: var(--surface-2); }
+.guida .affid { font: 600 2rem/1 var(--f-display); color: var(--accent); }
+
 /* --- installazione come app --- */
 .installa { display: flex; align-items: center; gap: 10px; background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); padding: 8px 8px 8px 12px; font-size: .88rem; }
 .installa img { width: 28px; height: 28px; border-radius: 7px; flex: none; }
@@ -689,7 +711,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .scheda .attenzione { margin-top: 4px; padding: 5px 7px; border-radius: 6px; font-size: .78rem; line-height: 1.35;
   background: color-mix(in srgb, var(--up) 12%, var(--surface)); color: var(--fg); text-align: left; }
 .scheda .dubbio .p { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
-.freccia { font-size: .72em; }
+.freccia { font-size: .8em; }
+.pin .freccia { font-size: .85em; }
 .su { color: var(--up); } .giu { color: var(--down); }
 .gruppo { display: grid; place-items: center; transform: translate(-50%, -50%);
   background: var(--accent); color: var(--accent-fg); border-radius: 999px; border: 2px solid var(--surface);
@@ -702,7 +725,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 10px); display: flex; flex-direction: column;
   max-height: 46%; min-height: 0; }
 .maniglia { border: 0; background: transparent; cursor: pointer; padding: 10px 0 8px; display: flex; flex-direction: column; gap: 6px; text-align: left; width: 100%; }
-.maniglia::before { content: ""; align-self: center; width: 38px; height: 4px; border-radius: 4px; background: var(--line); }
+.maniglia::before { display: none; }
+.pannello::before { content: ""; align-self: center; flex: none; width: 38px; height: 4px; border-radius: 4px; background: var(--line); margin-top: 8px; }
+.pannello .tendenza { margin-top: 8px; }
 .maniglia h2 { margin: 0; font: 600 1.05rem/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .05em; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .maniglia h2 span { color: var(--muted); font-weight: 500; text-transform: none; letter-spacing: 0; font-family: var(--f-body); font-size: .85rem; text-align: right; }
 .lista { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
@@ -738,7 +763,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   .pannello, .pannello.chiuso { flex: 1; width: auto; margin: 0; max-height: none; box-shadow: none; border-radius: 0; background: transparent; padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 12px); }
   .pannello.chiuso .lista, .pannello.chiuso .fonte { display: block; }
   .maniglia { cursor: default; padding-top: 0; }
-  .maniglia::before { display: none; }
+  .pannello::before { display: none; }
+  .pannello .tendenza { margin-top: 0; }
   .maniglia h2 { flex-direction: column; align-items: flex-start; gap: 2px; }
   .maniglia h2 span { text-align: left; }
   .riga { flex-wrap: wrap; }
@@ -853,11 +879,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 </div>
 
 <section class="pannello chiuso" id="pannello">
+  <div class="tendenza" id="tendenza" hidden></div>
   <button class="maniglia" id="maniglia" type="button" aria-expanded="false" aria-controls="lista">
     <h2>I più economici in zona <span id="conteggio">Caricamento…</span></h2>
   </button>
   <ol class="lista" id="lista"></ol>
-  <div class="fonte">Dati: Ministero delle Imprese e del Made in Italy — Osservatorio Prezzi Carburanti (IODL 2.0), prezzi in vigore alle 8 del <span id="data">–</span>. Frecce: ultima variazione rispetto al prezzo precedente.</div>
+  <div class="fonte">Dati: Ministero delle Imprese e del Made in Italy — Osservatorio Prezzi Carburanti (IODL 2.0), prezzi in vigore alle 8 del <span id="data">–</span>. ▲▼ accanto a un prezzo: ultima variazione di quel distributore, negli ultimi 7 giorni.</div>
 </section>
 </aside>
 
@@ -909,6 +936,8 @@ function freccia(delta) {
 // Un prezzo è "da verificare" se è molto sotto la media della provincia (segnato dallo script)
 // oppure se il gestore non lo aggiorna da più di 8 giorni.
 const MAX_GIORNI = 8;
+const PROVINCE = {"AG": "Agrigento", "AL": "Alessandria", "AN": "Ancona", "AO": "Aosta", "AP": "Ascoli Piceno", "AQ": "L'Aquila", "AR": "Arezzo", "AT": "Asti", "AV": "Avellino", "BA": "Bari", "BG": "Bergamo", "BI": "Biella", "BL": "Belluno", "BN": "Benevento", "BO": "Bologna", "BR": "Brindisi", "BS": "Brescia", "BT": "Barletta-Andria-Trani", "BZ": "Bolzano", "CA": "Cagliari", "CB": "Campobasso", "CE": "Caserta", "CH": "Chieti", "CL": "Caltanissetta", "CN": "Cuneo", "CO": "Como", "CR": "Cremona", "CS": "Cosenza", "CT": "Catania", "CZ": "Catanzaro", "EN": "Enna", "FC": "Forlì-Cesena", "FE": "Ferrara", "FG": "Foggia", "FI": "Firenze", "FM": "Fermo", "FR": "Frosinone", "GE": "Genova", "GO": "Gorizia", "GR": "Grosseto", "IM": "Imperia", "IS": "Isernia", "KR": "Crotone", "LC": "Lecco", "LE": "Lecce", "LI": "Livorno", "LO": "Lodi", "LT": "Latina", "LU": "Lucca", "MB": "Monza e Brianza", "MC": "Macerata", "ME": "Messina", "MI": "Milano", "MN": "Mantova", "MO": "Modena", "MS": "Massa-Carrara", "MT": "Matera", "NA": "Napoli", "NO": "Novara", "NU": "Nuoro", "OR": "Oristano", "PA": "Palermo", "PC": "Piacenza", "PD": "Padova", "PE": "Pescara", "PG": "Perugia", "PI": "Pisa", "PN": "Pordenone", "PO": "Prato", "PR": "Parma", "PT": "Pistoia", "PU": "Pesaro e Urbino", "PV": "Pavia", "PZ": "Potenza", "RA": "Ravenna", "RC": "Reggio Calabria", "RE": "Reggio Emilia", "RG": "Ragusa", "RI": "Rieti", "RM": "Roma", "RN": "Rimini", "RO": "Rovigo", "SA": "Salerno", "SI": "Siena", "SO": "Sondrio", "SP": "La Spezia", "SR": "Siracusa", "SS": "Sassari", "SU": "Sud Sardegna", "SV": "Savona", "TA": "Taranto", "TE": "Teramo", "TN": "Trento", "TO": "Torino", "TP": "Trapani", "TR": "Terni", "TS": "Trieste", "TV": "Treviso", "UD": "Udine", "VA": "Varese", "VB": "Verbano-Cusio-Ossola", "VC": "Vercelli", "VE": "Venezia", "VI": "Vicenza", "VR": "Verona", "VT": "Viterbo", "VV": "Vibo Valentia"};
+const GIORNI_FRECCIA = 7;   // la freccia sul segnaposto compare solo per variazioni recenti
 function giorniDa(s) { return Math.round((Date.parse(stato.aggiornato) - Date.parse(s)) / 864e5); }
 function motivoDubbio(v) {
   if (!v) return "";
@@ -929,7 +958,9 @@ function fascia(p) { const [lo, hi] = stato.soglie[stato.carb]; return p <= lo ?
 function iconaPrezzo(i) {
   const [p, d] = i.prezzi[stato.carb];
   if (!affidabile(i)) return L.divIcon({ className: "", iconSize: null, html: `<div class="pin dubbio" title="Prezzo da verificare">${euro(p)}?</div>` });
-  return L.divIcon({ className: "", iconSize: null, html: `<div class="pin ${fascia(p)}">${euro(p)}${freccia(d)}</div>` });
+  const dal = i.prezzi[stato.carb][2];
+  const recente = d && dal && giorniDa(dal) <= GIORNI_FRECCIA;
+  return L.divIcon({ className: "", iconSize: null, html: `<div class="pin ${fascia(p)}">${euro(p)}${recente ? freccia(d) : ""}</div>` });
 }
 
 function iconaGruppo(gruppo) {
@@ -944,7 +975,7 @@ function iconaGruppo(gruppo) {
 function scheda(i) {
   const righe = Object.keys(NOMI).filter((c) => i.prezzi[c]).map((c) => {
     const [p, d, dal, com] = i.prezzi[c];
-    const v = d ? `${freccia(d)} ${d > 0 ? "+" : "−"}${cent(d)} cent dal ${dataIt(dal)}` : "invariato";
+    const v = variazione(d, dal, true);
     const dubbio = motivoDubbio(i.prezzi[c]);
     return `<tr class="${c === stato.carb ? "scelto" : ""}${dubbio ? " dubbio" : ""}"><td>${NOMI[c]}</td>
       <td><div class="p">${euro(p)} €</div><div class="var">${v}</div><div class="var">comunicato il ${dataIt(com)}</div>
@@ -954,6 +985,7 @@ function scheda(i) {
   return `<div class="scheda"><h3>${esc(i.bandiera || i.nome)}</h3>
     <div class="dove">${esc(i.indirizzo)}, ${esc(i.comune)} (${esc(i.provincia)})</div>
     <table>${righe}</table>
+    ${zonaTesto(i.provincia)}
     ${i.autostrada ? '<div class="nota">Impianto autostradale.</div>' : ""}
     <div class="azioni"><a href="${dest}" target="_blank" rel="noopener">Portami qui</a></div></div>`;
 }
@@ -1011,7 +1043,7 @@ function aggiornaLista() {
   if (!visibili.length) { lista.innerHTML = '<li class="vuoto">Nessun distributore con questo carburante qui.</li>'; return; }
   lista.innerHTML = visibili.slice(0, MQ_LATO.matches ? 50 : 20).map((i, n) => {
     const [p, d, dal] = i.prezzi[stato.carb];
-    const v = d ? `${freccia(d)} ${cent(d)} cent · ${dataIt(dal)}` : "invariato";
+    const v = variazione(d, dal, false);
     return `<li><button type="button" data-n="${n}"><span class="nome">${esc(i.bandiera || i.nome)}</span>
       <span class="prezzo">${euro(p)}<small>${v}</small></span>
       <span class="dove">${esc(i.indirizzo)}, ${esc(i.comune)}</span></button></li>`;
@@ -1084,13 +1116,80 @@ function aggiornaZona() {
     <div class="largo">${ok.length} prezzi affidabili${qui.length > ok.length ? `, ${qui.length - ok.length} da verificare esclusi` : ""}. Tra il più economico e il più caro ci sono ${cent(ok[ok.length - 1] - ok[0])} cent al litro: ${((ok[ok.length - 1] - ok[0]) * 50).toFixed(2).replace(".", ",")} € su un pieno da 50 litri.</div>`;
 }
 
+// --- variazione del singolo distributore, in parole ---
+function variazione(d, dal, lunga) {
+  if (!d) return lunga ? "prezzo invariato negli ultimi giorni" : "invariato";
+  const verso = d > 0 ? "su" : "giu";
+  const quando = `il ${dataIt(dal)}`;   // data dei prezzi in cui compare per la prima volta il nuovo valore
+  const testo = lunga ? `${d > 0 ? "Salito" : "Sceso"} di ${cent(d)} cent ${quando}` : `${d > 0 ? "+" : "−"}${cent(d)} cent ${quando}`;
+  return `<span class="var-${verso}">${freccia(d)} ${testo}</span>`;
+}
+
+// --- tendenza della zona: dove stanno andando i prezzi medi ---
+function zonaCorrente() {
+  if (mappa.getZoom() < 9) return "IT";
+  const c = mappa.getCenter(); let best = null, dist = Infinity;
+  for (const i of stato.impianti) {
+    const dd = (i.lat - c.lat) ** 2 + (i.lon - c.lng) ** 2;
+    if (dd < dist) { dist = dd; best = i; }
+  }
+  return best && stato.medie?.tendenze?.[best.provincia] ? best.provincia : "IT";
+}
+function nomeZona(z) { return z === "IT" ? "in Italia" : `in provincia di ${PROVINCE[z] || z}`; }
+const CONSIGLI = { su: "Meglio fare il pieno adesso", giu: "Se puoi, aspetta qualche giorno", stabile: "Nessuna fretta: i prezzi sono fermi" };
+const TITOLI = { su: "in aumento", giu: "in calo", stabile: "stabile" };
+
+function aggiornaTendenza() {
+  const box = $("tendenza"), c = stato.carb, z = zonaCorrente();
+  const t = stato.medie?.tendenze?.[z]?.[c] || stato.medie?.tendenze?.IT?.[c];
+  if (!t) { box.hidden = true; return; }
+  const [media, , d3, dir] = t;
+  box.className = `tendenza ${dir}`; box.hidden = false;
+  const segno = dir === "su" ? "↑" : dir === "giu" ? "↓" : "→";
+  const numeri = dir === "stabile" ? `media ${euro(media)} €, quasi ferma negli ultimi 3 giorni`
+    : `${d3 > 0 ? "+" : "−"}${cent(d3)} cent in 3 giorni · media ${euro(media)} €`;
+  box.innerHTML = `<div class="segno" aria-hidden="true">${segno}</div>
+    <div class="testo"><span class="titolo">${NOMI[c]} ${TITOLI[dir]}</span>
+      <span class="dove">${nomeZona(z === "IT" || stato.medie.tendenze[z]?.[c] ? z : "IT")}</span>
+      <span class="numeri">${numeri}</span></div>
+    <button type="button" class="info" id="tendenzaInfo" aria-label="Come funziona la tendenza">?</button>
+    <div class="consiglio">${CONSIGLI[dir]}</div>`;
+  $("tendenzaInfo").addEventListener("click", spiegaTendenza);
+}
+
+function zonaTesto(prov) {
+  const t = stato.medie?.tendenze?.[prov]?.[stato.carb];
+  if (!t) return "";
+  const [, , d3, dir] = t;
+  const frase = dir === "stabile" ? "prezzi medi stabili" : `prezzi medi ${TITOLI[dir]} (${d3 > 0 ? "+" : "−"}${cent(d3)} cent in 3 giorni)`;
+  return `<div class="zona-t">${NOMI[stato.carb]} ${nomeZona(prov)}: <span class="${dir === "stabile" ? "" : "var-" + dir}">${frase}</span></div>`;
+}
+
+function spiegaTendenza() {
+  const a = stato.medie?.affidabilita || {};
+  const el = document.createElement("div");
+  el.className = "guida"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
+  el.innerHTML = `<div><h2>Come leggere i prezzi</h2>
+    <ol>
+      <li><b>La tendenza</b> (il riquadro colorato) dice dove si sono mossi i prezzi medi della zona negli ultimi 3 giorni. I distributori cambiano prezzo un po' alla volta, quindi di solito la direzione continua anche nei giorni successivi.</li>
+      <li><b>Le frecce ▲▼ sui singoli prezzi</b> mostrano l'ultima variazione di quel distributore, già avvenuta, se è successa negli ultimi ${GIORNI_FRECCIA} giorni.</li>
+    </ol>
+    ${a.percentuale != null ? `<p><span class="affid">${a.percentuale}%</span><br>Negli ultimi ${a.giorni} giorni, quando la media di una zona si è mossa in una direzione, nei ${a.orizzonte} giorni successivi ha continuato così ${a.percentuale} volte su 100 (${a.casi.toLocaleString("it-IT")} casi verificati).</p>` : ""}
+    <p class="nota">È una tendenza calcolata sui dati del Ministero, non una garanzia: sbaglia soprattutto quando i prezzi cambiano direzione. La percentuale si aggiorna ogni giorno con i dati nuovi.</p>
+    <button type="button">Ho capito</button></div>`;
+  el.addEventListener("click", (e) => { if (e.target === el || e.target.tagName === "BUTTON") el.remove(); });
+  document.body.appendChild(el);
+  el.querySelector("button").focus();
+}
+
 function aggiornaMedie() {
   if (!stato.medie) return;
   const s = stato.medie.nazionale, oggi = s[s.length - 1], ieri = s[s.length - 2] || {};
   document.querySelectorAll("#carburanti button").forEach((b) => {
     const c = b.dataset.c, p = oggi[c];
-    const d = p && ieri[c] ? p - ieri[c] : 0;
-    b.querySelector("small").innerHTML = p ? `media ${euro(p)}${Math.abs(d) >= .0005 ? " " + freccia(d) : ""}` : "–";
+    const t = stato.medie.tendenze?.IT?.[c];
+    const d = t && t[3] !== "stabile" ? t[2] : 0;
+    b.querySelector("small").innerHTML = p ? `media ${euro(p)}${d ? " " + freccia(d) : ""}` : "–";
   });
 }
 
@@ -1099,6 +1198,7 @@ function scegliCarburante(c) {
   document.querySelectorAll("#carburanti button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.c === c));
   disegna();
   aggiornaZona();
+  aggiornaTendenza();
 }
 
 $("carburanti").addEventListener("click", (e) => {
@@ -1108,7 +1208,7 @@ $("maniglia").addEventListener("click", () => {
   const p = $("pannello"); const chiuso = p.classList.toggle("chiuso");
   $("maniglia").setAttribute("aria-expanded", !chiuso);
 });
-mappa.on("moveend", () => { aggiornaLista(); aggiornaZona(); });
+mappa.on("moveend", () => { aggiornaLista(); aggiornaZona(); aggiornaTendenza(); });
 new ResizeObserver(() => mappa.invalidateSize()).observe($("mappa"));
 MQ_LATO.addEventListener("change", aggiornaLista);
 MQ_LARGO.addEventListener("change", () => { disegnaAndamento(); aggiornaZona(); });
