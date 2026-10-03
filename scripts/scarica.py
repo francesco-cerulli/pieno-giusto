@@ -10,7 +10,7 @@ import sys
 import urllib.request
 
 from comune import (RAW, URL_ANAGRAFICA, URL_PREZZI, data_estrazione,
-                    percorso_prezzi, scrivi_gz)
+                    leggi_gz, percorso_prezzi, scrivi_gz)
 
 
 def scarica(url: str) -> str:
@@ -41,8 +41,12 @@ def main():
 
     anagrafica = scarica(URL_ANAGRAFICA)
     data_estrazione(anagrafica)  # controllo formato
-    scrivi_gz(RAW / "anagrafica.csv.gz", anagrafica)
-    print("Anagrafica aggiornata.")
+    file_ana = RAW / "anagrafica.csv.gz"
+    if file_ana.exists() and leggi_gz(file_ana) == anagrafica:
+        print("Anagrafica invariata.")
+    else:
+        scrivi_gz(file_ana, anagrafica)
+        print("Anagrafica aggiornata.")
 
 
 if __name__ == "__main__":

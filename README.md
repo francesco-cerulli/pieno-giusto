@@ -41,7 +41,7 @@ Serve solo Python 3.10+, nessuna libreria da installare.
 4. **Settings → Actions → General → Workflow permissions**: seleziona "Read and write permissions".
    Serve per permettere all'aggiornamento automatico di salvare i dati.
 5. **Actions → Aggiorna prezzi carburanti → Run workflow**: lo lanci a mano una volta per verificare
-   che funzioni. Da lì in poi parte da solo alle 9:10 e alle 13:10.
+   che funzioni. Da lì in poi parte da solo ogni ora dalle 8:10 alle 20:10 e salva solo quando ci sono dati nuovi.
 
 ## Provarlo sul computer
 

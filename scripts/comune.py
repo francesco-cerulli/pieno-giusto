@@ -38,9 +38,12 @@ def leggi_gz(percorso: Path) -> str:
 
 
 def scrivi_gz(percorso: Path, testo: str):
+    """Scrive il file compresso senza data interna (mtime=0): stesso contenuto = stesso file,
+    così git non vede modifiche quando i dati non sono cambiati."""
     percorso.parent.mkdir(parents=True, exist_ok=True)
-    with gzip.open(percorso, "wt", encoding="utf-8") as f:
-        f.write(testo)
+    with open(percorso, "wb") as grezzo:
+        with gzip.GzipFile(fileobj=grezzo, mode="wb", mtime=0) as f:
+            f.write(testo.encode("utf-8"))
 
 
 def percorso_prezzi(giorno: str) -> Path:
