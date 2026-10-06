@@ -1,0 +1,17 @@
+# Generato dal workflow "Pubblica avvisi": l'id dell'archivio KV viene inserito al momento della pubblicazione
+name = "pumpy-avvisi"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+[vars]
+ORIGINE = "https://francesco-cerulli.github.io"
+PERCORSO = "/pieno-giusto/"
+
+[[kv_namespaces]]
+binding = "ISCRITTI"
+id = "__KV_ID__"
+
+# ogni ora al minuto 17: appena il sito ha i prezzi nuovi, parte il controllo (una volta al giorno)
+[triggers]
+crons = ["17 * * * *"]

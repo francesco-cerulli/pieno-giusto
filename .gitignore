@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
 .DS_Store
+avvisi/node_modules/
+avvisi/wrangler.toml
+avvisi/.wrangler/

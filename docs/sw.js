@@ -1,6 +1,6 @@
 // Service worker: rete prima di tutto (così i prezzi sono sempre quelli nuovi),
 // copia salvata come riserva quando manca la connessione.
-const CACHE = "pumpy-v21";
+const CACHE = "pumpy-v22";
 const BASE = ["./", "index.html", "manifest.webmanifest", "icone/icona-192.png", "icone/icona-512.png"];
 
 self.addEventListener("install", (e) => {
@@ -23,4 +23,22 @@ self.addEventListener("fetch", (e) => {
       return r;
     }).catch(() => caches.match(e.request, { ignoreSearch: true }))
   );
+});
+
+// --- Avvisi: notifiche mandate dal servizio Pumpy (al massimo una al giorno) ---
+self.addEventListener("push", (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch { d = { title: "Pumpy", body: e.data && e.data.text() }; }
+  e.waitUntil(self.registration.showNotification(d.title || "Pumpy", {
+    body: d.body || "", icon: "icone/icona-192.png", badge: "icone/badge-96.png",
+    tag: d.tag || "pumpy", renotify: false, data: { url: new URL(d.url || "./", self.registration.scope).href },
+  }));
+});
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const url = e.notification.data && e.notification.data.url || self.registration.scope;
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((finestre) => {
+    for (const f of finestre) if (f.url.startsWith(self.registration.scope) && "focus" in f) return f.navigate(url).then((c) => (c || f).focus());
+    return self.clients.openWindow(url);
+  }));
 });

@@ -1300,6 +1300,38 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 .v-perche2 { margin: 0; font-size: .8rem; color: var(--fg); }
 .v-quando { font-weight: 600; }
 .v-quando b { font-weight: 800; }
+
+/* preferite */
+.det-testa { align-items: flex-start; }
+.det-nome { flex: 1; min-width: 0; }
+.stella-btn { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--surface-2); display: grid; place-items: center; cursor: pointer; }
+.stella-btn svg { width: 22px; height: 22px; fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-linejoin: round; transition: transform .2s; }
+.stella-btn[aria-pressed="true"] { background: #fff4d6; }
+.stella-btn[aria-pressed="true"] svg { fill: #f5b301; stroke: #d99a00; transform: scale(1.08); }
+.pin .stella { width: 13px; height: 13px; fill: #f5b301; margin-right: 2px; }
+.pin.preferito { box-shadow: inset 0 0 0 2px #f5b301, 0 2px 8px rgb(11 31 23 / .16); }
+.pin.top .stella { fill: #ffe08a; }
+.tue { margin: 0 0 12px; padding: 12px 12px 6px; border-radius: 18px; background: var(--surface-2); }
+.tue[hidden] { display: none; }
+.t-testa { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.t-testa h2 { margin: 0; font: 700 1rem/1.2 var(--f-display); }
+.t-avvisi { border: 0; border-radius: 999px; padding: 7px 12px; font-weight: 700; font-size: .8rem; cursor: pointer; background: var(--fg); color: var(--surface); min-height: 34px; }
+.t-avvisi[aria-pressed="true"] { background: var(--mint); color: var(--down); }
+.t-lista { list-style: none; margin: 0; padding: 0; }
+.t-lista li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; border-top: 1px solid var(--line); }
+.t-lista li:first-child { border-top: 0; }
+.t-riga { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 8px; align-items: center; border: 0; background: none; text-align: left; padding: 9px 2px; cursor: pointer; }
+.t-stella svg { width: 16px; height: 16px; fill: #f5b301; }
+.t-nome { font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.t-nome small { display: block; font-weight: 400; font-size: .76rem; color: var(--muted); }
+.t-dir.giu { color: var(--down); font-weight: 600; } .t-dir.su { color: var(--up); font-weight: 600; }
+.t-prezzo { font: 800 1.15rem/1 var(--f-display); text-align: right; }
+.t-prezzo small { display: block; font: 600 .7rem var(--f-body); }
+.toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 24px); transform: translate(-50%, 140%); z-index: 3500;
+  background: var(--fg); color: var(--surface); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: .88rem; transition: transform .25s ease; pointer-events: none; }
+.toast.su { transform: translate(-50%, 0); }
+.pannello.con-dettaglio:not(.chiuso) .espanso, .pannello.con-dettaglio .verdetto, .pannello.con-dettaglio .consigliato { display: none !important; }
+.toast { white-space: nowrap; }
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1389,6 +1421,7 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
   <div class="pos-stato" id="posStato" hidden></div>
   <button class="vedi-tutti" id="maniglia" type="button" aria-expanded="true" hidden><span id="vediTesto"></span></button>
   <div class="espanso" id="espanso">
+    <section class="tue" id="tue" hidden aria-label="Le tue pompe"></section>
     <figure class="andamento" id="andamento" hidden></figure>
     <div class="intesta">
       <div class="titoli"><h2 id="titoloLista">Vicino a te</h2><span id="conteggio"></span></div>
@@ -1540,11 +1573,11 @@ const testoKm = (d) => d < 1 ? `${Math.round(d * 1000 / 50) * 50} m` : `${d.toFi
 // --- segnaposti: solo i distributori dell'area inquadrata; da lontano, le medie per provincia ---
 function iconaPrezzo(i) {
   const [p, d] = i.prezzi[stato.carb];
-  const sel = (stato.sel === i ? " scelto" : "") + (stato.migliore === i ? " top" : "");
+  const sel = (stato.sel === i ? " scelto" : "") + (stato.migliore === i ? " top" : "") + (preferita(i) ? " preferito" : "");
   if (!affidabile(i)) return L.divIcon({ className: "", iconSize: null, html: `<div class="pin dubbio${sel}" title="Prezzo da verificare">${euro(p)}?</div>` });
   const dal = i.prezzi[stato.carb][2];
   const recente = d && dal && giorniDa(dal) <= GIORNI_FRECCIA;
-  const stella = stato.migliore === i ? '<svg class="stella" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>' : "";
+  const stella = preferita(i) ? '<svg class="stella" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>' : "";
   return L.divIcon({ className: "", iconSize: null, html: `<div class="pin ${fascia(p)}${sel}">${stella}${euro(p)}${recente ? freccia(d) : ""}</div>` });
 }
 
@@ -1570,15 +1603,16 @@ function disegna() {
   let qui = stato.impianti.filter((i) => i.prezzi[c] && b.contains([i.lat, i.lon]));
   if (qui.length > MAX_SEGNAPOSTI) qui = qui.map((i) => [km(cc, i), i]).sort((x, y) => x[0] - y[0]).slice(0, MAX_SEGNAPOSTI).map((x) => x[1]);
   if (stato.sel && stato.sel.prezzi[c] && !qui.includes(stato.sel)) qui.push(stato.sel);
+  for (const f of stato.preferiti) { const i = stato.perId.get(f.id); if (i && i.prezzi[c] && !qui.includes(i) && b.contains([i.lat, i.lon])) qui.push(i); }
   const locali = qui.filter((i) => affidabile(i) && !i.autostrada).map((i) => i.prezzi[c][0]).sort((x, y) => x - y);
   stato.soglieLocali = locali.length >= 8 ? [locali[Math.floor(locali.length * .25)], locali[Math.floor(locali.length * .75)]] : null;
   // ordine di priorità: la pompa aperta, poi i prezzi affidabili dal più basso, infine quelli da verificare
-  const peso = (i) => (stato.sel === i ? -2e3 : 0) + (stato.migliore === i ? -1e3 : 0) + (affidabile(i) ? 0 : 1e3) + i.prezzi[c][0];
+  const peso = (i) => (stato.sel === i ? -3e3 : 0) + (stato.migliore === i ? -2e3 : 0) + (preferita(i) ? -1e3 : 0) + (affidabile(i) ? 0 : 1e3) + i.prezzi[c][0];
   qui.sort((a, b2) => peso(a) - peso(b2));
   for (const i of qui) {
     const m = L.marker([i.lat, i.lon], { icon: iconaPrezzo(i), title: i.bandiera || i.nome, zIndexOffset: stato.sel === i ? 900 : 0 });
     m.on("click", () => seleziona(i));
-    m.largo = stato.migliore === i ? 84 : 66; m.sempre = stato.sel === i || stato.migliore === i;
+    m.largo = stato.migliore === i || preferita(i) ? 84 : 66; m.sempre = stato.sel === i || stato.migliore === i || preferita(i);
     candidati.push(m);
   }
   piazza(candidati);
@@ -1733,6 +1767,109 @@ function sceltaNavigatore(i) {
 }
 const attrNav = (i) => { const h = linkNav(i); return h.startsWith("geo:") ? `href="${h}"` : `href="${h}" target="_blank" rel="noopener"`; };
 
+// --- Le tue pompe: preferite salvate sul telefono (nessun account) ---
+const ICONA_STELLA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';
+stato.preferiti = (() => { try { return JSON.parse(localStorage.getItem("preferiti")) || []; } catch { return []; } })();
+function preferita(i) { return !!i && stato.preferiti.some((f) => f.id === i.id); }
+function cambiaPreferita(i) {
+  const ora = !preferita(i);
+  if (ora) stato.preferiti.push({ id: i.id, lat: i.lat, lon: i.lon, prov: i.provincia, nome: i.bandiera || i.nome });
+  else stato.preferiti = stato.preferiti.filter((f) => f.id !== i.id);
+  try { localStorage.setItem("preferiti", JSON.stringify(stato.preferiti)); } catch {}
+  disegna(); disegnaTue(); aggiornaIscrizione();
+  return ora;
+}
+function avvisoBreve(testo) {
+  let t = document.getElementById("toast");
+  if (!t) { t = document.createElement("div"); t.id = "toast"; t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+  t.textContent = testo; t.classList.add("su"); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("su"), 1800);
+}
+function disegnaTue() {
+  const box = $("tue"), c = stato.carb;
+  if (!stato.preferiti.length) { box.hidden = true; return; }
+  box.hidden = false;
+  const righe = stato.preferiti.map((f) => {
+    const i = stato.perId.get(f.id), v = i?.prezzi[c];
+    const dir = stato.medie?.tendenze?.[f.prov]?.[c]?.[3];
+    const freccia = dir === "giu" ? "↓" : dir === "su" ? "↑" : "→";
+    return `<li><button type="button" class="t-riga" data-id="${f.id}">
+        <span class="t-stella" aria-hidden="true">${ICONA_STELLA}</span>
+        <span class="t-nome">${esc(f.nome)}<small>${i ? esc(i.comune) : "caricamento…"}${dir ? ` · <span class="t-dir ${dir}">${freccia} ${TITOLI[dir]}</span>` : ""}</small></span>
+        <span class="t-prezzo">${v ? euro(v[0]) : "–"}${v && v[1] && giorniDa(v[2]) <= GIORNI_FRECCIA ? `<small class="${v[1] > 0 ? "var-su" : "var-giu"}">${v[1] > 0 ? "+" : "−"}${cent(v[1])}</small>` : ""}</span>
+      </button>${i ? `<a class="nav-veloce" ${attrNav(i)} aria-label="Portami a ${esc(f.nome)}">${ICONA_NAV}</a>` : ""}</li>`;
+  }).join("");
+  box.innerHTML = `<div class="t-testa"><h2>Le tue pompe</h2>
+      ${AVVISI.url ? `<button type="button" class="t-avvisi" id="tAvvisi" aria-pressed="${avvisiAttivi()}">${avvisiAttivi() ? "🔔 Avvisi attivi" : "🔔 Avvisami"}</button>` : ""}</div>
+    <ol class="t-lista">${righe}</ol>`;
+  box.querySelectorAll(".t-riga").forEach((b) => b.addEventListener("click", () => {
+    const i = stato.perId.get(+b.dataset.id); if (i) seleziona(i);
+  }));
+  $("tAvvisi")?.addEventListener("click", () => (avvisiAttivi() ? spegniAvvisi() : accendiAvvisi()));
+}
+
+// --- Avvisi sul telefono (Web Push tramite il servizio su Cloudflare) ---
+const AVVISI = { url: null };
+fetch("avvisi.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : null)).then((c) => { if (c?.url) { AVVISI.url = c.url.replace(/\/$/, ""); disegnaTue(); } }).catch(() => {});
+function avvisiAttivi() { try { return localStorage.getItem("avvisi") === "1"; } catch { return false; } }
+function b64uInByte(s) {
+  const b = atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4));
+  return Uint8Array.from(b, (ch) => ch.charCodeAt(0));
+}
+async function abbonamento(crea) {
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub && crea) {
+    const { chiave } = await (await fetch(`${AVVISI.url}/chiave`)).json();
+    sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uInByte(chiave) });
+  }
+  return sub;
+}
+async function accendiAvvisi() {
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if (IOS && !standalone) { guidaAvvisiIphone(); return; }
+  if (!("Notification" in window) || !("PushManager" in window)) { avvisoBreve("Questo browser non supporta gli avvisi"); return; }
+  const permesso = await Notification.requestPermission();
+  if (permesso !== "granted") { avvisoBreve("Avvisi non consentiti dal telefono"); return; }
+  try {
+    const sub = await abbonamento(true);
+    await fetch(`${AVVISI.url}/iscrivi`, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ abbonamento: sub.toJSON(), preferiti: stato.preferiti, carb: stato.carb }) });
+    try { localStorage.setItem("avvisi", "1"); } catch {}
+    disegnaTue();
+    fetch(`${AVVISI.url}/prova`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ endpoint: sub.endpoint }) });
+  } catch (e) { console.error(e); avvisoBreve("Non riesco ad attivare gli avvisi, riprova"); }
+}
+async function spegniAvvisi() {
+  try {
+    const sub = await abbonamento(false);
+    if (sub) {
+      fetch(`${AVVISI.url}/disiscrivi`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ endpoint: sub.endpoint }) });
+      await sub.unsubscribe();
+    }
+  } catch {}
+  try { localStorage.removeItem("avvisi"); } catch {}
+  disegnaTue(); avvisoBreve("Avvisi spenti");
+}
+async function aggiornaIscrizione() {
+  if (!avvisiAttivi() || !AVVISI.url) return;
+  try {
+    const sub = await abbonamento(false); if (!sub) return;
+    await fetch(`${AVVISI.url}/iscrivi`, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ abbonamento: sub.toJSON(), preferiti: stato.preferiti, carb: stato.carb }) });
+  } catch {}
+}
+function guidaAvvisiIphone() {
+  const el = document.createElement("div");
+  el.className = "guida"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Avvisi su iPhone");
+  el.innerHTML = `<div><h2>Avvisi su iPhone</h2>
+    <p class="nota" style="color:var(--fg)">Su iPhone gli avvisi arrivano solo se Pumpy è sulla schermata Home.</p>
+    <ol><li>Tocca <b>Condividi</b> (il quadrato con la freccia) in Safari.</li><li>Scegli <b>Aggiungi alla schermata Home</b>.</li>
+      <li>Apri Pumpy dall'icona e tocca di nuovo <b>Avvisami</b>.</li></ol>
+    <button type="button">Ho capito</button></div>`;
+  el.addEventListener("click", (e) => { if (e.target === el || e.target.tagName === "BUTTON") el.remove(); });
+  document.body.appendChild(el); el.querySelector("button").focus();
+}
+
 // --- dettaglio del distributore, nel pannello: prezzo, storico da leggere col dito, navigazione ---
 const storici = new Map();
 function caricaStorico(prov) {
@@ -1782,7 +1919,8 @@ async function disegnaDettaglio() {
   const dist = stato.pos ? ` · ${testoKm(km(stato.pos, i))} da te` : "";
   $("dettaglio").innerHTML = `<div class="det-testa">
       <button type="button" class="indietro" id="chiudiDettaglio" aria-label="Torna alla lista"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-      <div><h3>${esc(i.bandiera || i.nome)}</h3><p class="dove">${esc(i.indirizzo)}, ${esc(i.comune)}${dist}</p></div></div>
+      <div class="det-nome"><h3>${esc(i.bandiera || i.nome)}</h3><p class="dove">${esc(i.indirizzo)}, ${esc(i.comune)}${dist}</p></div>
+      <button type="button" class="stella-btn" id="stellaBtn" aria-pressed="${preferita(i)}" aria-label="${preferita(i) ? "Togli dalle tue pompe" : "Aggiungi alle tue pompe"}">${ICONA_STELLA}</button></div>
     <div class="altri" role="group" aria-label="Carburante">${altri}</div>
     <div class="grande"><span class="cifra${dubbio ? " dubbio" : ""}">${euro(p)}<small>€/l</small></span>${chip}</div>
     ${dubbio ? `<div class="attenzione">Da verificare. ${dubbio}</div>` : ""}
@@ -1791,6 +1929,12 @@ async function disegnaDettaglio() {
       <button type="button" class="cambia-nav" id="cambiaNav">Cambia app</button></div>
     <p class="puo-sbagliare">Pumpy può sbagliare: controlla sempre il prezzo alla pompa.</p>`;
   $("chiudiDettaglio").addEventListener("click", chiudiDettaglio);
+  $("stellaBtn").addEventListener("click", () => {
+    const ora = cambiaPreferita(i);
+    $("stellaBtn").setAttribute("aria-pressed", ora);
+    $("stellaBtn").setAttribute("aria-label", ora ? "Togli dalle tue pompe" : "Aggiungi alle tue pompe");
+    avvisoBreve(ora ? "Aggiunta alle tue pompe" : "Tolta dalle tue pompe");
+  });
   $("cambiaNav").addEventListener("click", () => sceltaNavigatore(i));
   $("dettaglio").querySelectorAll(".altri button").forEach((b) => b.addEventListener("click", () => { stato.detCarb = b.dataset.c; disegnaDettaglio(); }));
   const dati = await caricaStorico(i.provincia);
@@ -2095,7 +2239,8 @@ function scegliCarburante(c) {
   stato.carb = c; salvaPreferenza(c);
   document.querySelectorAll("#carburanti button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.c === c));
   if (stato.sel && stato.sel.prezzi[c]) { stato.detCarb = c; disegnaDettaglio(); }
-  stato.migliore = null; aggiornaLista(); disegna(); aggiornaZona(); aggiornaTendenza();
+  stato.migliore = null; aggiornaLista(); disegna(); aggiornaZona(); aggiornaTendenza(); disegnaTue();
+  aggiornaIscrizione();
 }
 
 // --- menu ☰ ---
@@ -2324,12 +2469,16 @@ function segnaData(aggiornato) {
   $("aggiornati").textContent = `Prezzi comunicati al Ministero, aggiornati al ${d}`;
 }
 // La prima volta che arrivano dei dati si disegna tutto; dopo basta ridisegnare
+function caricaPreferite() {
+  return Promise.all(stato.preferiti.map((f) => caricaVicino({ lat: f.lat, lon: f.lon }))).then(disegnaTue);
+}
 function dopoDati() {
   if (!stato.avviata) {
     stato.avviata = true;
     const pref = leggiPreferenza();
     scegliCarburante(NOMI[pref] ? pref : "benzina");
   } else { aggiornaLista(); disegna(); aggiornaTendenza(); }
+  disegnaTue();
 }
 const indiceCelle = fetch("data/celle.json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : null).catch(() => null);
 // Scarica le celle (0,5°) intorno a una posizione: pochi KB, i prezzi vicini compaiono subito
@@ -2401,6 +2550,15 @@ fetch("data/medie.json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : nu
   if (negata) { stato.posNegata = !ultimaPos; stato.posErrore = 1; caricaTutto(); aggiornaLista(); aggiornaStatoPos(); }
   if (primaVolta()) { caricaTutto(); benvenuto(negata); }   // prima spieghiamo, poi chiediamo la posizione
   else if (!negata) localizza(false);
+  setTimeout(caricaPreferite, 800);
+  const daAprire = +new URLSearchParams(location.search).get("pompa");
+  if (daAprire) {
+    history.replaceState(null, "", location.pathname);
+    const f = stato.preferiti.find((x) => x.id === daAprire);
+    const apri = () => { const i = stato.perId.get(daAprire); if (i) { chiudiPannello(); seleziona(i); return true; } return false; };
+    if (f) caricaVicino({ lat: f.lat, lon: f.lon }).then(() => { if (!apri()) caricaTutto().then(apri); });
+    else caricaTutto().then(apri);
+  }
   // il resto d'Italia arriva in sottofondo, senza rallentare i prezzi vicini
   setTimeout(caricaTutto, ultimaPos ? 2500 : 6000);
 })();
