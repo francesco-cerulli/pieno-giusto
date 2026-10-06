@@ -1133,6 +1133,21 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 .avatar.vecchia { opacity: .55; filter: grayscale(.6); }
 .avatar.vecchia .alone, .avatar.vecchia .etichetta { display: none; }
 .pannello:has(.senza-pos) .pos-stato { display: none; }
+
+/* pannello trascinabile: transizione morbida tra le tre posizioni, nessuna mentre il dito lo tiene */
+@media (max-width: 1023px) {
+  .pannello { transition: max-height .28s cubic-bezier(.22,1,.36,1); }
+  .pannello.trascino { transition: none; }
+  .presa, .tendenza, .intesta { touch-action: none; }
+  .presa { height: 26px; }
+  .pannello.ridotto .tendenza, .pannello.ridotto .lista, .pannello.ridotto .ordina,
+  .pannello.ridotto .aggiornati, .pannello.ridotto .pos-stato { display: none !important; }
+  .pannello.ridotto { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4px); }
+  .pannello.ridotto .intesta .maniglia { padding: 2px 0 8px; }
+}
+.intesta .maniglia h2 { flex-direction: column !important; align-items: flex-start !important; gap: 1px !important; }
+.intesta .maniglia h2 #titoloLista { white-space: nowrap; }
+.intesta .maniglia h2 #conteggio { font-size: .76rem; font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1460,7 +1475,8 @@ function aggiornaLista() {
   const media = righe.length ? righe.reduce((a, i) => a + i.prezzi[c][0], 0) / righe.length : 0;
   righe.sort(stato.ordine === "distanza" ? (a, b) => a._km - b._km : (a, b) => a.prezzi[c][0] - b.prezzi[c][0] || a._km - b._km);
   $("titoloLista").textContent = titolo;
-  $("conteggio").textContent = righe.length ? (vicinoATe ? `${righe.length} entro ${stato.raggio} km` : `${righe.length} distributori`) : "";
+  const piuBasso = righe.length ? Math.min(...righe.map((i) => i.prezzi[c][0])) : 0;
+  $("conteggio").textContent = righe.length ? `${vicinoATe ? `${righe.length} entro ${stato.raggio} km` : `${righe.length} distributori`} · da ${euro(piuBasso)}` : "";
   if (!righe.length) { lista.innerHTML = '<li class="vuoto">Nessun distributore con questo carburante qui. Prova ad allontanare la mappa.</li>'; return; }
   // un solo "Il più conveniente": a parità di prezzo vince il più vicino
   const migliore = righe.reduce((m, i) => (!m || i.prezzi[c][0] < m.prezzi[c][0] || (i.prezzi[c][0] === m.prezzi[c][0] && i._km < m._km) ? i : m), null);
@@ -1822,25 +1838,64 @@ $("carburanti").addEventListener("click", (e) => {
 });
 $("basi").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { scegliBase(b.dataset.b); chiudiMenu(); } });
 $("comeFunziona").addEventListener("click", () => { chiudiMenu(); spiegaTendenza(); });
-$("maniglia").addEventListener("click", () => {
-  const p = $("pannello"); const chiuso = p.classList.toggle("chiuso");
-  $("maniglia").setAttribute("aria-expanded", !chiuso);
-});
-function apriPannello() { $("pannello").classList.remove("chiuso"); $("maniglia").setAttribute("aria-expanded", true); }
-function chiudiPannello() { $("pannello").classList.add("chiuso"); $("maniglia").setAttribute("aria-expanded", false); }
+// --- pannello in basso (telefono): tre posizioni, si trascina col dito ---
+// "ridotto" = solo la riga del titolo · "chiuso" = anteprima con i 3 migliori · aperto = lista intera
+const POSIZIONI = ["ridotto", "chiuso", "aperto"];
+function posPannello() { const p = $("pannello"); return p.classList.contains("ridotto") ? "ridotto" : p.classList.contains("chiuso") ? "chiuso" : "aperto"; }
+function mettiPannello(k) {
+  const p = $("pannello");
+  p.classList.toggle("ridotto", k === "ridotto");
+  p.classList.toggle("chiuso", k !== "aperto");
+  $("maniglia").setAttribute("aria-expanded", k === "aperto");
+  if (k !== "aperto") $("lista").scrollTop = 0;
+  try { localStorage.setItem("pannello", k === "aperto" ? "chiuso" : k); } catch {}
+}
+function apriPannello() { mettiPannello("aperto"); }
+function chiudiPannello() { mettiPannello("chiuso"); }
+$("maniglia").addEventListener("click", () => mettiPannello(posPannello() === "aperto" ? "chiuso" : "aperto"));
+$("presa").addEventListener("click", () => { if (stato.sel) return; mettiPannello(posPannello() === "aperto" ? "chiuso" : "aperto"); });
+try { if (localStorage.getItem("pannello") === "ridotto") mettiPannello("ridotto"); } catch {}
 (() => {
-  let y0 = null;
-  const zona = [$("presa"), $("tendenza"), document.querySelector(".intesta")];
-  zona.forEach((el) => {
-    el.addEventListener("pointerdown", (e) => { if (!MQ_LATO.matches) y0 = e.clientY; });
-    el.addEventListener("pointerup", (e) => {
-      if (y0 == null) return;
-      const dy = e.clientY - y0; y0 = null;
-      if (dy < -25) apriPannello();
-      else if (dy > 25) { if (stato.sel) chiudiDettaglio(); else chiudiPannello(); }
-    });
-  });
-  $("presa").addEventListener("click", () => { if (stato.sel) return; $("pannello").classList.contains("chiuso") ? apriPannello() : chiudiPannello(); });
+  const p = $("pannello");
+  let y0 = null, h0 = 0, trascina = false, scorrevole = null, ultimo = 0, tUltimo = 0, vel = 0;
+  const fine = () => { p.style.height = ""; p.style.maxHeight = ""; p.classList.remove("trascino"); };
+  p.addEventListener("touchstart", (e) => {
+    if (MQ_LATO.matches || e.touches.length > 1) return;
+    y0 = e.touches[0].clientY; h0 = p.getBoundingClientRect().height; trascina = false; vel = 0;
+    ultimo = y0; tUltimo = e.timeStamp;
+    // dentro lista o scheda si trascina il pannello solo se sono già in cima e il dito va verso il basso
+    scorrevole = e.target.closest(".lista, .dettaglio");
+  }, { passive: true });
+  p.addEventListener("touchmove", (e) => {
+    if (y0 == null) return;
+    const y = e.touches[0].clientY, dy = y - y0;
+    if (!trascina) {
+      if (Math.abs(dy) < 8) return;
+      if (scorrevole && (scorrevole.scrollTop > 0 || dy < 0) && posPannello() === "aperto") { y0 = null; return; }
+      if (scorrevole && stato.sel && (scorrevole.scrollTop > 0 || dy < 0)) { y0 = null; return; }
+      trascina = true; p.classList.add("trascino");
+    }
+    e.preventDefault();
+    const max = innerHeight * .78, min = 64;
+    const h = Math.max(min, Math.min(max, h0 - dy));
+    p.style.maxHeight = "none"; p.style.height = h + "px";
+    vel = (y - ultimo) / Math.max(1, e.timeStamp - tUltimo); ultimo = y; tUltimo = e.timeStamp;
+  }, { passive: false });
+  const rilascia = () => {
+    if (y0 == null) return;
+    const dy = ultimo - y0; y0 = null;
+    if (!trascina) return;
+    fine();
+    // nella scheda: trascinare giù la chiude e torna alla lista
+    if (stato.sel) { if (dy > 70 || vel > .5) chiudiDettaglio(); return; }
+    let i = POSIZIONI.indexOf(posPannello());
+    const passi = Math.abs(dy) > 260 ? 2 : 1;
+    if (dy > 45 || vel > .45) i = Math.max(0, i - passi);
+    else if (dy < -45 || vel < -.45) i = Math.min(2, i + passi);
+    mettiPannello(POSIZIONI[i]);
+  };
+  p.addEventListener("touchend", rilascia);
+  p.addEventListener("touchcancel", () => { y0 = null; fine(); });
 })();
 
 let attesaMossa = null;
