@@ -41,23 +41,32 @@ jobs:
       - name: Archivio KV (crea se manca)
         working-directory: avvisi
         run: |
-          ID=$(npx wrangler kv namespace list 2>/dev/null | node -e '
+          set +e
+          LISTA=$(npx wrangler kv namespace list 2>&1)
+          echo "$LISTA"
+          ID=$(printf '%s' "$LISTA" | node -e '
             let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{
-              try{const l=JSON.parse(s.slice(s.indexOf("[")));const n=l.find(x=>x.title==="pumpy-avvisi-ISCRITTI"||x.title==="ISCRITTI"||x.title.endsWith("ISCRITTI"));console.log(n?n.id:"")}catch{console.log("")}})')
+              try{const l=JSON.parse(s.slice(s.indexOf("["), s.lastIndexOf("]")+1));const n=l.find(x=>/ISCRITTI$/.test(x.title));console.log(n?n.id:"")}catch{console.log("")}})')
           if [ -z "$ID" ]; then
             OUT=$(npx wrangler kv namespace create ISCRITTI 2>&1); echo "$OUT"
-            ID=$(echo "$OUT" | grep -oE '[0-9a-f]{32}' | head -1)
+            ID=$(printf '%s' "$OUT" | grep -oE '[0-9a-f]{32}' | head -1)
           fi
-          if [ -z "$ID" ]; then echo "::error::Non riesco a ottenere l'id dell'archivio KV"; exit 1; fi
+          if [ -z "$ID" ]; then
+            # i dettagli finiscono nelle annotazioni del run, leggibili anche senza i log completi
+            echo "::error title=KV lista::$(printf '%s' "$LISTA" | tr '\n' ' ' | cut -c1-600)"
+            echo "::error title=KV crea::$(printf '%s' "$OUT" | tr '\n' ' ' | cut -c1-600)"
+            exit 1
+          fi
           echo "Archivio KV: $ID"
           sed "s/__KV_ID__/$ID/" wrangler.template.toml > wrangler.toml
 
       - name: Pubblica il Worker
         working-directory: avvisi
         run: |
+          set +e
           OUT=$(npx wrangler deploy 2>&1); echo "$OUT"
-          URL=$(echo "$OUT" | grep -oE 'https://[a-z0-9.-]+\.workers\.dev' | head -1)
-          if [ -z "$URL" ]; then echo "::error::Indirizzo del Worker non trovato"; exit 1; fi
+          URL=$(printf '%s' "$OUT" | grep -oE 'https://[a-z0-9.-]+\.workers\.dev' | head -1)
+          if [ -z "$URL" ]; then echo "::error title=Pubblicazione::$(printf '%s' "$OUT" | tr '\n' ' ' | tail -c 900)"; exit 1; fi
           echo "URL=$URL" >> "$GITHUB_ENV"
 
       - name: Salva l'indirizzo per l'app
