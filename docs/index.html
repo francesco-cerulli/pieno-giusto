@@ -1295,7 +1295,7 @@ function iconaPrezzo(i) {
 
 function disegna() {
   stato.strato.clearLayers();
-  const c = stato.carb;
+  const c = stato.carb, candidati = [];
   if (mappa.getZoom() < ZOOM_PREZZI) {
     for (const [prov, centro] of stato.centri) {
       const p = stato.medie?.province?.[prov]?.[c];
@@ -1303,8 +1303,10 @@ function disegna() {
       const m = L.marker([centro.lat, centro.lon], { title: PROVINCE[prov] || prov, keyboard: true,
         icon: L.divIcon({ className: "", iconSize: null, html: `<div class="prov"><b>${prov}</b>${euro(p)}</div>` }) });
       m.on("click", () => mappa.setView([centro.lat, centro.lon], ZOOM_PREZZI + 1));
-      stato.strato.addLayer(m);
+      m.prezzo = p; m.largo = 86;
+      candidati.push(m);
     }
+    piazza(candidati.sort((a, b) => a.prezzo - b.prezzo));
     return;
   }
   const centro = mappa.getCenter(), cc = { lat: centro.lat, lon: centro.lng };
@@ -1312,9 +1314,25 @@ function disegna() {
   let qui = stato.impianti.filter((i) => i.prezzi[c] && b.contains([i.lat, i.lon]));
   if (qui.length > MAX_SEGNAPOSTI) qui = qui.map((i) => [km(cc, i), i]).sort((x, y) => x[0] - y[0]).slice(0, MAX_SEGNAPOSTI).map((x) => x[1]);
   if (stato.sel && stato.sel.prezzi[c] && !qui.includes(stato.sel)) qui.push(stato.sel);
+  // ordine di priorità: la pompa aperta, poi i prezzi affidabili dal più basso, infine quelli da verificare
+  const peso = (i) => (stato.sel === i ? -1e3 : 0) + (affidabile(i) ? 0 : 1e3) + i.prezzi[c][0];
+  qui.sort((a, b2) => peso(a) - peso(b2));
   for (const i of qui) {
     const m = L.marker([i.lat, i.lon], { icon: iconaPrezzo(i), title: i.bandiera || i.nome, zIndexOffset: stato.sel === i ? 900 : 0 });
     m.on("click", () => seleziona(i));
+    m.largo = 66; m.sempre = stato.sel === i;
+    candidati.push(m);
+  }
+  piazza(candidati);
+}
+// Mette i segnaposti in ordine e salta quelli che coprirebbero uno già piazzato (da zoom 16 si vedono tutti)
+function piazza(lista) {
+  const tutti = mappa.getZoom() >= 16, presi = [], H = 28;
+  for (const m of lista) {
+    const pt = mappa.latLngToContainerPoint(m.getLatLng()), w = m.largo;
+    const box = [pt.x - w / 2, pt.y - H / 2, pt.x + w / 2, pt.y + H / 2];
+    if (!tutti && !m.sempre && presi.some((b) => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1])) continue;
+    presi.push(box);
     stato.strato.addLayer(m);
   }
 }
@@ -1773,7 +1791,12 @@ carica();
   try { const p = await navigator.permissions?.query({ name: "geolocation" }); if (p && p.state === "denied") return; } catch {}
   localizza(false);
 })();
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator) {
+  const cera = !!navigator.serviceWorker.controller;
+  let ricaricata = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (cera && !ricaricata) { ricaricata = true; location.reload(); } });
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then((r) => r.update()).catch(() => {});
+}
 
 // --- installazione come app: una voce nel menu (solo su telefoni e tablet, non se è già installata) ---
 (() => {

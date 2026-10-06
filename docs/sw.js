@@ -1,6 +1,6 @@
 // Service worker: rete prima di tutto (così i prezzi sono sempre quelli nuovi),
 // copia salvata come riserva quando manca la connessione.
-const CACHE = "pumpy-v5";
+const CACHE = "pumpy-v6";
 const BASE = ["./", "index.html", "manifest.webmanifest", "icone/icona-192.png", "icone/icona-512.png"];
 
 self.addEventListener("install", (e) => {
@@ -16,7 +16,9 @@ self.addEventListener("fetch", (e) => {
   // solo i file del sito: mappe, font e librerie esterne restano alla cache del browser
   if (e.request.method !== "GET" || url.origin !== self.location.origin) return;
   e.respondWith(
-    fetch(e.request).then((r) => {
+    // no-cache: chiede sempre al server se c'è una versione nuova (niente copie vecchie della cache HTTP)
+    // (le richieste di pagina non si possono ricopiare con opzioni: si rifanno dall'indirizzo)
+    fetch(e.request.mode === "navigate" ? e.request.url : e.request, { cache: "no-cache" }).then((r) => {
       if (r.ok) { const copia = r.clone(); caches.open(CACHE).then((c) => c.put(e.request, copia)); }
       return r;
     }).catch(() => caches.match(e.request, { ignoreSearch: true }))
