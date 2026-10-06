@@ -1,6 +1,6 @@
 // Service worker: rete prima di tutto (così i prezzi sono sempre quelli nuovi),
 // copia salvata come riserva quando manca la connessione.
-const CACHE = "pumpy-v24";
+const CACHE = "pumpy-v25";
 const BASE = ["./", "index.html", "manifest.webmanifest", "icone/icona-192.png", "icone/icona-512.png"];
 
 self.addEventListener("install", (e) => {

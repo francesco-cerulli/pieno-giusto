@@ -1,0 +1,76 @@
+name: Mappa di base
+
+# Ritaglia l'Italia dalla mappa mondiale di Protomaps (dati OpenStreetMap) e la carica
+# sul contenitore Cloudflare R2 "pumpy-mappe" come un unico file: italia.pmtiles.
+# Gira a mano e una volta al mese, così strade e nomi restano aggiornati.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 3 3 * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mappa-di-base
+  cancel-in-progress: false
+
+jobs:
+  mappa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CONTENITORE: pumpy-mappe
+      # Italia con isole, San Marino e Vaticano (ovest, sud, est, nord)
+      RIQUADRO: "6.5,35.4,18.6,47.1"
+      ZOOM_MAX: "15"
+    steps:
+      - name: Controlla i segreti
+        run: |
+          if [ -z "$R2_ACCESS_KEY_ID" ] || [ -z "$R2_SECRET_ACCESS_KEY" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Mancano i segreti R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY o CLOUDFLARE_ACCOUNT_ID"; exit 1
+          fi
+
+      - name: Scarica lo strumento pmtiles
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          URL=$(curl -sSf -H "Authorization: Bearer $GH_TOKEN" https://api.github.com/repos/protomaps/go-pmtiles/releases/latest \
+            | jq -r '.assets[] | select(.name | test("Linux_x86_64\\.tar\\.gz$")) | .browser_download_url' | head -1)
+          echo "Strumento: $URL"
+          curl -sSfL "$URL" | tar xz pmtiles
+          ./pmtiles version || true
+
+      - name: Trova l'ultima mappa mondiale
+        run: |
+          set -e
+          NOME=$(curl -sSf https://build-metadata.protomaps.dev/builds.json | jq -r '[.[] | .key] | map(select(endswith(".pmtiles"))) | sort | last')
+          if [ -z "$NOME" ] || [ "$NOME" = "null" ]; then echo "::error::Elenco delle mappe Protomaps non leggibile"; exit 1; fi
+          echo "SORGENTE=https://build.protomaps.com/$NOME" >> "$GITHUB_ENV"
+          echo "Mappa mondiale: $NOME"
+
+      - name: Ritaglia l'Italia
+        run: |
+          ./pmtiles extract "$SORGENTE" italia.pmtiles --bbox="$RIQUADRO" --maxzoom="$ZOOM_MAX" --download-threads=8
+          ls -la italia.pmtiles
+          ./pmtiles show italia.pmtiles | head -30
+          echo "::notice title=Mappa::italia.pmtiles: $(du -h italia.pmtiles | cut -f1) da $SORGENTE"
+
+      - name: Carica su Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          # R2 non accetta i controlli di integrità aggiunti di default dalle versioni recenti di aws-cli
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+        run: |
+          aws s3 cp italia.pmtiles "s3://$CONTENITORE/italia.pmtiles" \
+            --endpoint-url "https://$CLOUDFLARE_ACCOUNT_ID.r2.cloudflarestorage.com" \
+            --content-type application/octet-stream \
+            --cache-control "public, max-age=86400" \
+            --only-show-errors
+          echo "::notice title=Caricata::italia.pmtiles è su R2 ($CONTENITORE)"

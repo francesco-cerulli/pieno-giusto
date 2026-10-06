@@ -1523,19 +1523,81 @@ const BASI = {
       { url: ESRI("World_Imagery"), attr: "Immagini &copy; Esri, Maxar, Earthstar Geographics" },
       { url: ESRI("Reference/World_Transportation"), attr: "" }] },
 };
+// Mappa vettoriale Pumpy: l'Italia in un unico file Protomaps (dati OpenStreetMap) sul nostro
+// contenitore Cloudflare R2, aggiornato ogni mese da .github/workflows/mappa.yml.
+// Vuoto, o file irraggiungibile: si torna agli sfondi Esri qui sopra. Il satellite resta Esri.
+const MAPPA_PMTILES = "";
+const ATTR_PROTO = '<a href="https://protomaps.com">Protomaps</a> ' + OSM;
+let vettoriale = null;   // promessa: true se libreria e file sono pronti
+function preparaVettoriale() {
+  if (!MAPPA_PMTILES) return Promise.resolve(false);
+  if (!vettoriale) {
+    const script = (src) => new Promise((ok, ko) => {
+      const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = ko; document.head.append(s);
+    });
+    vettoriale = Promise.all([
+      script("lib/protomaps-leaflet-5.1.0.js"), script("lib/protomaps-basemaps-5.7.2.js"),
+      // prova a leggere l'intestazione del file: se R2 non risponde, niente schermo vuoto
+      fetch(MAPPA_PMTILES, { headers: { Range: "bytes=0-126" } }).then((r) => { if (!r.ok) throw new Error(r.status); }),
+    ]).then(() => true, (e) => { console.warn("Mappa Pumpy non disponibile, uso Esri", e); return false; });
+  }
+  return vettoriale;
+}
+// Colori della mappa: fondo verde-grigio chiarissimo, verde menta per parchi e boschi, strade bianche,
+// nomi discreti. Così i prezzi restano la cosa più visibile.
+function saporePumpy(notte, essenziale) {
+  const f = basemaps.namedFlavor(notte ? "dark" : "light");
+  const terra = notte ? "#101915" : "#F1F4F2", acqua = notte ? "#12232B" : "#CFE3EE";
+  const verde = notte ? ["#13241C", "#16291F"] : ["#DCEFE3", "#CDE8D7"];
+  const strada = notte ? "#26332E" : "#FFFFFF", bordo = notte ? "#18231F" : "#DCE3DF";
+  const testo = notte ? "#9DB3A9" : "#4A5C54", alone = terra;
+  const tinta = (chiavi, c) => chiavi.forEach((k) => { f[k] = c; });
+  Object.assign(f, { background: acqua, earth: terra, water: acqua, buildings: notte ? "#17221E" : "#E5EAE7" });
+  tinta(["park_a", "wood_a", "scrub_a", "zoo"], verde[0]);
+  tinta(["park_b", "wood_b", "scrub_b"], verde[1]);
+  tinta(["hospital", "industrial", "school", "pedestrian", "military", "aerodrome", "sand", "beach", "glacier"], notte ? "#141E1A" : "#ECF0EE");
+  tinta(["other", "minor_service", "minor_a", "minor_b", "link", "major", "bridges_other", "bridges_minor", "bridges_link", "bridges_major"], strada);
+  tinta(["highway", "bridges_highway"], notte ? "#3A3F2E" : "#F6EDCF");
+  tinta(Object.keys(f).filter((k) => k.endsWith("_casing") || k.includes("_casing_")), bordo);
+  tinta(["roads_label_minor", "roads_label_major", "address_label", "subplace_label", "state_label", "country_label"], testo);
+  tinta(["roads_label_minor_halo", "roads_label_major_halo", "address_label_halo", "subplace_label_halo", "city_label_halo", "state_label_halo", "country_label_halo"], alone);
+  f.city_label = notte ? "#D3E2DB" : "#24463A";
+  f.railway = notte ? "#2E3B35" : "#C3CCC8";
+  f.boundaries = notte ? "#3A4A43" : "#B9C4BF";
+  f.landcover = Object.fromEntries(Object.keys(f.landcover).map((k) =>
+    [k, k === "forest" || k === "grassland" || k === "scrub" ? verde[0] : terra]));
+  if (essenziale) { tinta(["buildings"], terra); f.pois = {}; }
+  return f;
+}
+function stratoVettoriale(essenziale) {
+  const f = saporePumpy(scuro(), essenziale);
+  let etichette = protomapsL.labelRules(f, "it");
+  if (essenziale) etichette = etichette.filter((r) => r.dataLayer !== "pois");
+  return protomapsL.leafletLayer({ url: MAPPA_PMTILES, maxDataZoom: 15, maxZoom: 19, attribution: ATTR_PROTO,
+    paintRules: protomapsL.paintRules(f), labelRules: etichette, backgroundColor: f.background });
+}
 let base = null;
 function leggiBase() { try { return localStorage.getItem("base-v2") || "essenziale"; } catch { return "essenziale"; } }
 function scegliBase(k) {
   if (!BASI[k]) k = "essenziale";
-  if (base) mappa.removeLayer(base);
-  base = L.layerGroup(BASI[k].strati().map((x) => L.tileLayer(x.url, { maxZoom: 19, maxNativeZoom: x.nativo || 19,
-    attribution: x.attr, subdomains: x.sub || "abc", className: x.classe || "" }))).addTo(mappa);
-  base.chiave = k;
+  const turno = Symbol();
+  scegliBase.turno = turno;
+  const metti = (strato) => {
+    if (scegliBase.turno !== turno) return;   // nel frattempo è stata scelta un'altra base
+    if (base) mappa.removeLayer(base);
+    base = strato.addTo(mappa);
+    base.chiave = k;
+  };
+  const esri = () => L.layerGroup(BASI[k].strati().map((x) => L.tileLayer(x.url, { maxZoom: 19, maxNativeZoom: x.nativo || 19,
+    attribution: x.attr, subdomains: x.sub || "abc", className: x.classe || "" })));
+  if (k !== "satellite" && MAPPA_PMTILES) {
+    preparaVettoriale().then((ok) => metti(ok ? L.layerGroup([stratoVettoriale(k === "essenziale")]) : esri()));
+  } else metti(esri());
   try { localStorage.setItem("base-v2", k); } catch {}
   document.querySelectorAll("#basi button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.b === k));
 }
 scegliBase(leggiBase());
-MQ_SCURO.addEventListener("change", () => scegliBase(base.chiave));
+MQ_SCURO.addEventListener("change", () => scegliBase(base ? base.chiave : leggiBase()));
 
 function avviso(testo) { const a = $("avviso"); a.textContent = testo || ""; a.hidden = !testo; }
 
