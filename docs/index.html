@@ -1049,6 +1049,11 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 @media (min-width: 1024px), (orientation: landscape) and (max-height: 520px) {
   .pannello.con-dettaglio { max-height: none; }
 }
+
+/* mappa "Essenziale": colori smorzati, si legge ma non distrae dai prezzi */
+.base-tenue { filter: saturate(.45) brightness(1.04) contrast(.92); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .base-tenue { filter: saturate(.5) brightness(.95); } }
+.anteprima.essenziale { background: linear-gradient(160deg, transparent 44%, #f1e7cf 44% 52%, transparent 52%), linear-gradient(70deg, transparent 46%, #fff 46% 54%, transparent 54%), radial-gradient(circle at 80% 20%, #dfe8da 0 22%, transparent 23%), #eef0ec; border: 1px solid var(--line); }
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1186,18 +1191,19 @@ const MQ_SCURO = matchMedia("(prefers-color-scheme: dark)");
 function scuro() { const t = document.documentElement.dataset.theme; return t ? t === "dark" : MQ_SCURO.matches; }
 const BASI = {
   strade: { nome: "Strade", url: () => `https://{s}.basemaps.cartocdn.com/${scuro() ? "dark_all" : "rastertiles/voyager"}/{z}/{x}/{y}{r}.png`, attr: CARTO, sub: "abcd" },
-  essenziale: { nome: "Essenziale", url: () => `https://{s}.basemaps.cartocdn.com/${scuro() ? "dark_nolabels" : "light_all"}/{z}/{x}/{y}{r}.png`, attr: CARTO, sub: "abcd" },
+  // Essenziale: la stessa base di "Strade" (strade, nomi, parchi, acqua) ma con colori attenuati da un filtro
+  essenziale: { nome: "Essenziale", url: () => `https://{s}.basemaps.cartocdn.com/${scuro() ? "dark_all" : "rastertiles/voyager"}/{z}/{x}/{y}{r}.png`, attr: CARTO, sub: "abcd", classe: "base-tenue" },
   satellite: { nome: "Satellite", url: () => "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attr: "Immagini &copy; Esri, Maxar, Earthstar Geographics", sub: "" },
 };
 let base = null;
-function leggiBase() { try { return localStorage.getItem("base"); } catch { return null; } }
+function leggiBase() { try { return localStorage.getItem("base-v2") || "essenziale"; } catch { return "essenziale"; } }
 function scegliBase(k) {
-  if (!BASI[k]) k = "strade";
+  if (!BASI[k]) k = "essenziale";
   if (base) mappa.removeLayer(base);
   const b = BASI[k];
-  base = L.tileLayer(b.url(), { maxZoom: 19, attribution: b.attr, subdomains: b.sub || "abc", detectRetina: true }).addTo(mappa);
+  base = L.tileLayer(b.url(), { maxZoom: 19, attribution: b.attr, subdomains: b.sub || "abc", detectRetina: true, className: b.classe || "" }).addTo(mappa);
   base.chiave = k;
-  try { localStorage.setItem("base", k); } catch {}
+  try { localStorage.setItem("base-v2", k); } catch {}
   document.querySelectorAll("#basi button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.b === k));
 }
 scegliBase(leggiBase());
