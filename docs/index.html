@@ -1298,6 +1298,8 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 .vt-v.giu { color: var(--down); } .vt-v.su { color: var(--up); }
 .vt-s { font-size: .68rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .v-perche2 { margin: 0; font-size: .8rem; color: var(--fg); }
+.v-quando { font-weight: 600; }
+.v-quando b { font-weight: 800; }
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1967,11 +1969,17 @@ function aggiornaTendenza() {
   const prev = previsione(dir, d3), i = stato.migliore, media = stato.mediaLista;
   const risparmioDove = i && media ? (media - i.prezzi[c][0]) * PIENO_LITRI : 0;
   // la riga "quando", sempre visibile sotto il titolo
-  const quando = dir === "giu" ? (prev ? `Il momento migliore: ${prev.giorni === 1 ? "domani" : `verso ${giornoTra(prev.giorni)}`}` : "Il momento migliore: tra qualche giorno")
-    : dir === "su" ? "Il momento migliore: oggi" : "Nessun giorno migliore in vista";
+  // una frase sola che lega il giorno ai soldi; importi arrotondati ai 10 centesimi (è una stima)
+  const tondo = (e) => (Math.round(e * 10) / 10).toFixed(2).replace(".", ",");
+  const quando = dir === "giu"
+    ? (prev ? `Fino a ${prev.giorni === 1 ? "domani" : giornoTra(prev.giorni)}${prev.pieno >= .2 ? `: circa <b>${tondo(prev.pieno)} € in meno</b> sul pieno` : ""}` : "Tra qualche giorno dovrebbe costare meno")
+    : dir === "su"
+      ? (prev && prev.pieno >= .2 ? `Aspettando spenderesti circa <b>${tondo(prev.pieno)} € in più</b> sul pieno` : "Nei prossimi giorni di solito sale ancora")
+      : "Nessun giorno migliore in vista: conta solo dove";
   // i dettagli: tre numeri da leggere al volo, più una riga sul perché
   const tessere = [["Ultimi 3 giorni", dir === "stabile" ? "fermi" : `${dir === "giu" ? "−" : "+"}${cent(d3)} cent`, dir === "stabile" ? "nessuna fretta" : "al litro", dir === "stabile" ? "" : dir]];
-  if (prev && prev.pieno >= .2) tessere.push(["Aspettando", `${dir === "giu" ? "−" : "+"}${soldi(prev.pieno)} €`, "sul pieno", dir]);
+  if (prev) tessere.push([dir === "giu" ? "Calo previsto" : "Sale ancora", `${prev.giorni === 1 ? "1 giorno" : prev.giorni + " giorni"}`, "di solito", dir]);
+  if (a?.percentuale) tessere.push(["Ci prende", `${a.percentuale} su 100`, "volte"]);
   // (il risparmio scegliendo il distributore è già nella carta del consigliato, subito sotto: non si ripete)
   box.className = `verdetto ${dir}`; box.hidden = false;
   box.innerHTML = `<div class="v-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ICONE_VERDETTO[dir]}</svg></div>
@@ -1979,12 +1987,12 @@ function aggiornaTendenza() {
       <p class="v-occhiello">${NOMI[c]} · ${zona === "IT" ? "Italia" : esc(PROVINCE[zona] || zona)}</p>
       <h2 class="v-titolo">${v.titolo}</h2>
       <p class="v-quando">${quando}</p>
-      <button type="button" class="v-espandi" id="vEspandi" aria-expanded="${!!stato.vAperto}" aria-controls="vDettagli">Quanto risparmi
+      <button type="button" class="v-espandi" id="vEspandi" aria-expanded="${!!stato.vAperto}" aria-controls="vDettagli">Perché
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     </div>
     <div class="v-dettagli" id="vDettagli" ${stato.vAperto ? "" : "hidden"}>
       <div class="v-tessere">${tessere.map(([et, val, sotto, tono]) => `<div class="v-tessera"><span class="vt-e">${et}</span><b class="vt-v ${tono || ""}">${val}</b><span class="vt-s">${sotto}</span></div>`).join("")}</div>
-      <p class="v-fiducia">${prev ? `Stima su ${prev.casi.toLocaleString("it-IT")} casi · ` : ""}può sbagliare · <button type="button" id="vComeFunziona">come funziona</button></p>
+      <p class="v-fiducia">Stima${prev ? ` su ${prev.casi.toLocaleString("it-IT")} casi reali` : ""}, su un pieno da ${PIENO_LITRI} litri: può sbagliare · <button type="button" id="vComeFunziona">come funziona</button></p>
     </div>`;
   $("vEspandi").addEventListener("click", (e) => {
     e.stopPropagation(); stato.vAperto = !stato.vAperto;
