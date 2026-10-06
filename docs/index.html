@@ -1526,7 +1526,7 @@ const BASI = {
 // Mappa vettoriale Pumpy: l'Italia in un unico file Protomaps (dati OpenStreetMap) sul nostro
 // contenitore Cloudflare R2, aggiornato ogni mese da .github/workflows/mappa.yml.
 // Vuoto, o file irraggiungibile: si torna agli sfondi Esri qui sopra. Il satellite resta Esri.
-const MAPPA_PMTILES = "";
+const MAPPA_PMTILES = "https://pub-dcd14dfd4d504fa6aa8ed9cae16d3f33.r2.dev/italia.pmtiles";
 const ATTR_PROTO = '<a href="https://protomaps.com">Protomaps</a> ' + OSM;
 let vettoriale = null;   // promessa: true se libreria e file sono pronti
 function preparaVettoriale() {
