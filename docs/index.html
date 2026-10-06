@@ -1972,7 +1972,7 @@ function aggiornaTendenza() {
   // i dettagli: tre numeri da leggere al volo, più una riga sul perché
   const tessere = [["Ultimi 3 giorni", dir === "stabile" ? "fermi" : `${dir === "giu" ? "−" : "+"}${cent(d3)} cent`, dir === "stabile" ? "nessuna fretta" : "al litro", dir === "stabile" ? "" : dir]];
   if (prev && prev.pieno >= .2) tessere.push(["Aspettando", `${dir === "giu" ? "−" : "+"}${soldi(prev.pieno)} €`, "sul pieno", dir]);
-  if (i && risparmioDove >= .5) tessere.push(["Andando da", `−${soldi(risparmioDove)} €`, esc(i.bandiera || i.nome), "giu"]);
+  // (il risparmio scegliendo il distributore è già nella carta del consigliato, subito sotto: non si ripete)
   box.className = `verdetto ${dir}`; box.hidden = false;
   box.innerHTML = `<div class="v-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ICONE_VERDETTO[dir]}</svg></div>
     <div class="v-testo">
