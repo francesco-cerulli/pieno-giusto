@@ -1244,6 +1244,26 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 .espanso .lista { flex: none; }
 .espanso .aggiornati { flex: none; padding-bottom: 4px; }
 .b-scheda h2 { font-size: 1.75rem; }
+
+/* pannello: aperto (tutto) o chiuso del tutto (solo una riga) */
+.mini { display: none; }
+@media (max-width: 1023px) {
+  .pannello { max-height: 64%; }
+  .pannello:not(.chiuso) .espanso { display: flex !important; }
+  .vedi-tutti { display: none !important; }
+  .pannello.chiuso { max-height: none; padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px); }
+  .pannello.chiuso .verdetto, .pannello.chiuso .consigliato, .pannello.chiuso .pos-stato, .pannello.chiuso .espanso { display: none !important; }
+  .pannello.chiuso .mini { display: flex; }
+  .mini { align-items: center; gap: 10px; width: 100%; border: 0; background: transparent; padding: 2px 2px 6px; cursor: pointer; text-align: left; font-size: .95rem; color: var(--fg); min-height: 44px; }
+  .mini > b { white-space: nowrap; }
+  .mini.giu > b { color: var(--down); } .mini.su > b { color: var(--up); }
+  .m-icona { flex: none; width: 30px; height: 30px; border-radius: 10px; background: var(--fg); display: grid; place-items: center; }
+  .mini.giu .m-icona { background: var(--down); } .mini.su .m-icona { background: var(--up); }
+  .m-icona svg { width: 17px; height: 17px; stroke: #fff; }
+  .m-top { flex: 1; min-width: 0; text-align: right; color: var(--muted); font-size: .84rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m-top b { color: var(--fg); font-size: 1rem; }
+  .m-su { flex: none; width: 20px; height: 20px; stroke: var(--muted); }
+}
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1325,15 +1345,13 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
   <div class="avviso" id="avviso" hidden></div>
 </div>
 
-<section class="pannello chiuso" id="pannello">
+<section class="pannello" id="pannello">
   <div class="presa" id="presa" aria-hidden="true"></div>
+  <button type="button" class="mini" id="mini" aria-controls="pannello" aria-label="Apri il riepilogo"></button>
   <div class="verdetto" id="verdetto" hidden></div>
   <div class="consigliato" id="consigliato" hidden></div>
   <div class="pos-stato" id="posStato" hidden></div>
-  <button class="vedi-tutti" id="maniglia" type="button" aria-expanded="false" aria-controls="espanso">
-    <span id="vediTesto">Tutti i distributori vicini</span>
-    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
-  </button>
+  <button class="vedi-tutti" id="maniglia" type="button" aria-expanded="true" hidden><span id="vediTesto"></span></button>
   <div class="espanso" id="espanso">
     <figure class="andamento" id="andamento" hidden></figure>
     <div class="intesta">
@@ -1546,7 +1564,8 @@ function aggiornaLista() {
   if (stato.sel) return;
   const lista = $("lista"), c = stato.carb;
   const centro = mappa.getCenter(), cc = { lat: centro.lat, lon: centro.lng };
-  const vicinoATe = stato.pos && km(stato.pos, cc) < 4;
+  // "vicino a te" finché la tua posizione è dentro la mappa (il centro può essere spostato dal pannello)
+  const vicinoATe = stato.pos && mappa.getZoom() >= ZOOM_PREZZI - 1 && mappa.getBounds().pad(.1).contains([stato.pos.lat, stato.pos.lon]);
   if (!stato.impianti.length) {           // dati non ancora arrivati
     if (stato.posNegata) mostraSenzaPosizione();
     return;
@@ -1620,6 +1639,7 @@ function disegnaConsigliato(i, media, vicinoATe) {
     </button>
     <a class="c-vai" ${attrNav(i)} aria-label="Portami a ${esc(i.bandiera || i.nome)}">${ICONA_NAV}<span>Vai</span></a>`;
   $("cApri").addEventListener("click", () => seleziona(i));
+  aggiornaMini();
 }
 function mostraSenzaPosizione() {
   $("titoloLista").textContent = "Dove sei?"; $("conteggio").textContent = ""; $("consigliato").hidden = true;
@@ -1900,6 +1920,7 @@ function aggiornaTendenza() {
     </div>`;
   $("vComeFunziona")?.addEventListener("click", (e) => { e.stopPropagation(); spiegaTendenza(); });
   disegnaAndamentoZona(zona, dir);
+  aggiornaMini();
 }
 
 // Grafico della zona: media degli ultimi 14 giorni; gli ultimi 3 (quelli che decidono la tendenza) evidenziati,
@@ -2014,11 +2035,23 @@ function mettiPannello(apri) {
   const p = $("pannello");
   p.classList.toggle("chiuso", !apri);
   $("maniglia").setAttribute("aria-expanded", apri);
-  if (!apri) $("lista").scrollTop = 0;
+  if (!apri) $("espanso").scrollTop = 0;
+  aggiornaMini();
 }
+// Pannello chiuso: resta solo una riga col verdetto e il prezzo migliore; un tocco lo riapre
+function aggiornaMini() {
+  const m = $("mini"), c = stato.carb;
+  const t = stato.medie?.tendenze?.[zonaCorrente()]?.[c] || stato.medie?.tendenze?.IT?.[c];
+  const dir = t?.[3], i = stato.migliore;
+  m.className = `mini ${dir || ""}`;
+  m.innerHTML = `${dir ? `<span class="m-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">${ICONE_VERDETTO[dir]}</svg></span><b>${VERDETTI[dir].titolo}</b>` : "<b>Distributori vicini</b>"}
+    ${i ? `<span class="m-top">${esc(i.bandiera || i.nome)} <b>${euro(i.prezzi[c][0])}</b></span>` : ""}
+    <svg class="m-su" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>`;
+}
+$("mini").addEventListener("click", () => apriPannello());
 function apriPannello() { mettiPannello(true); }
 function chiudiPannello() { mettiPannello(false); }
-$("maniglia").addEventListener("click", () => mettiPannello(!aperto()));
+
 $("presa").addEventListener("click", () => { if (stato.sel) { chiudiDettaglio(); return; } mettiPannello(!aperto()); });
 (() => {
   const p = $("pannello");
@@ -2029,6 +2062,7 @@ $("presa").addEventListener("click", () => { if (stato.sel) { chiudiDettaglio();
     y0 = e.touches[0].clientY; h0 = p.getBoundingClientRect().height; trascina = false; vel = 0;
     ultimo = y0; tUltimo = e.timeStamp;
     scorrevole = e.target.closest(".espanso, .dettaglio");
+    if (scorrevole && !aperto()) scorrevole = null;
   }, { passive: true });
   p.addEventListener("touchmove", (e) => {
     if (y0 == null) return;
@@ -2040,7 +2074,7 @@ $("presa").addEventListener("click", () => { if (stato.sel) { chiudiDettaglio();
       trascina = true; p.classList.add("trascino");
     }
     e.preventDefault();
-    const h = Math.max(90, Math.min(innerHeight * .88, h0 - dy));
+    const h = Math.max(56, Math.min(innerHeight * .88, h0 - dy));
     p.style.maxHeight = "none"; p.style.height = h + "px";
     vel = (y - ultimo) / Math.max(1, e.timeStamp - tUltimo); ultimo = y; tUltimo = e.timeStamp;
   }, { passive: false });
