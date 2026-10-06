@@ -32,6 +32,7 @@ MIN_IMPIANTI_MEDIANA = 10           # sotto questo numero uso la mediana naziona
 GIORNI_ANDAMENTO = 90               # lunghezza della serie delle medie nazionali
 GIORNI_TENDENZA = 3                 # la tendenza guarda gli ultimi 3 giorni...
 SOGLIA_TENDENZA = 0.005             # ...e conta solo se la media si è mossa di almeno mezzo centesimo
+GIORNI_SERIE_ZONA = 14              # giorni del grafico della zona nel pannello
 GIORNI_PUNTO = 30                   # storico del singolo distributore mostrato nella scheda
 
 
@@ -215,9 +216,18 @@ def main():
                     "casi": casi, "giorni": len(cronologia), "orizzonte": H}
     print(f"Tendenza: confermata {giusti}/{casi} volte ({affidabilita['percentuale']}%)")
 
+    # --- andamento recente per zona (Italia e province): serve al grafico "come si muovono i prezzi qui" ---
+    ultimi = cronologia[-GIORNI_SERIE_ZONA:]
+    serie_zone = defaultdict(dict)
+    for (zona, carb), s_z in serie.items():
+        valori = [round(s_z[g], 3) if g in s_z else None for g in ultimi]
+        if sum(v is not None for v in valori) >= 5:
+            serie_zone[zona][carb] = valori
+
     with open(SITE_DATA / "medie.json", "w", encoding="utf-8") as f:
         json.dump({"aggiornato": oggi, "nazionale": andamento, "province": province,
-                   "tendenze": tendenze, "affidabilita": affidabilita},
+                   "tendenze": tendenze, "affidabilita": affidabilita,
+                   "giorni_serie": ultimi, "serie_zone": serie_zone},
                   f, ensure_ascii=False, separators=(",", ":"))
 
     scrivi_storico(impianti, per_giorno)

@@ -1148,6 +1148,102 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 .intesta .maniglia h2 { flex-direction: column !important; align-items: flex-start !important; gap: 1px !important; }
 .intesta .maniglia h2 #titoloLista { white-space: nowrap; }
 .intesta .maniglia h2 #conteggio { font-size: .76rem; font-weight: 500; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+/* =================== Redesign: il verdetto al centro =================== */
+.verdetto { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; padding: 14px 14px 12px; border-radius: 20px;
+  background: var(--surface-2); margin: 0 0 8px; }
+.verdetto.giu { background: var(--mint); }
+.verdetto.su { background: color-mix(in srgb, var(--up) 11%, var(--surface)); }
+.v-icona { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--fg); }
+.verdetto.giu .v-icona { background: var(--down); } .verdetto.su .v-icona { background: var(--up); }
+.v-icona svg { width: 24px; height: 24px; stroke: #fff; }
+.v-testo { min-width: 0; }
+.v-occhiello { margin: 0; font-size: .74rem; font-weight: 600; color: var(--muted); letter-spacing: .01em; }
+.v-titolo { margin: 1px 0 2px; font: 800 1.42rem/1.12 var(--f-display); letter-spacing: -.025em; }
+.verdetto.giu .v-titolo { color: var(--down); } .verdetto.su .v-titolo { color: var(--up); }
+.v-perche { margin: 0; font-size: .86rem; line-height: 1.35; }
+.v-fiducia { margin: 6px 0 0; font-size: .72rem; color: var(--muted); }
+.v-fiducia button { border: 0; background: none; padding: 0; color: inherit; text-decoration: underline; font: inherit; cursor: pointer; }
+
+.consigliato { display: flex; align-items: stretch; gap: 8px; margin: 0 0 6px; }
+.consigliato[hidden] { display: none; }
+.c-scheda { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1px 10px; text-align: left;
+  border: 1px solid var(--line); background: var(--surface); border-radius: 18px; padding: 10px 12px; cursor: pointer; }
+.c-etichetta { grid-column: 1 / -1; font-size: .7rem; font-weight: 700; color: var(--down); letter-spacing: .01em; }
+.c-nome { font-weight: 700; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c-dove { grid-column: 1; font-size: .78rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c-dove b { color: var(--down); font-weight: 600; }
+.c-prezzo { grid-column: 2; grid-row: 2 / span 2; align-self: center; font: 800 1.6rem/1 var(--f-display); letter-spacing: -.03em; }
+.c-prezzo small { font: 500 .7rem var(--f-body); color: var(--muted); margin-left: 2px; letter-spacing: 0; }
+.c-vai { flex: none; width: 64px; border-radius: 18px; background: var(--accent); color: var(--accent-fg); text-decoration: none;
+  display: grid; place-items: center; align-content: center; gap: 2px; font-weight: 700; font-size: .8rem;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--brand) 35%, transparent); }
+.c-vai svg { width: 22px; height: 22px; stroke: currentColor; }
+.c-vai:active, .c-scheda:active { transform: scale(.98); }
+
+.vedi-tutti { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; border: 0; background: transparent;
+  color: var(--muted); font-weight: 600; font-size: .84rem; padding: 8px 0 4px; cursor: pointer; }
+.vedi-tutti svg { width: 16px; height: 16px; stroke: currentColor; }
+.espanso { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.espanso .lista { overflow: visible; }
+.intesta { padding: 4px 0 6px; }
+.titoli { flex: 1; min-width: 0; display: grid; }
+.titoli h2 { margin: 0; font: 700 1.05rem/1.2 var(--f-display); }
+.titoli #conteggio { font-size: .76rem; color: var(--muted); }
+
+.andamento { margin: 2px 0 12px; padding: 12px 12px 8px; border-radius: 18px; background: var(--surface-2); }
+.andamento figcaption { display: flex; justify-content: space-between; align-items: baseline; font-size: .82rem; margin-bottom: 4px; }
+.andamento figcaption span { color: var(--muted); font-size: .74rem; }
+.andamento svg { width: 100%; height: 96px; display: block; overflow: visible; }
+.andamento .linea { fill: none; stroke: var(--fg); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+.andamento .ultimi { fill: var(--fg); opacity: .06; }
+.andamento.giu .ultimi { fill: var(--down); opacity: .14; } .andamento.su .ultimi { fill: var(--up); opacity: .14; }
+.andamento .futuro { fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-dasharray: 3 4; stroke-linecap: round; }
+.andamento.giu .futuro { stroke: var(--down); } .andamento.su .futuro { stroke: var(--up); }
+.andamento .oggi { fill: var(--fg); stroke: var(--surface-2); stroke-width: 2.5; }
+.andamento .assi { display: flex; justify-content: space-between; font-size: .7rem; color: var(--muted); margin-top: 2px; }
+.andamento .t3 { font-weight: 600; }
+
+/* segnaposto del consigliato */
+.pin.top { background: var(--brand); color: #fff; padding: 5px 10px 5px 7px; font-size: 14.5px; box-shadow: 0 0 0 3px var(--surface), 0 6px 16px rgb(11 31 23 / .3); z-index: 2; }
+.pin .stella { width: 13px; height: 13px; fill: #fff; margin-right: 1px; }
+.pin.top .freccia { color: #fff; }
+
+/* pannello: due sole posizioni */
+.pannello.chiuso .espanso { display: none !important; }
+.pannello:not(.chiuso) .vedi-tutti { display: none; }
+@media (max-width: 1023px) {
+  .pannello { max-height: 86%; }
+  .pannello.chiuso { max-height: none; }
+  .pannello.chiuso .lista li:nth-child(n+4) { display: list-item; }
+}
+.pannello.con-dettaglio .verdetto, .pannello.con-dettaglio .consigliato, .pannello.con-dettaglio .vedi-tutti, .pannello.con-dettaglio .espanso { display: none !important; }
+@media (min-width: 1024px), (orientation: landscape) and (max-height: 520px) {
+  .pannello.chiuso .espanso { display: flex !important; }
+  .vedi-tutti { display: none !important; }
+  .verdetto { margin-top: 2px; }
+}
+
+/* benvenuto */
+.benvenuto { position: fixed; inset: 0; z-index: 4000; background: var(--surface); display: grid; place-items: center; padding: 24px;
+  animation: entra .35s ease both; }
+.benvenuto.via { animation: esce .3s ease both; }
+@keyframes entra { from { opacity: 0; } } @keyframes esce { to { opacity: 0; transform: scale(1.02); } }
+.b-scheda { width: min(420px, 100%); display: grid; justify-items: center; text-align: center; gap: 14px; }
+.b-icona { width: 88px; height: 88px; border-radius: 26px; background: var(--brand); display: grid; place-items: center; margin-bottom: 8px;
+  box-shadow: 0 14px 36px color-mix(in srgb, var(--brand) 40%, transparent); }
+.b-icona svg { width: 44px; height: 44px; stroke: #fff; }
+.b-scheda h2 { margin: 0; font: 800 1.9rem/1.12 var(--f-display); letter-spacing: -.03em; }
+.b-scheda p { margin: 0; font-size: 1rem; line-height: 1.5; color: var(--muted); max-width: 34ch; }
+.b-punti { display: flex; gap: 6px; margin: 10px 0 6px; }
+.b-punti i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); transition: width .2s; }
+.b-punti i.on { width: 22px; border-radius: 4px; background: var(--fg); }
+.b-avanti { width: 100%; border: 0; border-radius: 999px; background: var(--fg); color: var(--surface); font-weight: 700; font-size: 1.02rem; padding: 16px; cursor: pointer; }
+.b-dopo { border: 0; background: none; color: var(--muted); font-weight: 600; padding: 8px; cursor: pointer; }
+.b-nota { font-size: .76rem !important; }
+.espanso .lista { flex: none; }
+.espanso .aggiornati { flex: none; padding-bottom: 4px; }
+.b-scheda h2 { font-size: 1.75rem; }
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1231,19 +1327,25 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 
 <section class="pannello chiuso" id="pannello">
   <div class="presa" id="presa" aria-hidden="true"></div>
-  <div class="tendenza" id="tendenza" hidden></div>
-  <div class="intesta">
-    <button class="maniglia" id="maniglia" type="button" aria-expanded="false" aria-controls="lista">
-      <h2><span id="titoloLista">Vicino a te</span> <span id="conteggio"></span></h2>
-    </button>
-    <div class="ordina" id="ordina" role="group" aria-label="Ordina per">
-      <button type="button" data-o="prezzo" aria-pressed="true">Prezzo</button>
-      <button type="button" data-o="distanza" aria-pressed="false">Distanza</button>
-    </div>
-  </div>
+  <div class="verdetto" id="verdetto" hidden></div>
+  <div class="consigliato" id="consigliato" hidden></div>
   <div class="pos-stato" id="posStato" hidden></div>
-  <ol class="lista" id="lista"><li class="vuoto attesa-pos"><span class="rotella" aria-hidden="true"></span>Cerco i distributori vicino a te…</li></ol>
-  <p class="aggiornati" id="aggiornati"></p>
+  <button class="vedi-tutti" id="maniglia" type="button" aria-expanded="false" aria-controls="espanso">
+    <span id="vediTesto">Tutti i distributori vicini</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+  </button>
+  <div class="espanso" id="espanso">
+    <figure class="andamento" id="andamento" hidden></figure>
+    <div class="intesta">
+      <div class="titoli"><h2 id="titoloLista">Vicino a te</h2><span id="conteggio"></span></div>
+      <div class="ordina" id="ordina" role="group" aria-label="Ordina per">
+        <button type="button" data-o="prezzo" aria-pressed="true">Prezzo</button>
+        <button type="button" data-o="distanza" aria-pressed="false">Distanza</button>
+      </div>
+    </div>
+    <ol class="lista" id="lista"><li class="vuoto attesa-pos"><span class="rotella" aria-hidden="true"></span>Cerco i distributori vicino a te…</li></ol>
+    <p class="aggiornati" id="aggiornati"></p>
+  </div>
   <div class="dettaglio" id="dettaglio" hidden></div>
 </section>
 </aside>
@@ -1384,11 +1486,12 @@ const testoKm = (d) => d < 1 ? `${Math.round(d * 1000 / 50) * 50} m` : `${d.toFi
 // --- segnaposti: solo i distributori dell'area inquadrata; da lontano, le medie per provincia ---
 function iconaPrezzo(i) {
   const [p, d] = i.prezzi[stato.carb];
-  const sel = stato.sel === i ? " scelto" : "";
+  const sel = (stato.sel === i ? " scelto" : "") + (stato.migliore === i ? " top" : "");
   if (!affidabile(i)) return L.divIcon({ className: "", iconSize: null, html: `<div class="pin dubbio${sel}" title="Prezzo da verificare">${euro(p)}?</div>` });
   const dal = i.prezzi[stato.carb][2];
   const recente = d && dal && giorniDa(dal) <= GIORNI_FRECCIA;
-  return L.divIcon({ className: "", iconSize: null, html: `<div class="pin ${fascia(p)}${sel}">${euro(p)}${recente ? freccia(d) : ""}</div>` });
+  const stella = stato.migliore === i ? '<svg class="stella" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>' : "";
+  return L.divIcon({ className: "", iconSize: null, html: `<div class="pin ${fascia(p)}${sel}">${stella}${euro(p)}${recente ? freccia(d) : ""}</div>` });
 }
 
 function disegna() {
@@ -1416,12 +1519,12 @@ function disegna() {
   const locali = qui.filter((i) => affidabile(i) && !i.autostrada).map((i) => i.prezzi[c][0]).sort((x, y) => x - y);
   stato.soglieLocali = locali.length >= 8 ? [locali[Math.floor(locali.length * .25)], locali[Math.floor(locali.length * .75)]] : null;
   // ordine di priorità: la pompa aperta, poi i prezzi affidabili dal più basso, infine quelli da verificare
-  const peso = (i) => (stato.sel === i ? -1e3 : 0) + (affidabile(i) ? 0 : 1e3) + i.prezzi[c][0];
+  const peso = (i) => (stato.sel === i ? -2e3 : 0) + (stato.migliore === i ? -1e3 : 0) + (affidabile(i) ? 0 : 1e3) + i.prezzi[c][0];
   qui.sort((a, b2) => peso(a) - peso(b2));
   for (const i of qui) {
     const m = L.marker([i.lat, i.lon], { icon: iconaPrezzo(i), title: i.bandiera || i.nome, zIndexOffset: stato.sel === i ? 900 : 0 });
     m.on("click", () => seleziona(i));
-    m.largo = 66; m.sempre = stato.sel === i;
+    m.largo = stato.migliore === i ? 84 : 66; m.sempre = stato.sel === i || stato.migliore === i;
     candidati.push(m);
   }
   piazza(candidati);
@@ -1462,6 +1565,7 @@ function aggiornaLista() {
     const b = mappa.getBounds();
     righe = stato.impianti.filter((i) => i.prezzi[c] && affidabile(i) && b.contains([i.lat, i.lon])); titolo = "In questa zona";
   } else {
+    $("consigliato").hidden = true; $("vediTesto").textContent = "Elenco dei distributori";
     $("titoloLista").textContent = stato.pos ? "Sei lontano dalla tua zona" : "Avvicinati";
     $("conteggio").textContent = "";
     lista.innerHTML = stato.pos
@@ -1477,9 +1581,14 @@ function aggiornaLista() {
   $("titoloLista").textContent = titolo;
   const piuBasso = righe.length ? Math.min(...righe.map((i) => i.prezzi[c][0])) : 0;
   $("conteggio").textContent = righe.length ? `${vicinoATe ? `${righe.length} entro ${stato.raggio} km` : `${righe.length} distributori`} · da ${euro(piuBasso)}` : "";
-  if (!righe.length) { lista.innerHTML = '<li class="vuoto">Nessun distributore con questo carburante qui. Prova ad allontanare la mappa.</li>'; return; }
+  if (!righe.length) { $("consigliato").hidden = true; lista.innerHTML = '<li class="vuoto">Nessun distributore con questo carburante qui. Prova ad allontanare la mappa.</li>'; return; }
   // un solo "Il più conveniente": a parità di prezzo vince il più vicino
   const migliore = righe.reduce((m, i) => (!m || i.prezzi[c][0] < m.prezzi[c][0] || (i.prezzi[c][0] === m.prezzi[c][0] && i._km < m._km) ? i : m), null);
+  const cambiato = stato.migliore !== migliore;
+  stato.migliore = migliore;
+  disegnaConsigliato(migliore, media, vicinoATe);
+  $("vediTesto").textContent = `Tutti i ${righe.length} distributori ${vicinoATe ? `entro ${stato.raggio} km` : "in zona"}`;
+  if (cambiato) disegna();
   const mostra = righe.slice(0, MQ_LATO.matches ? 50 : 25);
   lista.innerHTML = mostra.map((i, n) => {
     const [p, d, dal] = i.prezzi[c];
@@ -1495,8 +1604,26 @@ function aggiornaLista() {
   }).join("");
   lista.querySelectorAll("button[data-n]").forEach((btn) => btn.addEventListener("click", () => seleziona(mostra[+btn.dataset.n])));
 }
+// La raccomandazione concreta: dove andare, quanto si risparmia, e partire con un tocco
+function disegnaConsigliato(i, media, vicinoATe) {
+  const box = $("consigliato");
+  if (!i) { box.hidden = true; return; }
+  const c = stato.carb, p = i.prezzi[c][0], risparmio = (media - p) * PIENO_LITRI;
+  const dir = (stato.medie?.tendenze?.[zonaCorrente()]?.[c] || stato.medie?.tendenze?.IT?.[c] || [])[3];
+  const etichetta = dir === "giu" ? "Se devi fare il pieno adesso" : vicinoATe ? "Il più conveniente vicino a te" : "Il più conveniente in questa zona";
+  box.hidden = false;
+  box.innerHTML = `<button type="button" class="c-scheda" id="cApri">
+      <span class="c-etichetta">${etichetta}</span>
+      <span class="c-nome">${esc(i.bandiera || i.nome)}</span>
+      <span class="c-dove">${testoKm(i._km)}${risparmio >= .5 ? ` · <b>−${risparmio.toFixed(2).replace(".", ",")} €</b> sul pieno` : ""}</span>
+      <span class="c-prezzo">${euro(p)}<small>€/l</small></span>
+    </button>
+    <a class="c-vai" ${attrNav(i)} aria-label="Portami a ${esc(i.bandiera || i.nome)}">${ICONA_NAV}<span>Vai</span></a>`;
+  $("cApri").addEventListener("click", () => seleziona(i));
+}
 function mostraSenzaPosizione() {
-  $("titoloLista").textContent = "Dove sei?"; $("conteggio").textContent = "";
+  $("titoloLista").textContent = "Dove sei?"; $("conteggio").textContent = ""; $("consigliato").hidden = true;
+  apriPannello();
   $("lista").innerHTML = `<li class="vuoto senza-pos"><p>Per vedere subito i distributori più vicini, Pumpy ha bisogno della tua posizione.</p>
     <button type="button" class="torna" id="chiediPos">Usa la mia posizione</button>
     <span>oppure scrivi il comune nella ricerca in alto</span></li>`;
@@ -1748,20 +1875,63 @@ function nomeZona(z) { return z === "IT" ? "in Italia" : `in provincia di ${PROV
 const CONSIGLI = { su: "Meglio fare il pieno adesso", giu: "Se puoi, aspetta qualche giorno", stabile: "Nessuna fretta: i prezzi sono fermi" };
 const TITOLI = { su: "in aumento", giu: "in calo", stabile: "stabile" };
 
+// Il cuore di Pumpy: una risposta sola, in parole semplici, per la zona dove sei
+const VERDETTI = {
+  giu: { titolo: "Se puoi, aspetta", perche: (d) => `Qui i prezzi stanno scendendo: −${cent(d)} cent negli ultimi 3 giorni.` },
+  su: { titolo: "Fai il pieno oggi", perche: (d) => `Qui i prezzi stanno salendo: +${cent(d)} cent negli ultimi 3 giorni.` },
+  stabile: { titolo: "Fai il pieno quando vuoi", perche: () => "Qui i prezzi sono fermi da qualche giorno: nessuna fretta." },
+};
+const ICONE_VERDETTO = {
+  giu: '<path d="M12 5v14M6 13l6 6 6-6"/>', su: '<path d="M12 19V5M6 11l6-6 6 6"/>', stabile: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+};
 function aggiornaTendenza() {
-  const box = $("tendenza"), c = stato.carb, z = zonaCorrente();
+  const box = $("verdetto"), c = stato.carb, z = zonaCorrente();
   const t = stato.medie?.tendenze?.[z]?.[c] || stato.medie?.tendenze?.IT?.[c];
-  if (!t) { box.hidden = true; return; }
-  const [media, , d3, dir] = t;
-  box.className = `tendenza ${dir}`; box.hidden = false;
-  const segno = dir === "su" ? "↑" : dir === "giu" ? "↓" : "→";
-  const numeri = dir === "stabile" ? `media ${euro(media)} €, quasi ferma negli ultimi 3 giorni`
-    : `${d3 > 0 ? "+" : "−"}${cent(d3)} cent in 3 giorni · media ${euro(media)} €`;
-  box.innerHTML = `<div class="segno" aria-hidden="true">${segno}</div>
-    <div class="testo"><span class="titolo">${NOMI[c]} ${TITOLI[dir]}</span>
-      <span class="dove">${CONSIGLI[dir]} · <b>${z === "IT" ? "Italia" : esc(PROVINCE[z] || z)}</b></span></div>
-    <button type="button" class="info" id="tendenzaInfo" aria-label="Come funziona" title="${esc(numeri)}">?</button>`;
-  $("tendenzaInfo").addEventListener("click", spiegaTendenza);
+  const zona = stato.medie?.tendenze?.[z]?.[c] ? z : "IT";
+  if (!t) { box.hidden = true; $("andamento").hidden = true; return; }
+  const [, , d3, dir] = t, v = VERDETTI[dir], a = stato.medie?.affidabilita;
+  box.className = `verdetto ${dir}`; box.hidden = false;
+  box.innerHTML = `<div class="v-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ICONE_VERDETTO[dir]}</svg></div>
+    <div class="v-testo">
+      <p class="v-occhiello">${NOMI[c]} · ${zona === "IT" ? "Italia" : esc(PROVINCE[zona] || zona)}</p>
+      <h2 class="v-titolo">${v.titolo}</h2>
+      <p class="v-perche">${v.perche(d3)}</p>
+      ${a?.percentuale ? `<p class="v-fiducia">Indicazione giusta ${a.percentuale} volte su 100 · <button type="button" id="vComeFunziona">come lo sappiamo</button></p>` : ""}
+    </div>`;
+  $("vComeFunziona")?.addEventListener("click", (e) => { e.stopPropagation(); spiegaTendenza(); });
+  disegnaAndamentoZona(zona, dir);
+}
+
+// Grafico della zona: media degli ultimi 14 giorni; gli ultimi 3 (quelli che decidono la tendenza) evidenziati,
+// più una freccia tratteggiata che indica solo la direzione, senza promettere numeri.
+function disegnaAndamentoZona(zona, dir) {
+  const fig = $("andamento"), c = stato.carb;
+  const valori = stato.medie?.serie_zone?.[zona]?.[c], giorni = stato.medie?.giorni_serie;
+  if (!valori || !giorni) { fig.hidden = true; return; }
+  const punti = valori.map((v, k) => [k, v]).filter((x) => x[1] != null);
+  if (punti.length < 5) { fig.hidden = true; return; }
+  const W = 320, H = 96, n = valori.length, prolunga = 34;
+  const vs = punti.map((x) => x[1]);
+  let min = Math.min(...vs), max = Math.max(...vs);
+  if (max - min < .01) { const m = (max + min) / 2; min = m - .005; max = m + .005; }
+  const x = (k) => (k / (n - 1)) * (W - prolunga), y = (v) => 10 + (1 - (v - min) / (max - min)) * (H - 22);
+  const linea = punti.map(([k, v], j) => `${j ? "L" : "M"}${x(k).toFixed(1)},${y(v).toFixed(1)}`).join("");
+  const [kU, vU] = punti[punti.length - 1], xU = x(kU), yU = y(vU);
+  const pend = dir === "giu" ? 16 : dir === "su" ? -16 : 0;
+  const xF = xU + prolunga - 6, yF = Math.max(6, Math.min(H - 10, yU + pend));
+  const k3 = Math.max(0, n - 4);
+  const nomeZona = zona === "IT" ? "in Italia" : `a ${PROVINCE[zona] || zona}`;
+  const fmt = (g) => new Date(g).toLocaleDateString("it-IT", { day: "numeric", month: "short" });
+  fig.hidden = false;
+  fig.className = `andamento ${dir}`;
+  fig.innerHTML = `<figcaption><b>Prezzo medio ${esc(nomeZona)}</b><span>ultimi ${n} giorni</span></figcaption>
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Prezzo medio della ${NOMI[c].toLowerCase()} ${esc(nomeZona)} dal ${fmt(giorni[0])} a oggi: da ${euro(vs[0])} a ${euro(vU)} euro. Tendenza: ${TITOLI[dir]}.">
+      <rect class="ultimi" x="${x(k3).toFixed(1)}" y="0" width="${(xU - x(k3)).toFixed(1)}" height="${H - 12}" rx="6"/>
+      <path class="linea" d="${linea}" vector-effect="non-scaling-stroke"/>
+      <path class="futuro" d="M${xU.toFixed(1)},${yU.toFixed(1)}L${xF.toFixed(1)},${yF.toFixed(1)}" vector-effect="non-scaling-stroke"/>
+      <circle class="oggi" cx="${xU.toFixed(1)}" cy="${yU.toFixed(1)}" r="4.5" vector-effect="non-scaling-stroke"/>
+    </svg>
+    <div class="assi"><span>${fmt(giorni[0])}</span><span class="t3">ultimi 3 giorni</span><span>oggi ${euro(vU)} → ${TITOLI[dir]}</span></div>`;
 }
 
 function zonaTesto(prov) {
@@ -1823,7 +1993,7 @@ function scegliCarburante(c) {
   stato.carb = c; salvaPreferenza(c);
   document.querySelectorAll("#carburanti button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.c === c));
   if (stato.sel && stato.sel.prezzi[c]) { stato.detCarb = c; disegnaDettaglio(); }
-  disegna(); aggiornaLista(); aggiornaZona(); aggiornaTendenza();
+  stato.migliore = null; aggiornaLista(); disegna(); aggiornaZona(); aggiornaTendenza();
 }
 
 // --- menu ☰ ---
@@ -1838,23 +2008,18 @@ $("carburanti").addEventListener("click", (e) => {
 });
 $("basi").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { scegliBase(b.dataset.b); chiudiMenu(); } });
 $("comeFunziona").addEventListener("click", () => { chiudiMenu(); spiegaTendenza(); });
-// --- pannello in basso (telefono): tre posizioni, si trascina col dito ---
-// "ridotto" = solo la riga del titolo · "chiuso" = anteprima con i 3 migliori · aperto = lista intera
-const POSIZIONI = ["ridotto", "chiuso", "aperto"];
-function posPannello() { const p = $("pannello"); return p.classList.contains("ridotto") ? "ridotto" : p.classList.contains("chiuso") ? "chiuso" : "aperto"; }
-function mettiPannello(k) {
+// --- pannello in basso (telefono): chiuso (verdetto + consigliato) o aperto (andamento + lista); si trascina col dito ---
+function aperto() { return !$("pannello").classList.contains("chiuso"); }
+function mettiPannello(apri) {
   const p = $("pannello");
-  p.classList.toggle("ridotto", k === "ridotto");
-  p.classList.toggle("chiuso", k !== "aperto");
-  $("maniglia").setAttribute("aria-expanded", k === "aperto");
-  if (k !== "aperto") $("lista").scrollTop = 0;
-  try { localStorage.setItem("pannello", k === "aperto" ? "chiuso" : k); } catch {}
+  p.classList.toggle("chiuso", !apri);
+  $("maniglia").setAttribute("aria-expanded", apri);
+  if (!apri) $("lista").scrollTop = 0;
 }
-function apriPannello() { mettiPannello("aperto"); }
-function chiudiPannello() { mettiPannello("chiuso"); }
-$("maniglia").addEventListener("click", () => mettiPannello(posPannello() === "aperto" ? "chiuso" : "aperto"));
-$("presa").addEventListener("click", () => { if (stato.sel) return; mettiPannello(posPannello() === "aperto" ? "chiuso" : "aperto"); });
-try { if (localStorage.getItem("pannello") === "ridotto") mettiPannello("ridotto"); } catch {}
+function apriPannello() { mettiPannello(true); }
+function chiudiPannello() { mettiPannello(false); }
+$("maniglia").addEventListener("click", () => mettiPannello(!aperto()));
+$("presa").addEventListener("click", () => { if (stato.sel) { chiudiDettaglio(); return; } mettiPannello(!aperto()); });
 (() => {
   const p = $("pannello");
   let y0 = null, h0 = 0, trascina = false, scorrevole = null, ultimo = 0, tUltimo = 0, vel = 0;
@@ -1863,38 +2028,31 @@ try { if (localStorage.getItem("pannello") === "ridotto") mettiPannello("ridotto
     if (MQ_LATO.matches || e.touches.length > 1) return;
     y0 = e.touches[0].clientY; h0 = p.getBoundingClientRect().height; trascina = false; vel = 0;
     ultimo = y0; tUltimo = e.timeStamp;
-    // dentro lista o scheda si trascina il pannello solo se sono già in cima e il dito va verso il basso
-    scorrevole = e.target.closest(".lista, .dettaglio");
+    scorrevole = e.target.closest(".espanso, .dettaglio");
   }, { passive: true });
   p.addEventListener("touchmove", (e) => {
     if (y0 == null) return;
     const y = e.touches[0].clientY, dy = y - y0;
     if (!trascina) {
       if (Math.abs(dy) < 8) return;
-      if (scorrevole && (scorrevole.scrollTop > 0 || dy < 0) && posPannello() === "aperto") { y0 = null; return; }
-      if (scorrevole && stato.sel && (scorrevole.scrollTop > 0 || dy < 0)) { y0 = null; return; }
+      // dentro l'elenco o la scheda: si scorre normalmente, finché non si è in cima e si tira giù
+      if (scorrevole && (scorrevole.scrollTop > 0 || dy < 0)) { y0 = null; return; }
       trascina = true; p.classList.add("trascino");
     }
     e.preventDefault();
-    const max = innerHeight * .78, min = 64;
-    const h = Math.max(min, Math.min(max, h0 - dy));
+    const h = Math.max(90, Math.min(innerHeight * .88, h0 - dy));
     p.style.maxHeight = "none"; p.style.height = h + "px";
     vel = (y - ultimo) / Math.max(1, e.timeStamp - tUltimo); ultimo = y; tUltimo = e.timeStamp;
   }, { passive: false });
-  const rilascia = () => {
+  p.addEventListener("touchend", () => {
     if (y0 == null) return;
     const dy = ultimo - y0; y0 = null;
     if (!trascina) return;
     fine();
-    // nella scheda: trascinare giù la chiude e torna alla lista
     if (stato.sel) { if (dy > 70 || vel > .5) chiudiDettaglio(); return; }
-    let i = POSIZIONI.indexOf(posPannello());
-    const passi = Math.abs(dy) > 260 ? 2 : 1;
-    if (dy > 45 || vel > .45) i = Math.max(0, i - passi);
-    else if (dy < -45 || vel < -.45) i = Math.min(2, i + passi);
-    mettiPannello(POSIZIONI[i]);
-  };
-  p.addEventListener("touchend", rilascia);
+    if (dy > 40 || vel > .4) chiudiPannello();
+    else if (dy < -40 || vel < -.4) apriPannello();
+  });
   p.addEventListener("touchcancel", () => { y0 = null; fine(); });
 })();
 
@@ -1904,7 +2062,7 @@ mappa.on("moveend", () => {
   attesaMossa = setTimeout(() => {
     if (!stato.completo && mappa.getZoom() >= ZOOM_PREZZI) { const c = mappa.getCenter(); caricaVicino({ lat: c.lat, lon: c.lng }); }
     if (!stato.completo && mappa.getZoom() < ZOOM_PREZZI && (stato.pos || stato.posNegata || mossaDaTe)) caricaTutto();
-    disegna(); aggiornaLista(); aggiornaZona(); aggiornaTendenza(); salvaVista();
+    aggiornaLista(); disegna(); aggiornaZona(); aggiornaTendenza(); salvaVista();
   }, 60);
 });
 new ResizeObserver(() => mappa.invalidateSize()).observe($("mappa"));
@@ -1943,7 +2101,9 @@ function inquadraVicino(pos) {
   const c = stato.carb;
   const vicini = stato.impianti.filter((i) => i.prezzi[c] && affidabile(i)).map((i) => [km(pos, i), i])
     .sort((a, b) => a[0] - b[0]).slice(0, 6).filter((x) => x[0] < 15);
-  const punti = [[pos.lat, pos.lon], ...vicini.map((x) => [x[1].lat, x[1].lon])];
+  const conveniente = stato.impianti.filter((i) => i.prezzi[c] && affidabile(i) && km(pos, i) <= RAGGIO_KM)
+    .sort((a, b) => a.prezzi[c][0] - b.prezzi[c][0] || km(pos, a) - km(pos, b))[0];
+  const punti = [[pos.lat, pos.lon], ...vicini.map((x) => [x[1].lat, x[1].lon]), ...(conveniente ? [[conveniente.lat, conveniente.lon]] : [])];
   if (punti.length < 2) { mappa.setView([pos.lat, pos.lon], 14); return; }
   const lato = MQ_LATO.matches;
   const testa = document.querySelector(".testa").getBoundingClientRect().bottom;
@@ -2046,7 +2206,7 @@ function dopoDati() {
     stato.avviata = true;
     const pref = leggiPreferenza();
     scegliCarburante(NOMI[pref] ? pref : "benzina");
-  } else { disegna(); aggiornaLista(); aggiornaTendenza(); }
+  } else { aggiornaLista(); disegna(); aggiornaTendenza(); }
 }
 const indiceCelle = fetch("data/celle.json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : null).catch(() => null);
 // Scarica le celle (0,5°) intorno a una posizione: pochi KB, i prezzi vicini compaiono subito
@@ -2116,10 +2276,48 @@ fetch("data/medie.json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : nu
   let negata = false;
   try { const p = await navigator.permissions?.query({ name: "geolocation" }); negata = p?.state === "denied"; } catch {}
   if (negata) { stato.posNegata = !ultimaPos; stato.posErrore = 1; caricaTutto(); aggiornaLista(); aggiornaStatoPos(); }
+  else if (primaVolta()) { caricaTutto(); benvenuto(); }   // prima spieghiamo, poi chiediamo la posizione
   else localizza(false);
   // il resto d'Italia arriva in sottofondo, senza rallentare i prezzi vicini
   setTimeout(caricaTutto, ultimaPos ? 2500 : 6000);
 })();
+// --- Benvenuto: tre schermate al primo avvio, poi la richiesta della posizione (spiegata, non a sorpresa) ---
+function primaVolta() { try { return !localStorage.getItem("benvenuto"); } catch { return false; } }
+function benvenuto() {
+  const passi = [
+    { icona: '<path d="M12 4v16M6 14l6 6 6-6"/>', titolo: "Fare il pieno oggi<br>o aspettare?",
+      testo: "Pumpy guarda come si stanno muovendo i prezzi nella tua zona e ti dà una risposta semplice: fai il pieno adesso, oppure aspetta qualche giorno." },
+    { icona: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', titolo: "Il distributore giusto,<br>vicino a te",
+      testo: "Ti indichiamo il più conveniente nei dintorni, quanto risparmi sul pieno, e ti portiamo lì con un tocco." },
+    { icona: '<path d="M4 20h16M6 20V10M10 20V10M14 20V10M18 20V10M3 10l9-6 9 6z"/>', titolo: "Prezzi ufficiali,<br>ogni giorno",
+      testo: () => { const a = stato.medie?.affidabilita?.percentuale; return `Usiamo i prezzi che i distributori comunicano al Ministero. La tendenza ci prende ${a ? a + " volte su 100" : "nella maggior parte dei casi"}: Pumpy può sbagliare, controlla sempre alla pompa.`; } },
+  ];
+  let k = 0;
+  const el = document.createElement("div");
+  el.className = "benvenuto"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Benvenuto in Pumpy");
+  const fine = (chiedi) => {
+    try { localStorage.setItem("benvenuto", "1"); } catch {}
+    el.classList.add("via"); setTimeout(() => el.remove(), 300);
+    if (chiedi) localizza(false);
+    else { stato.posNegata = true; aggiornaLista(); aggiornaStatoPos(); }
+  };
+  const mostra = () => {
+    const p = passi[k], ultimo = k === passi.length - 1;
+    el.innerHTML = `<div class="b-scheda">
+      <div class="b-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p.icona}</svg></div>
+      <h2>${p.titolo}</h2><p>${typeof p.testo === "function" ? p.testo() : p.testo}</p>
+      <div class="b-punti" aria-hidden="true">${passi.map((_, j) => `<i class="${j === k ? "on" : ""}"></i>`).join("")}</div>
+      <button type="button" class="b-avanti">${ultimo ? "Mostrami i distributori vicini" : "Continua"}</button>
+      ${ultimo ? '<button type="button" class="b-dopo">Non ora, cerco un comune</button><p class="b-nota">Ti chiederemo la posizione: resta sul tuo telefono e serve solo a trovare i distributori intorno a te.</p>' : '<button type="button" class="b-dopo b-salta">Salta</button>'}
+    </div>`;
+    el.querySelector(".b-avanti").addEventListener("click", () => { if (ultimo) fine(true); else { k++; mostra(); } });
+    el.querySelector(".b-dopo").addEventListener("click", () => fine(!ultimo ? true : false));
+    el.querySelector(".b-avanti").focus();
+  };
+  mostra();
+  document.body.appendChild(el);
+}
+
 // cercare un comune prima che sia arrivato tutto: si aspetta il caricamento completo
 $("comune").addEventListener("focus", () => caricaTutto(), { once: true });
 if ("serviceWorker" in navigator) {
