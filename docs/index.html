@@ -1199,10 +1199,16 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 function leggiPreferenza() { try { return localStorage.getItem("carburante"); } catch { return null; } }
 function salvaPreferenza(c) { try { localStorage.setItem("carburante", c); } catch {} }
 
-// Si riapre dove l'avevi lasciata; la prima volta sull'Italia (poi la posizione la porta sulla tua zona)
-const vistaSalvata = (() => { try { return JSON.parse(localStorage.getItem("vista")); } catch { return null; } })();
+// Apertura: subito sull'ultima posizione nota (istantaneo, anche prima del GPS); poi il GPS la corregge.
+// Senza posizione nota: dove avevi lasciato la mappa, altrimenti l'Italia.
+const leggiJSON = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+const ultimaPos = (() => { const u = leggiJSON("ultima-pos"); return u && Date.now() - u[2] < 30 * 864e5 ? { lat: u[0], lon: u[1], acc: 200 } : null; })();
+const vistaSalvata = leggiJSON("vista");
 const mappa = L.map("mappa", { zoomControl: false, minZoom: 5, maxZoom: 18 })
-  .setView(vistaSalvata ? [vistaSalvata[0], vistaSalvata[1]] : [42.3, 12.6], vistaSalvata ? vistaSalvata[2] : 6);
+  .setView(ultimaPos ? [ultimaPos.lat, ultimaPos.lon] : vistaSalvata ? [vistaSalvata[0], vistaSalvata[1]] : [42.3, 12.6],
+           ultimaPos ? 14 : vistaSalvata ? vistaSalvata[2] : 6);
+let mossaDaTe = false;   // se sposti la mappa a mano, il GPS non te la riporta indietro
+mappa.on("dragstart", () => { mossaDaTe = true; });
 L.control.zoom({ position: "bottomright" }).addTo(mappa);
 stato.strato = L.layerGroup().addTo(mappa);
 // Basi della mappa: "Strade" (stile navigatore), "Essenziale" (quasi solo strade), "Satellite".
@@ -1739,17 +1745,27 @@ function localizza(centra) {
   if (!navigator.geolocation) { if (centra) avviso("Il tuo browser non condivide la posizione: cerca il comune."); return; }
   if (centra && stato.pos) { if (stato.sel) chiudiDettaglio(); mappa.setView([stato.pos.lat, stato.pos.lon], 14); apriPannello(); return; }
   if (osservatore != null) return;
-  osservatore = navigator.geolocation.watchPosition((pos) => {
+  const arrivata = (pos) => {
     stato.pos = { lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy || 50 };
     aggiornaAvatar(); avviso("");
-    if (primaPosizione) { primaPosizione = false; mappa.setView([stato.pos.lat, stato.pos.lon], 14); }
-    else if (!stato.sel) aggiornaLista();
-  }, (err) => {
+    try { localStorage.setItem("ultima-pos", JSON.stringify([stato.pos.lat, stato.pos.lon, Date.now()])); } catch {}
+    const c = mappa.getCenter();
+    if (primaPosizione || centra) {
+      primaPosizione = false; centra = false;
+      if (!mossaDaTe && !stato.sel && (km(stato.pos, { lat: c.lat, lon: c.lng }) > .15 || mappa.getZoom() < 13)) mappa.setView([stato.pos.lat, stato.pos.lon], 14);
+      else aggiornaLista();
+    } else if (!stato.sel) aggiornaLista();
+  };
+  const errore = (err) => {
     osservatore = null;
     if (centra || err.code !== 1) avviso(err.code === 1 ? "Posizione non concessa: cerca un comune, oppure consentila dalle impostazioni del browser." : "Posizione non disponibile al momento: cerca il comune.");
-  }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 });
+  };
+  // prima una posizione veloce (anche di qualche minuto fa), poi quella precisa che si aggiorna
+  navigator.geolocation.getCurrentPosition(arrivata, () => {}, { enableHighAccuracy: false, maximumAge: 600000, timeout: 4000 });
+  osservatore = navigator.geolocation.watchPosition(arrivata, errore, { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 });
 }
-$("vicino").addEventListener("click", () => localizza(true));
+$("vicino").addEventListener("click", () => { mossaDaTe = false; localizza(true); });
+if (ultimaPos) { stato.pos = ultimaPos; aggiornaAvatar(); }
 
 async function carica() {
   try {
