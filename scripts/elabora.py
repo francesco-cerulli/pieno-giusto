@@ -8,10 +8,12 @@ Output:
 - docs/data/impianti.json  → distributori con prezzi e variazioni
 - docs/data/medie.json     → medie nazionali e provinciali, andamento storico,
                              tendenza (su/giù/stabile) per provincia e quanto si è rivelata affidabile
+- docs/data/celle/LAT_LON.json → gli stessi distributori divisi in celle da 0,5° (caricamento rapido)
 - docs/data/storico/XX.json → per provincia, i cambi di prezzo di ogni distributore negli ultimi 30 giorni
 Uso: python scripts/elabora.py
 """
 import json
+import math
 import sys
 from collections import defaultdict
 from datetime import date, datetime
@@ -152,6 +154,8 @@ def main():
                              "lat", "lon", "autostrada", "prezzi"],
                    "impianti": impianti}, f, ensure_ascii=False, separators=(",", ":"))
 
+    scrivi_celle(impianti, oggi)
+
     # --- medie: provinciali di oggi + andamento nazionale ---
     def media(valori):
         return round(sum(valori) / len(valori), 3) if valori else None
@@ -220,6 +224,32 @@ def main():
 
     cambiati = sum(1 for d, _ in variazioni.values() if d)
     print(f"Scritti {len(impianti)} distributori, {cambiati} prezzi con variazione registrata.")
+
+
+PASSO_CELLA = 0.5   # gradi: celle di circa 55 x 40 km
+
+
+def chiave_cella(lat, lon):
+    return f"{math.floor(lat / PASSO_CELLA) * PASSO_CELLA:.1f}_{math.floor(lon / PASSO_CELLA) * PASSO_CELLA:.1f}"
+
+
+def scrivi_celle(impianti, oggi):
+    """Gli stessi distributori di impianti.json, divisi in celle geografiche: all'apertura l'app
+    scarica solo le celle intorno a te (pochi KB) e mostra subito i prezzi vicini."""
+    cartella = SITE_DATA / "celle"
+    cartella.mkdir(parents=True, exist_ok=True)
+    celle = defaultdict(list)
+    for imp in impianti:
+        celle[chiave_cella(imp[6], imp[7])].append(imp)
+    for vecchio in cartella.glob("*.json"):
+        if vecchio.stem not in celle:
+            vecchio.unlink()
+    for chiave, righe in celle.items():
+        with open(cartella / f"{chiave}.json", "w", encoding="utf-8") as f:
+            json.dump({"aggiornato": oggi, "impianti": righe}, f, ensure_ascii=False, separators=(",", ":"))
+    with open(SITE_DATA / "celle.json", "w", encoding="utf-8") as f:
+        json.dump({"aggiornato": oggi, "passo": PASSO_CELLA, "celle": sorted(celle)}, f, separators=(",", ":"))
+    print(f"Celle: {len(celle)}")
 
 
 def scrivi_storico(impianti, per_giorno):
