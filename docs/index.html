@@ -1054,6 +1054,27 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 .base-tenue { filter: saturate(.45) brightness(1.04) contrast(.92); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .base-tenue { filter: saturate(.5) brightness(.95); } }
 .anteprima.essenziale { background: linear-gradient(160deg, transparent 44%, #f1e7cf 44% 52%, transparent 52%), linear-gradient(70deg, transparent 46%, #fff 46% 54%, transparent 54%), radial-gradient(circle at 80% 20%, #dfe8da 0 22%, transparent 23%), #eef0ec; border: 1px solid var(--line); }
+
+/* "Portami qui": grande, con icona e app indicata; nella lista un pulsante rapido per riga */
+.nav-riga { display: grid; gap: 6px; }
+.dettaglio .vai { display: flex; align-items: center; justify-content: center; gap: 12px; text-align: left; padding: 12px 18px; min-height: 56px; box-sizing: border-box;
+  background: var(--accent); color: var(--accent-fg); box-shadow: 0 6px 18px color-mix(in srgb, var(--brand) 35%, transparent); }
+.dettaglio .vai:active { transform: scale(.98); }
+.dettaglio .vai svg { width: 24px; height: 24px; stroke: currentColor; flex: none; }
+.dettaglio .vai span { display: grid; font-size: 1.05rem; line-height: 1.15; }
+.dettaglio .vai small { font-weight: 500; font-size: .78rem; opacity: .85; }
+.cambia-nav { justify-self: center; border: 0; background: none; color: var(--muted); font-size: .8rem; text-decoration: underline; cursor: pointer; padding: 6px 10px; }
+.lista li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; border-top: 1px solid var(--line); }
+.lista li button { border-top: 0; }
+.lista li.vuoto { display: block; border-top: 0; }
+.nav-veloce { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; margin-left: 6px;
+  background: var(--mint); color: var(--down); flex: none; }
+.nav-veloce svg { width: 20px; height: 20px; stroke: currentColor; }
+.nav-veloce:active { transform: scale(.94); }
+.scelta-nav { display: grid; gap: 8px; margin-bottom: 12px; }
+.voce-nav { display: block; padding: 14px 16px; border-radius: 16px; background: var(--surface-2); color: var(--fg); font-weight: 600; text-decoration: none; }
+.voce-nav:hover { background: var(--mint); }
+.guida .annulla { background: var(--surface-2); color: var(--fg); }
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1318,10 +1339,50 @@ function aggiornaLista() {
     const dist = stato.pos ? testoKm(km(stato.pos, i)) : "";
     return `<li><button type="button" data-n="${n}"><span class="nome">${esc(i.bandiera || i.nome)}</span>
       <span class="prezzo">${euro(p)}<small>${variazione(d, dal, false)}</small></span>
-      <span class="dove">${dist ? `<b>${dist}</b> · ` : ""}${esc(i.indirizzo)}, ${esc(i.comune)}</span></button></li>`;
+      <span class="dove">${dist ? `<b>${dist}</b> · ` : ""}${esc(i.indirizzo)}, ${esc(i.comune)}</span></button>
+      <a class="nav-veloce" ${attrNav(i)} aria-label="Portami a ${esc(i.bandiera || i.nome)}" title="Portami qui">${ICONA_NAV}</a></li>`;
   }).join("");
   lista.querySelectorAll("button").forEach((btn) => btn.addEventListener("click", () => seleziona(mostra[+btn.dataset.n])));
 }
+
+// --- "Portami qui": un tocco apre la navigazione con l'app di mappe del telefono ---
+// Android: link geo: → l'app predefinita (Google Maps, Waze…) o la scelta del sistema.
+// iPhone/iPad: Mappe di Apple. PC: Google Maps nel browser. Si può fissare un'altra app dal pulsante "Cambia".
+const UA = navigator.userAgent;
+const IOS = /iPhone|iPad|iPod/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const ANDROID = /Android/.test(UA);
+const NAVIGATORI = {
+  auto: { nome: IOS ? "Mappe" : ANDROID ? "la tua app di mappe" : "Google Maps" },
+  google: { nome: "Google Maps" }, apple: { nome: "Mappe di Apple" }, waze: { nome: "Waze" },
+};
+function navPreferito() { try { const v = localStorage.getItem("navigatore"); return NAVIGATORI[v] ? v : "auto"; } catch { return "auto"; } }
+function linkNav(i, app = navPreferito()) {
+  const ll = `${i.lat},${i.lon}`, nome = encodeURIComponent(i.bandiera || i.nome || "Distributore");
+  if (app === "auto") app = IOS ? "apple" : ANDROID ? "geo" : "google";
+  if (app === "geo") return `geo:${ll}?q=${ll}(${nome})`;
+  if (app === "apple") return `https://maps.apple.com/?daddr=${ll}&dirflg=d`;
+  if (app === "waze") return `https://waze.com/ul?ll=${ll}&navigate=yes`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${ll}&travelmode=driving`;
+}
+const ICONA_NAV = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>';
+function sceltaNavigatore(i) {
+  const el = document.createElement("div");
+  el.className = "guida"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Apri con");
+  const voci = ["google", ...(IOS ? ["apple"] : []), "waze"];
+  el.innerHTML = `<div><h2>Apri la navigazione con</h2>
+    <div class="scelta-nav">${voci.map((k) => `<a class="voce-nav" data-k="${k}" href="${linkNav(i, k)}" target="_blank" rel="noopener">${NAVIGATORI[k].nome}</a>`).join("")}
+    <a class="voce-nav" data-k="auto" href="${linkNav(i, "auto")}" ${IOS || ANDROID ? "" : 'target="_blank" rel="noopener"'}>Predefinita del telefono</a></div>
+    <p class="nota">La scelta viene ricordata: la prossima volta basta un tocco.</p>
+    <button type="button" class="annulla">Annulla</button></div>`;
+  el.addEventListener("click", (e) => {
+    const a = e.target.closest(".voce-nav");
+    if (a) { try { localStorage.setItem("navigatore", a.dataset.k); } catch {} setTimeout(() => { el.remove(); if (stato.sel) disegnaDettaglio(); }, 300); return; }
+    if (e.target === el || e.target.classList.contains("annulla")) el.remove();
+  });
+  document.body.appendChild(el);
+  el.querySelector(".voce-nav").focus();
+}
+const attrNav = (i) => { const h = linkNav(i); return h.startsWith("geo:") ? `href="${h}"` : `href="${h}" target="_blank" rel="noopener"`; };
 
 // --- dettaglio del distributore, nel pannello: prezzo, storico da leggere col dito, navigazione ---
 const storici = new Map();
@@ -1362,7 +1423,6 @@ async function disegnaDettaglio() {
   const altri = Object.keys(NOMI).filter((k) => i.prezzi[k])
     .map((k) => `<button type="button" data-c="${k}" aria-pressed="${k === c}">${NOMI[k]} <b>${euro(i.prezzi[k][0])}</b></button>`).join("");
   const dist = stato.pos ? ` · ${testoKm(km(stato.pos, i))} da te` : "";
-  const dest = `https://www.google.com/maps/dir/?api=1&destination=${i.lat},${i.lon}`;
   $("dettaglio").innerHTML = `<div class="det-testa">
       <button type="button" class="indietro" id="chiudiDettaglio" aria-label="Torna alla lista"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
       <div><h3>${esc(i.bandiera || i.nome)}</h3><p class="dove">${esc(i.indirizzo)}, ${esc(i.comune)}${dist}</p></div></div>
@@ -1370,9 +1430,11 @@ async function disegnaDettaglio() {
     <div class="grande"><span class="cifra${dubbio ? " dubbio" : ""}">${euro(p)}<small>€/l</small></span>${chip}</div>
     ${dubbio ? `<div class="attenzione">Da verificare. ${dubbio}</div>` : ""}
     <figure class="storico" id="storico" aria-label="Storico del prezzo"><div class="attesa"></div></figure>
-    <a class="vai" href="${dest}" target="_blank" rel="noopener">Portami qui</a>
+    <div class="nav-riga"><a class="vai" ${attrNav(i)}>${ICONA_NAV}<span>Portami qui<small>con ${NAVIGATORI[navPreferito()].nome}</small></span></a>
+      <button type="button" class="cambia-nav" id="cambiaNav">Cambia app</button></div>
     <p class="puo-sbagliare">Pumpy può sbagliare: controlla sempre il prezzo alla pompa.</p>`;
   $("chiudiDettaglio").addEventListener("click", chiudiDettaglio);
+  $("cambiaNav").addEventListener("click", () => sceltaNavigatore(i));
   $("dettaglio").querySelectorAll(".altri button").forEach((b) => b.addEventListener("click", () => { stato.detCarb = b.dataset.c; disegnaDettaglio(); }));
   const dati = await caricaStorico(i.provincia);
   if (stato.sel !== i || stato.detCarb !== c) return;
