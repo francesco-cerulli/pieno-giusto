@@ -1,17 +1,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Pieno Giusto</title>
+<title>Pumpy · prezzi carburanti</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0d6b5c">
+<meta name="theme-color" content="#0E9F6E">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Pieno Giusto">
+<meta name="apple-mobile-web-app-title" content="Pumpy">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icone/apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="icone/goccia.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="icone/favicon-32.png">
-<meta name="description" content="Prezzi di benzina, gasolio, GPL e metano in tutti i distributori d'Italia, con le variazioni di prezzo.">
+<meta name="description" content="Pumpy: prezzi di benzina, gasolio, GPL e metano in tutti i distributori d'Italia, e se conviene fare il pieno oggi o aspettare.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap">
 <style>
 .leaflet-pane,
 .leaflet-tile,
@@ -597,30 +598,33 @@ print-color-adjust: exact;
 /* Layout: telefono = mappa a tutto schermo con comandi sopra e foglio dal basso;
    tablet verticale = pannello flottante; PC/tablet orizzontale = barra laterale fissa;
    21:9 = barra laterale + mappa + colonna con l'andamento nazionale.
-   Tipografia da cartellone stradale (Barlow Condensed) per prezzi ed etichette. */
+   Marchio Pumpy: verde goccia, inchiostro, menta; Figtree; angoli morbidi, niente maiuscoletto. */
 :root {
-  --bg: #eef0ee;          /* sfondo sotto la mappa */
+  --bg: #f2f3f0;          /* sfondo sotto la mappa */
   --surface: #ffffff;
-  --surface-2: #f3f5f4;
-  --fg: #16201d;
-  --muted: #5d6b67;
-  --line: #d6dcda;
-  --accent: #0d6b5c;      /* verde petrolio */
+  --surface-2: #f1f5f2;
+  --fg: #0b1f17;          /* inchiostro */
+  --muted: #56695f;
+  --line: #dde5e0;
+  --brand: #0e9f6e;       /* verde Pumpy (logo, segnaposti) */
+  --accent: #0b8a5e;      /* verde per pulsanti con testo bianco */
   --accent-fg: #ffffff;
+  --mint: #eaf7f0;
   --up: #c2410c;          /* prezzo in aumento */
-  --down: #15803d;        /* prezzo in calo */
-  --shadow: 0 6px 24px rgb(15 30 25 / .14);
+  --down: #0b7a53;        /* prezzo in calo */
+  --shadow: 0 4px 18px rgb(11 31 23 / .10);
   --tiles: none;
-  --f-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
-  --f-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r: 18px;
+  --f-display: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #121816; --surface: #1b2320; --surface-2: #232d29; --fg: #e8eeeb; --muted: #97a6a1;
-  --line: #33403b; --accent: #3fb8a0; --accent-fg: #07201b; --up: #fb923c; --down: #4ade80;
+  --bg: #0b1310; --surface: #121c18; --surface-2: #1a2621; --fg: #eaf2ee; --muted: #93a69d;
+  --line: #26352f; --brand: #2bc48a; --accent: #2bc48a; --accent-fg: #04140d; --mint: #12301f; --up: #ff8a4c; --down: #3dd68c;
   --shadow: 0 6px 24px rgb(0 0 0 / .45); color-scheme: dark; } }
 :root[data-theme="dark"] {
-  --bg: #121816; --surface: #1b2320; --surface-2: #232d29; --fg: #e8eeeb; --muted: #97a6a1;
-  --line: #33403b; --accent: #3fb8a0; --accent-fg: #07201b; --up: #fb923c; --down: #4ade80;
+  --bg: #0b1310; --surface: #121c18; --surface-2: #1a2621; --fg: #eaf2ee; --muted: #93a69d;
+  --line: #26352f; --brand: #2bc48a; --accent: #2bc48a; --accent-fg: #04140d; --mint: #12301f; --up: #ff8a4c; --down: #3dd68c;
   --shadow: 0 6px 24px rgb(0 0 0 / .45); color-scheme: dark; }
 
 html, body { height: 100%; }
@@ -640,25 +644,25 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 
 /* --- barra in alto --- */
 .riga { display: flex; gap: 8px; align-items: center; }
-.marchio { font: 700 1.1rem/1 var(--f-display); letter-spacing: .02em; text-transform: uppercase;
-  background: var(--accent); color: var(--accent-fg); padding: 10px 9px; border-radius: 10px; box-shadow: var(--shadow); white-space: nowrap; }
-@media (max-width: 699px) { .marchio { display: none; } }
-.cerca { flex: 1; min-width: 0; display: flex; background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); }
+.marchio { font: 700 1.1rem/1 var(--f-display);  
+  background: var(--accent); color: var(--accent-fg); padding: 10px 9px; border-radius: var(--r); box-shadow: var(--shadow); white-space: nowrap; }
+
+.cerca { flex: 1; min-width: 0; display: flex; background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); }
 .cerca input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 9px 12px; }
-.cerca input:focus-visible { outline-offset: -2px; border-radius: 10px; }
-.btn-icona { border: 0; background: var(--surface); border-radius: 10px; box-shadow: var(--shadow);
+.cerca input:focus-visible { outline-offset: -2px; border-radius: var(--r); }
+.btn-icona { border: 0; background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow);
   width: 40px; height: 38px; display: grid; place-items: center; cursor: pointer; flex: none; }
 .btn-icona svg { width: 20px; height: 20px; stroke: var(--fg); }
 
 .carburanti { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface);
-  border-radius: 10px; box-shadow: var(--shadow); padding: 3px; gap: 3px; }
+  border-radius: var(--r); box-shadow: var(--shadow); padding: 3px; gap: 3px; }
 .carburanti button { border: 0; background: transparent; border-radius: 8px; padding: 6px 4px; cursor: pointer;
-  font: 600 .95rem/1.1 var(--f-display); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  font: 600 .95rem/1.1 var(--f-display);   color: var(--muted); }
 .carburanti button:hover { color: var(--fg); }
 .carburanti button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
 .carburanti small { display: block; font: 500 .8rem/1.2 var(--f-body); letter-spacing: 0; text-transform: none; font-variant-numeric: tabular-nums; }
 
-.avviso { background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); padding: 8px 12px; font-size: .88rem; }
+.avviso { background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); padding: 8px 12px; font-size: .88rem; }
 
 /* --- tendenza: "conviene fare il pieno adesso?" --- */
 .tendenza { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px 12px;
@@ -670,7 +674,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .tendenza.giu { background: color-mix(in srgb, var(--down) 13%, var(--surface)); }
 .tendenza.giu .segno { background: var(--down); }
 .tendenza .testo { min-width: 0; line-height: 1.25; }
-.tendenza .titolo { font: 600 1.1rem/1.15 var(--f-display); text-transform: uppercase; letter-spacing: .03em; }
+.tendenza .titolo { font: 600 1.1rem/1.15 var(--f-display);   }
 .tendenza.su .titolo { color: var(--up); } .tendenza.giu .titolo { color: var(--down); }
 .tendenza .dove, .tendenza .numeri { display: block; font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .tendenza .dove b { color: var(--fg); font-weight: 600; }
@@ -683,7 +687,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .guida .affid { font: 600 2rem/1 var(--f-display); color: var(--accent); }
 
 /* --- installazione come app --- */
-.installa { display: flex; align-items: center; gap: 10px; background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); padding: 8px 8px 8px 12px; font-size: .88rem; }
+.installa { display: flex; align-items: center; gap: 10px; background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); padding: 8px 8px 8px 12px; font-size: .88rem; }
 .installa img { width: 28px; height: 28px; border-radius: 7px; flex: none; }
 .installa p { margin: 0; flex: 1; min-width: 0; line-height: 1.3; }
 .installa .si { border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-fg); font-weight: 600; padding: 8px 12px; cursor: pointer; min-height: 38px; }
@@ -691,10 +695,10 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .guida { position: fixed; inset: 0; z-index: 3000; background: rgb(0 0 0 / .5); display: grid; place-items: end center; padding: 16px; }
 .guida > div { background: var(--surface); color: var(--fg); border-radius: 16px; padding: 18px 18px calc(env(safe-area-inset-bottom, 0px) + 16px); width: min(460px, 100%); box-shadow: var(--shadow); }
 @media (min-width: 700px) { .guida { place-items: center; } }
-.guida h2 { margin: 0 0 10px; font: 600 1.25rem/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .04em; }
+.guida h2 { margin: 0 0 10px; font: 600 1.25rem/1.2 var(--f-display);   }
 .guida ol { margin: 0 0 14px; padding-left: 1.3em; display: grid; gap: 8px; line-height: 1.4; }
 .guida .nota { color: var(--muted); font-size: .85rem; margin: 0 0 14px; }
-.guida button { width: 100%; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-fg); font-weight: 600; padding: 11px; cursor: pointer; }
+.guida button { width: 100%; border: 0; border-radius: var(--r); background: var(--accent); color: var(--accent-fg); font-weight: 600; padding: 11px; cursor: pointer; }
 @media (display-mode: standalone) { .installa { display: none !important; } }
 
 /* --- segnaposti con il prezzo --- */
@@ -728,7 +732,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .maniglia::before { display: none; }
 .pannello::before { content: ""; align-self: center; flex: none; width: 38px; height: 4px; border-radius: 4px; background: var(--line); margin-top: 8px; }
 .pannello .tendenza { margin-top: 8px; }
-.maniglia h2 { margin: 0; font: 600 1.05rem/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .05em; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.maniglia h2 { margin: 0; font: 600 1.05rem/1.2 var(--f-display);   display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .maniglia h2 span { color: var(--muted); font-weight: 500; text-transform: none; letter-spacing: 0; font-family: var(--f-body); font-size: .85rem; text-align: right; }
 .lista { list-style: none; margin: 0; padding: 0; overflow-y: auto; min-height: 0; overscroll-behavior: contain; }
 .pannello.chiuso .lista, .pannello.chiuso .fonte { display: none; }
@@ -798,10 +802,10 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   .panoramica { display: flex; flex-direction: column; gap: 14px; grid-column: 3; grid-row: 1; min-height: 0; overflow-y: auto;
     background: var(--surface); border-left: 1px solid var(--line); padding: 16px 20px; }
 }
-.panoramica h2 { margin: 0; font: 600 1.05rem/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .05em; }
+.panoramica h2 { margin: 0; font: 600 1.05rem/1.2 var(--f-display);   }
 .panoramica .sotto { color: var(--muted); font-size: .8rem; margin-top: 2px; }
 .trend { border: 0; background: transparent; text-align: left; cursor: pointer; padding: 10px 0 6px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto; gap: 0 10px; }
-.trend .n { font: 600 .95rem/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.trend .n { font: 600 .95rem/1.2 var(--f-display);   color: var(--muted); }
 .trend[aria-pressed="true"] .n { color: var(--accent); }
 .trend .v { font: 600 1.45rem/1 var(--f-display); font-variant-numeric: tabular-nums; text-align: right; }
 .trend .d { grid-column: 1 / -1; font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; min-height: 1.2em; }
@@ -813,7 +817,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .trend svg .guida { stroke: var(--line); stroke-width: 1; }
 .trend svg .cursore { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 2; }
 .zona { border-top: 1px solid var(--line); padding-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
-.zona h3 { grid-column: 1 / -1; margin: 0; font: 600 1rem/1.2 var(--f-display); text-transform: uppercase; letter-spacing: .05em; }
+.zona h3 { grid-column: 1 / -1; margin: 0; font: 600 1rem/1.2 var(--f-display);   }
 .zona div span { display: block; color: var(--muted); font-size: .78rem; }
 .zona div b { font: 600 1.3rem/1.1 var(--f-display); font-variant-numeric: tabular-nums; }
 .zona .largo { grid-column: 1 / -1; color: var(--muted); font-size: .85rem; }
@@ -831,7 +835,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .basi { position: absolute; right: 0; top: calc(100% + 8px); z-index: 1200; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow);
   padding: 8px; display: grid; grid-template-columns: repeat(3, 76px); gap: 6px; }
 .basi[hidden] { display: none; }
-.basi button { border: 0; background: transparent; border-radius: 10px; padding: 4px 4px 6px; cursor: pointer; font-size: .78rem; color: var(--muted); display: grid; gap: 4px; justify-items: center; }
+.basi button { border: 0; background: transparent; border-radius: var(--r); padding: 4px 4px 6px; cursor: pointer; font-size: .78rem; color: var(--muted); display: grid; gap: 4px; justify-items: center; }
 .basi button[aria-pressed="true"] { color: var(--fg); font-weight: 600; }
 .basi button[aria-pressed="true"] .anteprima { box-shadow: 0 0 0 2px var(--accent); }
 .anteprima { width: 64px; height: 44px; border-radius: 8px; display: block; }
@@ -844,11 +848,11 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface); color: var(--fg); box-shadow: var(--shadow); }
 .leaflet-popup-content { margin: 12px 14px; font: 14px/1.4 var(--f-body); min-width: 230px; }
 .leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
-.scheda h3 { margin: 0 0 2px; font: 600 1.15rem/1.15 var(--f-display); text-transform: uppercase; letter-spacing: .03em; padding-right: 14px; }
+.scheda h3 { margin: 0 0 2px; font: 600 1.15rem/1.15 var(--f-display);   padding-right: 14px; }
 .scheda .dove { color: var(--muted); font-size: .85rem; margin-bottom: 8px; }
 .scheda table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .scheda td { padding: 5px 0; border-top: 1px solid var(--line); vertical-align: top; }
-.scheda td:first-child { font: 600 .95rem/1.3 var(--f-display); text-transform: uppercase; letter-spacing: .05em; }
+.scheda td:first-child { font: 600 .95rem/1.3 var(--f-display);   }
 .scheda .p { text-align: right; font: 600 1.2rem/1.1 var(--f-display); }
 .scheda .var { text-align: right; font-size: .78rem; color: var(--muted); }
 .scheda .scelto td { color: var(--accent); }
@@ -894,13 +898,120 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .leaflet-top.leaflet-right { top: calc(env(safe-area-inset-top, 0px) + 120px); }
 @media (min-width: 700px) { .leaflet-top.leaflet-right { top: calc(env(safe-area-inset-top, 0px) + 140px); } }
 @media (prefers-reduced-motion: reduce) { .leaflet-zoom-anim .leaflet-zoom-animated { transition: none !important; } }
+
+/* ===== Pumpy: ritocchi dei componenti ===== */
+body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
+.marchio { display: inline-flex; align-items: center; gap: 7px; background: var(--surface); color: var(--fg);
+  font: 800 1.25rem/1 var(--f-display); letter-spacing: -.03em; padding: 6px 12px 6px 6px; border-radius: 999px; }
+.marchio svg { width: 28px; height: 28px; flex: none; }
+.cerca, .btn-icona { border-radius: 999px; }
+.cerca input { padding: 10px 16px; }
+.btn-icona { width: 42px; height: 42px; }
+.carburanti { border-radius: 999px; padding: 4px; gap: 4px; }
+.carburanti button { border-radius: 999px; font: 600 .92rem/1.1 var(--f-body); color: var(--fg); padding: 6px 4px; }
+.carburanti button[aria-pressed="true"] { background: var(--fg); color: var(--surface); }
+.carburanti small { color: var(--muted); font-size: .74rem; }
+.carburanti button[aria-pressed="true"] small { color: color-mix(in srgb, var(--surface) 75%, transparent); }
+.avviso, .installa { border-radius: var(--r); }
+.installa .si { border-radius: 999px; }
+
+@media (max-width: 699px) { .marchio { padding: 7px; } .marchio .nome-marchio { display: none; } }
+
+/* segnaposti a pillola: verde pieno = tra i più economici */
+.pin { transform: translate(-50%, -50%); border: 0; border-radius: 999px; padding: 4px 9px; font: 700 13.5px/1.2 var(--f-body);
+  box-shadow: 0 2px 8px rgb(11 31 23 / .16); }
+.pin::after { display: none; }
+.pin.economico { background: var(--brand); color: #fff; box-shadow: 0 4px 12px color-mix(in srgb, var(--brand) 40%, transparent); }
+.pin.economico .freccia { color: #fff; }
+.pin.caro { box-shadow: inset 0 0 0 1.5px var(--up), 0 2px 8px rgb(11 31 23 / .16); }
+.pin.dubbio { border: 1.5px dashed var(--line); }
+.gruppo { background: var(--fg); color: var(--surface); border: 3px solid var(--surface); font: 700 13px/1.05 var(--f-body); }
+
+/* foglio dal basso e tendenza */
+.pannello { border-radius: 26px 26px 0 0; }
+.maniglia h2 { font: 700 1.05rem/1.2 var(--f-display); }
+.tendenza { border-radius: var(--r); padding: 12px 12px 12px 14px; }
+.tendenza .segno { width: 42px; height: 42px; font-size: 1.3rem; }
+.tendenza .titolo { font: 700 1.05rem/1.2 var(--f-display); }
+.tendenza.giu { background: var(--mint); }
+.lista .nome { font-weight: 600; }
+.lista .prezzo { font: 700 1.25rem/1 var(--f-display); letter-spacing: -.02em; }
+.lista li button { border-radius: 12px; }
+
+/* scheda del distributore */
+.leaflet-popup-content-wrapper { border-radius: 22px; }
+.leaflet-popup-content { margin: 16px 18px; }
+.scheda h3 { font: 800 1.15rem/1.2 var(--f-display); }
+.scheda .grande .cifra { font: 800 2.5rem/1 var(--f-display); letter-spacing: -.04em; }
+.storico .area { fill: var(--brand); opacity: .12; }
+.storico .linea { stroke: var(--brand); stroke-width: 2.5; }
+.storico .fine { fill: var(--brand); }
+.chip.giu { background: var(--mint); }
+.scheda .azioni a { border-radius: 999px; background: var(--fg); color: var(--surface); padding: 11px; }
+.scheda .altri button { border-radius: 999px; }
+.guida > div { border-radius: 26px; }
+.guida h2 { font: 800 1.35rem/1.2 var(--f-display); }
+.guida button { border-radius: 999px; background: var(--fg); color: var(--surface); padding: 13px; }
+.guida .affid { font: 800 2.2rem/1 var(--f-display); color: var(--down); }
+.barra-aff i { background: var(--brand); }
+.flusso .icona svg { stroke: var(--brand); }
+.fonte button { color: var(--down); }
+@media (min-width: 1024px), (orientation: landscape) and (max-height: 520px) {
+  .marchio { background: transparent; padding: 0 0 4px; font-size: 1.7rem; }
+  .marchio svg { width: 34px; height: 34px; }
+  .pannello, .pannello.chiuso { border-radius: 0; }
+}
+
+/* ===== animazione d'avvio: la scritta "pumpy" diventa la goccia ===== */
+#avvio { position: fixed; inset: 0; z-index: 5000; background: var(--brand); display: grid; place-items: center; }
+#avvio .scena { position: relative; display: grid; place-items: center; }
+#avvio .parola { font: 800 clamp(56px, 16vw, 112px)/1 "Figtree", system-ui, sans-serif; letter-spacing: -.045em; color: #fff; display: flex; }
+#avvio .parola span { display: inline-block; opacity: 0; will-change: transform, opacity, filter; }
+#avvio svg { position: absolute; width: clamp(84px, 22vw, 132px); height: auto; overflow: visible; transform: scale(0); opacity: 0; }
+#avvio .chevron { stroke-dasharray: 60; stroke-dashoffset: 60; }
+@media (prefers-reduced-motion: reduce) { #avvio { display: none; } }
 </style>
 
+<div id="avvio" aria-hidden="true"><div class="scena">
+  <div class="parola"><span>p</span><span>u</span><span>m</span><span>p</span><span>y</span></div>
+  <svg viewBox="0 0 100 100"><path d="M50 8C50 8 18 46 18 64a32 32 0 0 0 64 0C82 46 50 8 50 8Z" fill="#fff"/><path class="chevron" d="M36 58l14 14 14-14" fill="none" stroke="var(--brand)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div></div>
+<script>
+// Avvio: le lettere salgono, poi convergono al centro e si fondono nella goccia,
+// che rimbalza, disegna la freccia e si apre sull'app. Circa 2 secondi; saltata con "riduci movimento".
+(() => {
+  const av = document.getElementById("avvio");
+  const via = () => av && av.remove();
+  if (!av || matchMedia("(prefers-reduced-motion: reduce)").matches || !av.animate) { via(); return; }
+  setTimeout(via, 4000);   // rete di sicurezza
+  const lettere = [...av.querySelectorAll(".parola span")], goccia = av.querySelector("svg"), freccia = av.querySelector(".chevron");
+  const morbido = "cubic-bezier(.22,1,.36,1)", rimbalzo = "cubic-bezier(.34,1.56,.64,1)";
+  lettere.forEach((l, k) => l.animate([{ opacity: 0, transform: "translateY(40%)" }, { opacity: 1, transform: "none" }],
+    { duration: 420, delay: 60 * k, easing: morbido, fill: "forwards" }));
+  setTimeout(() => {
+    const c = av.querySelector(".scena").getBoundingClientRect(), cx = c.left + c.width / 2;
+    lettere.forEach((l, k) => {
+      const r = l.getBoundingClientRect(), dx = cx - (r.left + r.width / 2);
+      l.animate([{ opacity: 1, transform: "none", filter: "blur(0)" },
+                 { opacity: 0, transform: `translateX(${dx}px) scale(.25)`, filter: "blur(6px)" }],
+        { duration: 520, delay: 30 * Math.abs(k - 2), easing: "cubic-bezier(.55,0,.45,1)", fill: "forwards" });
+    });
+    goccia.animate([{ opacity: 0, transform: "scale(0) translateY(20%)" }, { opacity: 1, transform: "scale(1.12)", offset: .7 }, { opacity: 1, transform: "scale(1)" }],
+      { duration: 560, delay: 280, easing: rimbalzo, fill: "forwards" });
+    freccia.animate([{ strokeDashoffset: 60 }, { strokeDashoffset: 0 }], { duration: 320, delay: 720, easing: morbido, fill: "forwards" });
+  }, 820);
+  setTimeout(() => {
+    goccia.animate([{ transform: "scale(1)" }, { transform: "scale(.85)" }, { transform: "scale(14)", opacity: 0 }],
+      { duration: 520, easing: "cubic-bezier(.7,0,.2,1)", fill: "forwards" });
+    av.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 360, delay: 200, easing: "ease-out", fill: "forwards" }).onfinish = via;
+  }, 2150);
+})();
+</script>
 <div class="app">
 <aside class="lato" aria-label="Ricerca e classifica">
 <div class="testa">
   <div class="riga">
-    <div class="marchio">Pieno Giusto</div>
+    <div class="marchio"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 8C50 8 18 46 18 64a32 32 0 0 0 64 0C82 46 50 8 50 8Z" fill="var(--brand)"/><path d="M36 58l14 14 14-14" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="nome-marchio">pumpy</span></div>
     <form class="cerca" id="cerca" role="search">
       <label for="comune" hidden>Cerca un comune</label>
       <input id="comune" list="comuni" placeholder="Cerca comune…" autocomplete="off" enterkeyhint="search">
@@ -929,7 +1040,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   <div class="avviso" id="avviso" hidden></div>
   <div class="installa" id="installa" hidden>
     <img src="icone/icona-192.png" alt="">
-    <p>Tienila sul telefono come un'app</p>
+    <p>Tieni Pumpy sul telefono come un'app</p>
     <button type="button" class="si" id="installaSi">Installa</button>
     <button type="button" class="no" id="installaNo" aria-label="Chiudi">×</button>
   </div>
@@ -959,6 +1070,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+
 <script>
 "use strict";
 const NOMI = { benzina: "Benzina", gasolio: "Gasolio", gpl: "GPL", metano: "Metano" };
@@ -1067,7 +1179,7 @@ function scheda(i) {
     <figure class="storico" aria-label="Storico del prezzo"><div class="attesa"></div></figure>
     ${altri ? `<div class="altri">${altri}</div>` : ""}
     <div class="azioni"><a href="${dest}" target="_blank" rel="noopener">Portami qui</a></div>
-    <p class="puo-sbagliare">Possiamo sbagliare: controlla sempre il prezzo alla pompa.</p></div>`;
+    <p class="puo-sbagliare">Pumpy può sbagliare: controlla sempre il prezzo alla pompa.</p></div>`;
 }
 
 // Storico del singolo distributore: un file per provincia, caricato solo quando serve
@@ -1306,7 +1418,7 @@ function spiegaTendenza() {
     ${a.percentuale != null ? `<p style="margin:0"><span class="affid">${a.percentuale}%</span> tendenze confermate nei ${a.orizzonte} giorni dopo</p>
       <div class="barra-aff" aria-hidden="true"><i style="width:${a.percentuale}%"></i></div>
       <p class="nota">${a.casi.toLocaleString("it-IT")} casi verificati in ${a.giorni} giorni.</p>` : ""}
-    <p class="nota">Possiamo sbagliare, soprattutto quando i prezzi cambiano direzione. Controlla sempre il prezzo alla pompa.</p>
+    <p class="nota">Pumpy può sbagliare, soprattutto quando i prezzi cambiano direzione. Controlla sempre il prezzo alla pompa.</p>
     <button type="button">Ho capito</button></div>`;
   el.addEventListener("click", (e) => { if (e.target === el || e.target.tagName === "BUTTON") el.remove(); });
   document.body.appendChild(el);
@@ -1446,7 +1558,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
       : "";
     const el = document.createElement("div");
     el.className = "guida"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
-    el.innerHTML = `<div><h2>Installa Pieno Giusto</h2><ol>${passi.map((p) => `<li>${p}</li>`).join("")}</ol>
+    el.innerHTML = `<div><h2>Installa Pumpy</h2><ol>${passi.map((p) => `<li>${p}</li>`).join("")}</ol>
       ${nota ? `<p class="nota">${nota}</p>` : ""}<button type="button">Ho capito</button></div>`;
     el.addEventListener("click", (e) => { if (e.target === el || e.target.tagName === "BUTTON") el.remove(); });
     document.body.appendChild(el);

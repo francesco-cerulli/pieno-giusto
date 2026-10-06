@@ -1,17 +1,18 @@
 {
-  "name": "Pieno Giusto",
-  "short_name": "Pieno Giusto",
-  "description": "Prezzi di benzina, gasolio, GPL e metano in tutti i distributori d'Italia, con le variazioni di prezzo.",
+  "name": "Pumpy · prezzi carburanti",
+  "short_name": "Pumpy",
+  "description": "Prezzi di benzina, gasolio, GPL e metano in tutti i distributori d'Italia, e se conviene fare il pieno oggi o aspettare.",
   "lang": "it",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#121816",
-  "theme_color": "#0d6b5c",
+  "background_color": "#0E9F6E",
+  "theme_color": "#0E9F6E",
   "icons": [
     { "src": "icone/icona-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "icone/icona-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "icone/icona-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "icone/icona-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icone/goccia.svg", "sizes": "any", "type": "image/svg+xml" }
   ]
 }

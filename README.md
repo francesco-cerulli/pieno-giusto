@@ -1,9 +1,10 @@
-# Pieno Giusto
+# Pumpy
 
 Mappa di tutti i distributori d'Italia con i prezzi di benzina, gasolio, GPL e metano
 e l'ultima variazione di ogni prezzo (▲ in aumento, ▼ in calo). Si aggiorna da sola ogni giorno.
 
-> "Pieno Giusto" è un nome provvisorio: cambiatelo quando volete (titolo in `docs/index.html`).
+> Marchio: **Pumpy** (prima "Pieno Giusto"). Verde goccia `#0E9F6E`, inchiostro `#0B1F17`, menta `#EAF7F0`,
+> carattere Figtree. Logo e icone in `docs/icone/`; all'avvio la scritta "pumpy" si trasforma nella goccia.
 
 ## Come funziona
 
