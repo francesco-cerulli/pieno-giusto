@@ -1122,6 +1122,17 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
   .presa { display: none; }
 }
 @media (max-width: 1023px) { .leaflet-control-zoom { display: none; } }
+
+/* stato della posizione e avatar non confermato */
+.pos-stato { display: flex; align-items: center; gap: 10px; margin: 2px 0 6px; padding: 9px 10px 9px 12px; border-radius: 14px; background: #fff4e5; color: var(--fg); font-size: .84rem; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pos-stato { background: #3a2a12; } }
+.pos-stato[hidden] { display: none; }
+.pos-stato span:not(.rotella) { flex: 1; min-width: 0; }
+.pos-stato button { flex: none; border: 0; border-radius: 999px; background: var(--fg); color: var(--surface); font-weight: 700; padding: 8px 12px; cursor: pointer; font-size: .8rem; }
+.pannello.con-dettaglio .pos-stato { display: none !important; }
+.avatar.vecchia { opacity: .55; filter: grayscale(.6); }
+.avatar.vecchia .alone, .avatar.vecchia .etichetta { display: none; }
+.pannello:has(.senza-pos) .pos-stato { display: none; }
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1130,36 +1141,35 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 </div></div>
 <script>
 // Avvio: le lettere salgono, poi convergono al centro e si fondono nella goccia,
-// che rimbalza, disegna la freccia e si apre sull'app. Circa 2 secondi; saltata con "riduci movimento".
+// che rimbalza, disegna la freccia e si apre sull'app. Circa 1,5 secondi (un tocco la salta);
+// intanto sotto si caricano già i prezzi vicini. Saltata con "riduci movimento".
 (() => {
   const av = document.getElementById("avvio");
   const via = () => av && av.remove();
-  let recente = false;
-  try { recente = Date.now() - (+localStorage.getItem("avvio-ts") || 0) < 6 * 3600e3; localStorage.setItem("avvio-ts", String(Date.now())); } catch {}
-  if (!av || recente || matchMedia("(prefers-reduced-motion: reduce)").matches || !av.animate) { via(); return; }
+  if (!av || matchMedia("(prefers-reduced-motion: reduce)").matches || !av.animate) { via(); return; }
   av.addEventListener("click", via);
   setTimeout(via, 4000);   // rete di sicurezza
   const lettere = [...av.querySelectorAll(".parola span")], goccia = av.querySelector("svg"), freccia = av.querySelector(".chevron");
   const morbido = "cubic-bezier(.22,1,.36,1)", rimbalzo = "cubic-bezier(.34,1.56,.64,1)";
   lettere.forEach((l, k) => l.animate([{ opacity: 0, transform: "translateY(40%)" }, { opacity: 1, transform: "none" }],
-    { duration: 420, delay: 60 * k, easing: morbido, fill: "forwards" }));
+    { duration: 340, delay: 45 * k, easing: morbido, fill: "forwards" }));
   setTimeout(() => {
     const c = av.querySelector(".scena").getBoundingClientRect(), cx = c.left + c.width / 2;
     lettere.forEach((l, k) => {
       const r = l.getBoundingClientRect(), dx = cx - (r.left + r.width / 2);
       l.animate([{ opacity: 1, transform: "none", filter: "blur(0)" },
                  { opacity: 0, transform: `translateX(${dx}px) scale(.25)`, filter: "blur(6px)" }],
-        { duration: 520, delay: 30 * Math.abs(k - 2), easing: "cubic-bezier(.55,0,.45,1)", fill: "forwards" });
+        { duration: 420, delay: 25 * Math.abs(k - 2), easing: "cubic-bezier(.55,0,.45,1)", fill: "forwards" });
     });
     goccia.animate([{ opacity: 0, transform: "scale(0) translateY(20%)" }, { opacity: 1, transform: "scale(1.12)", offset: .7 }, { opacity: 1, transform: "scale(1)" }],
-      { duration: 560, delay: 280, easing: rimbalzo, fill: "forwards" });
-    freccia.animate([{ strokeDashoffset: 60 }, { strokeDashoffset: 0 }], { duration: 320, delay: 720, easing: morbido, fill: "forwards" });
-  }, 820);
+      { duration: 460, delay: 200, easing: rimbalzo, fill: "forwards" });
+    freccia.animate([{ strokeDashoffset: 60 }, { strokeDashoffset: 0 }], { duration: 260, delay: 540, easing: morbido, fill: "forwards" });
+  }, 560);
   setTimeout(() => {
     goccia.animate([{ transform: "scale(1)" }, { transform: "scale(.85)" }, { transform: "scale(14)", opacity: 0 }],
       { duration: 520, easing: "cubic-bezier(.7,0,.2,1)", fill: "forwards" });
     av.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 360, delay: 200, easing: "ease-out", fill: "forwards" }).onfinish = via;
-  }, 2150);
+  }, 1450);
 })();
 </script>
 <div class="app">
@@ -1216,6 +1226,7 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
       <button type="button" data-o="distanza" aria-pressed="false">Distanza</button>
     </div>
   </div>
+  <div class="pos-stato" id="posStato" hidden></div>
   <ol class="lista" id="lista"><li class="vuoto attesa-pos"><span class="rotella" aria-hidden="true"></span>Cerco i distributori vicino a te…</li></ol>
   <p class="aggiornati" id="aggiornati"></p>
   <div class="dettaglio" id="dettaglio" hidden></div>
@@ -1863,12 +1874,14 @@ $("comune").addEventListener("change", (e) => { if (stato.comuni.has(e.target.va
 const AVATAR = `<div class="avatar"><span class="alone"></span><span class="faccia"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 16V11l2-5h10l2 5v5"/><path d="M4 11h16v5H4z"/><circle cx="7.5" cy="16.5" r="1.5"/><circle cx="16.5" cy="16.5" r="1.5"/></svg></span><span class="etichetta">Sei qui</span></div>`;
 let osservatore = null, avatar = null, precisione = null, primaPosizione = true;
 function aggiornaAvatar() {
+  if (!stato.pos) return;
   const p = [stato.pos.lat, stato.pos.lon];
   if (!avatar) {
     precisione = L.circle(p, { radius: stato.pos.acc, interactive: false, stroke: false, fillColor: "#0e9f6e", fillOpacity: .1 }).addTo(mappa);
     avatar = L.marker(p, { interactive: false, keyboard: false, zIndexOffset: 1000, icon: L.divIcon({ className: "", iconSize: null, html: AVATAR }) }).addTo(mappa);
   } else { avatar.setLatLng(p); precisione.setLatLng(p); }
   precisione.setRadius(Math.min(stato.pos.acc, 800));
+  const el = avatar.getElement(); if (el) el.firstElementChild?.classList.toggle("vecchia", !!stato.pos.vecchia || !!stato.posErrore);
 }
 // Inquadra i distributori più vicini (almeno 6), lasciando libero lo spazio coperto da barra e pannello
 function inquadraVicino(pos) {
@@ -1883,20 +1896,57 @@ function inquadraVicino(pos) {
   mappa.fitBounds(L.latLngBounds(punti), { paddingTopLeft: [28, (lato ? 0 : testa) + 24], paddingBottomRight: [28, pann + 24], maxZoom: 15, animate: false });
   if (mappa.getZoom() < 12) mappa.setView([pos.lat, pos.lon], 12, { animate: false });
 }
+// Riga sopra la lista quando "Sei qui" non c'è: spiega perché e offre il rimedio con un tocco
+function aggiornaStatoPos() {
+  const el = $("posStato");
+  if (stato.pos && !stato.pos.vecchia) { el.hidden = true; return; }
+  el.hidden = false;
+  if (stato.posErrore === 1) {
+    el.innerHTML = `<span>📍 La posizione è bloccata per Pumpy</span><button type="button" id="posAiuto">Come attivarla</button>`;
+    $("posAiuto").addEventListener("click", aiutoPosizione);
+  } else if (stato.posErrore) {
+    el.innerHTML = `<span>📍 Il GPS non risponde: è attiva la localizzazione del telefono?</span><button type="button" id="posRiprova">Riprova</button>`;
+    $("posRiprova").addEventListener("click", () => localizza(true));
+  } else if (stato.pos?.vecchia) {
+    el.innerHTML = `<span class="rotella" aria-hidden="true"></span><span>Aggiorno la tua posizione…</span>`;
+  } else {
+    el.innerHTML = `<span>📍 Mostra dove sei e i distributori intorno a te</span><button type="button" id="posAttiva">Attiva</button>`;
+    $("posAttiva").addEventListener("click", () => localizza(true));
+  }
+}
+function aiutoPosizione() {
+  const ios = IOS, standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  const passi = ios
+    ? ["Apri <b>Impostazioni</b> dell'iPhone → <b>Privacy e sicurezza</b> → <b>Localizzazione</b> (deve essere attiva).",
+       standalone ? "Nella stessa pagina scorri e scegli <b>Siti web di Safari</b> → <b>Mentre usi l'app</b>." : "Scorri fino a <b>Safari</b> (o <b>Siti web di Safari</b>) → <b>Mentre usi l'app</b>.",
+       "Torna su Pumpy e tocca la freccia in alto."]
+    : ["Tocca il <b>lucchetto</b> (o l'icona ⓘ) a sinistra dell'indirizzo, in alto.",
+       "Apri <b>Autorizzazioni</b> → <b>Posizione</b> e scegli <b>Consenti</b>.",
+       "Controlla che la <b>localizzazione del telefono</b> sia accesa (tendina in alto), poi ricarica Pumpy."];
+  const el = document.createElement("div");
+  el.className = "guida"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Attivare la posizione");
+  el.innerHTML = `<div><h2>Attiva la posizione</h2><ol>${passi.map((p) => `<li>${p}</li>`).join("")}</ol>
+    <p class="nota">Pumpy usa la posizione solo sul telefono, per mostrarti i distributori vicini: non la invia a nessuno.</p>
+    <button type="button">Ho capito</button></div>`;
+  el.addEventListener("click", (e) => { if (e.target === el || e.target.tagName === "BUTTON") el.remove(); });
+  document.body.appendChild(el); el.querySelector("button").focus();
+}
 function localizza(centra) {
   if (!navigator.geolocation) { stato.posNegata = true; caricaTutto(); aggiornaLista(); if (centra) avviso("Il tuo browser non condivide la posizione: cerca il comune."); return; }
-  if (centra && stato.pos) {
+  if (centra && stato.posErrore === 1) { aiutoPosizione(); return; }
+  if (centra && stato.pos && !stato.pos.vecchia) {
     if (stato.sel) chiudiDettaglio();
     caricaVicino(stato.pos).then(() => inquadraVicino(stato.pos));
     return;
   }
-  if (osservatore != null) return;
+  if (osservatore != null) { if (centra) { navigator.geolocation.clearWatch(osservatore); osservatore = null; } else return; }
+  stato.posErrore = 0; aggiornaStatoPos();
   let primaQui = true;
   const arrivata = async (pos) => {
     const prima = stato.pos;
     stato.pos = { lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy || 50 };
-    stato.posNegata = false;
-    aggiornaAvatar(); avviso("");
+    stato.posNegata = false; stato.posErrore = 0;
+    aggiornaAvatar(); avviso(""); aggiornaStatoPos();
     try { localStorage.setItem("ultima-pos", JSON.stringify([stato.pos.lat, stato.pos.lon, Date.now()])); } catch {}
     // si decide subito (prima di attendere i dati) se inquadrare: la posizione veloce e quella precisa arrivano quasi insieme
     const spostato = !prima || km(prima, stato.pos) > .15;
@@ -1907,16 +1957,19 @@ function localizza(centra) {
     else if (!stato.sel) aggiornaLista();
   };
   const errore = (err) => {
+    if (err.code === 3 && stato.pos && !stato.pos.vecchia) return;   // un ritardo dopo una posizione buona: si continua
+    if (osservatore != null) navigator.geolocation.clearWatch(osservatore);
     osservatore = null;
-    if (err.code === 1) { stato.posNegata = !stato.pos; caricaTutto(); aggiornaLista(); }
-    if (centra || (err.code !== 1 && !stato.pos)) avviso(err.code === 1 ? "Posizione non concessa: consentila dalle impostazioni del browser, oppure cerca il comune." : "Posizione non disponibile al momento: cerca il comune.");
+    stato.posErrore = err.code || 2;
+    if (err.code === 1) { stato.posNegata = !stato.pos; caricaTutto(); aggiornaLista(); if (centra) aiutoPosizione(); }
+    aggiornaStatoPos(); aggiornaAvatar();
   };
   // prima una posizione veloce (anche di qualche minuto fa), poi quella precisa che si aggiorna
   navigator.geolocation.getCurrentPosition(arrivata, () => {}, { enableHighAccuracy: false, maximumAge: 600000, timeout: 4000 });
   osservatore = navigator.geolocation.watchPosition(arrivata, errore, { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 });
 }
 $("vicino").addEventListener("click", () => { mossaDaTe = false; localizza(true); });
-if (ultimaPos) { stato.pos = ultimaPos; aggiornaAvatar(); }
+if (ultimaPos) { stato.pos = { ...ultimaPos, vecchia: true }; aggiornaAvatar(); aggiornaStatoPos(); }
 
 function aggiungi(righe) {
   for (const r of righe) {
@@ -2007,7 +2060,7 @@ fetch("data/medie.json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : nu
   if (ultimaPos) caricaVicino(ultimaPos).then(() => { if (!mossaDaTe && !stato.sel) inquadraVicino(stato.pos || ultimaPos); });
   let negata = false;
   try { const p = await navigator.permissions?.query({ name: "geolocation" }); negata = p?.state === "denied"; } catch {}
-  if (negata) { stato.posNegata = !ultimaPos; caricaTutto(); aggiornaLista(); }
+  if (negata) { stato.posNegata = !ultimaPos; stato.posErrore = 1; caricaTutto(); aggiornaLista(); aggiornaStatoPos(); }
   else localizza(false);
   // il resto d'Italia arriva in sottofondo, senza rallentare i prezzi vicini
   setTimeout(caricaTutto, ultimaPos ? 2500 : 6000);
