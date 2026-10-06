@@ -1264,6 +1264,31 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
   .m-top b { color: var(--fg); font-size: 1rem; }
   .m-su { flex: none; width: 20px; height: 20px; stroke: var(--muted); }
 }
+
+/* verdetto: quando, e i dettagli a richiesta */
+.v-quando { margin: 2px 0 0; font-weight: 700; font-size: .92rem; }
+.v-espandi { margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; padding: 4px 0; color: var(--muted); font-weight: 600; font-size: .82rem; cursor: pointer; }
+.v-espandi svg { width: 15px; height: 15px; stroke: currentColor; transition: transform .2s; }
+.v-espandi[aria-expanded="true"] svg { transform: rotate(180deg); }
+.v-dettagli { grid-column: 1 / -1; display: grid; gap: 10px; margin-top: 4px; padding-top: 10px; border-top: 1px solid color-mix(in srgb, var(--fg) 10%, transparent); }
+.v-dettagli[hidden] { display: none; }
+.v-riga { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; }
+.v-ri { width: 28px; height: 28px; border-radius: 9px; background: var(--surface); display: grid; place-items: center; }
+.v-ri svg { width: 16px; height: 16px; stroke: var(--fg); }
+.verdetto.giu .v-ri svg { stroke: var(--down); } .verdetto.su .v-ri svg { stroke: var(--up); }
+.v-riga p { margin: 0; font-size: .84rem; line-height: 1.4; }
+.v-riga p b:first-child { display: block; font-size: .78rem; margin-bottom: 1px; }
+.v-dettagli .v-fiducia { margin: 2px 0 0; }
+.v-fiducia button { border: 0; background: none; padding: 0; color: inherit; text-decoration: underline; font: inherit; cursor: pointer; }
+.v-riga p { color: var(--fg); }
+.verdetto.giu .v-riga p b:first-child { color: var(--down); } .verdetto.su .v-riga p b:first-child { color: var(--up); }
+.v-dettagli .v-fiducia { color: var(--muted); }
+@media (max-width: 1023px) {
+  /* telefono: il pannello aperto scorre tutto insieme (verdetto, consigliato, andamento, lista) */
+  .pannello:not(.con-dettaglio) { overflow-y: auto; overscroll-behavior: contain; }
+  .pannello:not(.chiuso) .espanso { display: block !important; overflow: visible; }
+  .pannello .presa { position: sticky; top: 0; z-index: 2; background: var(--surface); }
+}
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1596,6 +1621,7 @@ function aggiornaLista() {
   const rif = stato.pos && vicinoATe ? stato.pos : cc;
   for (const i of righe) i._km = km(rif, i);
   const media = righe.length ? righe.reduce((a, i) => a + i.prezzi[c][0], 0) / righe.length : 0;
+  stato.mediaLista = media;
   righe.sort(stato.ordine === "distanza" ? (a, b) => a._km - b._km : (a, b) => a.prezzi[c][0] - b.prezzi[c][0] || a._km - b._km);
   $("titoloLista").textContent = titolo;
   const piuBasso = righe.length ? Math.min(...righe.map((i) => i.prezzi[c][0])) : 0;
@@ -1639,7 +1665,7 @@ function disegnaConsigliato(i, media, vicinoATe) {
     </button>
     <a class="c-vai" ${attrNav(i)} aria-label="Portami a ${esc(i.bandiera || i.nome)}">${ICONA_NAV}<span>Vai</span></a>`;
   $("cApri").addEventListener("click", () => seleziona(i));
-  aggiornaMini();
+  aggiornaTendenza();
 }
 function mostraSenzaPosizione() {
   $("titoloLista").textContent = "Dove sei?"; $("conteggio").textContent = ""; $("consigliato").hidden = true;
@@ -1904,21 +1930,67 @@ const VERDETTI = {
 const ICONE_VERDETTO = {
   giu: '<path d="M12 5v14M6 13l6 6 6-6"/>', su: '<path d="M12 19V5M6 11l6-6 6 6"/>', stabile: '<path d="M5 12h14M13 6l6 6-6 6"/>',
 };
+// Quando e quanto: dalle medie di cosa è successo davvero dopo tendenze simili (ricalcolate ogni giorno),
+// scalate sulla forza del movimento di oggi. È una stima: lo diciamo sempre.
+function previsione(dir, d3) {
+  const dt = stato.medie?.dopo_tendenza?.[dir];
+  if (!dt || dir === "stabile") return null;
+  const r = Math.min(1.2, Math.abs(d3) / dt.d3_medio);
+  const giorni = Math.max(1, Math.round(dt.giorno * Math.min(1, r)));
+  const litro = dt.attesa * r;
+  return { giorni, litro, pieno: litro * PIENO_LITRI, casi: dt.casi };
+}
+const soldi = (e) => e.toFixed(2).replace(".", ",");
+const giornoTra = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" }); };
+const ICONE_RIGA = {
+  perche: '<path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/>',
+  quando: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+  quanto: '<circle cx="12" cy="12" r="8"/><path d="M15 9.5a3.5 3.5 0 1 0 0 5M7.5 11h5M7.5 13h5"/>',
+  adesso: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+};
 function aggiornaTendenza() {
   const box = $("verdetto"), c = stato.carb, z = zonaCorrente();
   const t = stato.medie?.tendenze?.[z]?.[c] || stato.medie?.tendenze?.IT?.[c];
   const zona = stato.medie?.tendenze?.[z]?.[c] ? z : "IT";
   if (!t) { box.hidden = true; $("andamento").hidden = true; return; }
   const [, , d3, dir] = t, v = VERDETTI[dir], a = stato.medie?.affidabilita;
+  const nomeZona = zona === "IT" ? "In Italia" : `In provincia di ${PROVINCE[zona] || zona}`;
+  const prev = previsione(dir, d3), i = stato.migliore, media = stato.mediaLista;
+  const risparmioDove = i && media ? (media - i.prezzi[c][0]) * PIENO_LITRI : 0;
+  // la riga "quando", sempre visibile sotto il titolo
+  const quando = dir === "giu" ? (prev ? `Il momento migliore: ${prev.giorni === 1 ? "domani" : `verso ${giornoTra(prev.giorni)}`}` : "Il momento migliore: tra qualche giorno")
+    : dir === "su" ? "Il momento migliore: oggi" : "Nessun giorno migliore in vista";
+  // i dettagli: perché, quando, quanto, e cosa fare se serve subito
+  const righe = [];
+  righe.push(["perche", "Perché", dir === "stabile"
+    ? `${nomeZona} i prezzi sono fermi da qualche giorno.`
+    : `${nomeZona} i distributori stanno ${dir === "giu" ? "abbassando" : "alzando"} i prezzi: ${dir === "giu" ? "−" : "+"}${cent(d3)} cent al litro negli ultimi 3 giorni. Cambiano un po' alla volta, quindi di solito il movimento continua ancora qualche giorno.`]);
+  if (prev) righe.push(["quando", "Quando", dir === "giu"
+    ? `Nelle ultime settimane, dopo un calo così, il prezzo ha toccato il minimo in circa ${prev.giorni === 1 ? "un giorno" : prev.giorni + " giorni"}.`
+    : `Nelle ultime settimane, dopo un aumento così, i prezzi sono saliti ancora per circa ${prev.giorni === 1 ? "un giorno" : prev.giorni + " giorni"}: prima fai il pieno, meglio è.`]);
+  if (prev && prev.pieno >= .2) righe.push(["quanto", "Quanto", dir === "giu"
+    ? `Aspettando: circa <b>${soldi(prev.pieno)} € in meno</b> su un pieno da ${PIENO_LITRI} litri.`
+    : `Aspettando potresti spendere circa <b>${soldi(prev.pieno)} € in più</b> su un pieno da ${PIENO_LITRI} litri.`]);
+  if (i && risparmioDove >= .5) righe.push(["adesso", dir === "giu" ? "Se ti serve adesso" : "Dove",
+    `${esc(i.bandiera || i.nome)} (${testoKm(i._km)}) costa già <b>${soldi(risparmioDove)} € meno</b> della media qui intorno: scegliere il distributore giusto è il risparmio più sicuro.`]);
   box.className = `verdetto ${dir}`; box.hidden = false;
   box.innerHTML = `<div class="v-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ICONE_VERDETTO[dir]}</svg></div>
     <div class="v-testo">
       <p class="v-occhiello">${NOMI[c]} · ${zona === "IT" ? "Italia" : esc(PROVINCE[zona] || zona)}</p>
       <h2 class="v-titolo">${v.titolo}</h2>
-      <p class="v-perche">${v.perche(d3)}</p>
-      ${a?.percentuale ? `<p class="v-fiducia">Indicazione giusta ${a.percentuale} volte su 100 · <button type="button" id="vComeFunziona">come lo sappiamo</button></p>` : ""}
+      <p class="v-quando">${quando}</p>
+      <button type="button" class="v-espandi" id="vEspandi" aria-expanded="${!!stato.vAperto}" aria-controls="vDettagli">Perché, e quanto risparmi
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    </div>
+    <div class="v-dettagli" id="vDettagli" ${stato.vAperto ? "" : "hidden"}>
+      ${righe.map(([k, tit, testo]) => `<div class="v-riga"><span class="v-ri" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONE_RIGA[k]}</svg></span><p><b>${tit}</b>${testo}</p></div>`).join("")}
+      <p class="v-fiducia">${prev ? `Stime basate su ${prev.casi.toLocaleString("it-IT")} casi in ${stato.medie.giorni_dati} giorni di prezzi: medie, non garanzie. ` : ""}${a?.percentuale ? `La tendenza si è confermata ${a.percentuale} volte su 100. ` : ""}<button type="button" id="vComeFunziona">Come lo calcoliamo</button></p>
     </div>`;
-  $("vComeFunziona")?.addEventListener("click", (e) => { e.stopPropagation(); spiegaTendenza(); });
+  $("vEspandi").addEventListener("click", (e) => {
+    e.stopPropagation(); stato.vAperto = !stato.vAperto;
+    $("vDettagli").hidden = !stato.vAperto; $("vEspandi").setAttribute("aria-expanded", stato.vAperto);
+  });
+  $("vComeFunziona").addEventListener("click", (e) => { e.stopPropagation(); spiegaTendenza(); });
   disegnaAndamentoZona(zona, dir);
   aggiornaMini();
 }
@@ -1992,6 +2064,7 @@ function spiegaTendenza() {
     ${a.percentuale != null ? `<p style="margin:0"><span class="affid">${a.percentuale}%</span> tendenze confermate nei ${a.orizzonte} giorni dopo</p>
       <div class="barra-aff" aria-hidden="true"><i style="width:${a.percentuale}%"></i></div>
       <p class="nota">${a.casi.toLocaleString("it-IT")} casi verificati in ${a.giorni} giorni.</p>` : ""}
+    ${stato.medie?.dopo_tendenza?.giu ? `<p class="nota"><b>Quando e quanto:</b> guardiamo cosa è successo nei 5 giorni successivi tutte le volte che i prezzi di una zona si sono mossi così (${(stato.medie.dopo_tendenza.giu.casi + (stato.medie.dopo_tendenza.su?.casi || 0)).toLocaleString("it-IT")} casi), e lo riportiamo alla forza del movimento di oggi. Più giorni di dati raccogliamo, più la stima diventa precisa.</p>` : ""}
     <p class="nota">Pumpy può sbagliare, soprattutto quando i prezzi cambiano direzione. Controlla sempre il prezzo alla pompa.</p>
     <button type="button">Ho capito</button></div>`;
   el.addEventListener("click", (e) => { if (e.target === el || e.target.tagName === "BUTTON") el.remove(); });
@@ -2035,7 +2108,7 @@ function mettiPannello(apri) {
   const p = $("pannello");
   p.classList.toggle("chiuso", !apri);
   $("maniglia").setAttribute("aria-expanded", apri);
-  if (!apri) $("espanso").scrollTop = 0;
+  if (!apri) { $("espanso").scrollTop = 0; $("pannello").scrollTop = 0; }
   aggiornaMini();
 }
 // Pannello chiuso: resta solo una riga col verdetto e il prezzo migliore; un tocco lo riapre
@@ -2061,8 +2134,8 @@ $("presa").addEventListener("click", () => { if (stato.sel) { chiudiDettaglio();
     if (MQ_LATO.matches || e.touches.length > 1) return;
     y0 = e.touches[0].clientY; h0 = p.getBoundingClientRect().height; trascina = false; vel = 0;
     ultimo = y0; tUltimo = e.timeStamp;
-    scorrevole = e.target.closest(".espanso, .dettaglio");
-    if (scorrevole && !aperto()) scorrevole = null;
+    // pannello aperto: scorre tutto insieme; si trascina giù solo quando è già in cima
+    scorrevole = stato.sel ? e.target.closest(".dettaglio") : (aperto() ? p : null);
   }, { passive: true });
   p.addEventListener("touchmove", (e) => {
     if (y0 == null) return;

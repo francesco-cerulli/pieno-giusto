@@ -32,6 +32,7 @@ MIN_IMPIANTI_MEDIANA = 10           # sotto questo numero uso la mediana naziona
 GIORNI_ANDAMENTO = 90               # lunghezza della serie delle medie nazionali
 GIORNI_TENDENZA = 3                 # la tendenza guarda gli ultimi 3 giorni...
 SOGLIA_TENDENZA = 0.005             # ...e conta solo se la media si è mossa di almeno mezzo centesimo
+ORIZZONTE_DOPO = 5                  # quanti giorni dopo la tendenza si guarda per dire "quando" e "quanto"
 GIORNI_SERIE_ZONA = 14              # giorni del grafico della zona nel pannello
 GIORNI_PUNTO = 30                   # storico del singolo distributore mostrato nella scheda
 
@@ -216,6 +217,38 @@ def main():
                     "casi": casi, "giorni": len(cronologia), "orizzonte": H}
     print(f"Tendenza: confermata {giusti}/{casi} volte ({affidabilita['percentuale']}%)")
 
+    # --- dopo la tendenza: cosa è successo di solito nei giorni successivi? ---
+    # Per ogni zona e giorno in cui la tendenza era "giu" o "su", la variazione media della media di zona
+    # dopo 1..5 giorni. Da qui: quando conviene (il giorno in cui si raggiunge quasi tutto il calo) e quanto.
+    dopo = {"giu": [[] for _ in range(ORIZZONTE_DOPO)], "su": [[] for _ in range(ORIZZONTE_DOPO)]}
+    casi_dopo = {"giu": 0, "su": 0}
+    forza = {"giu": [], "su": []}   # quanto si era mosso nei 3 giorni prima: serve a scalare l'attesa sul caso di oggi
+    for s_z in serie.values():
+        for i in range(GIORNI_TENDENZA, len(cronologia) - ORIZZONTE_DOPO):
+            g = [cronologia[i + h] for h in range(-GIORNI_TENDENZA, ORIZZONTE_DOPO + 1)]
+            if any(x not in s_z for x in g):
+                continue
+            d3 = s_z[cronologia[i]] - s_z[cronologia[i - GIORNI_TENDENZA]]
+            verso = "giu" if d3 <= -SOGLIA_TENDENZA else "su" if d3 >= SOGLIA_TENDENZA else None
+            if not verso:
+                continue
+            casi_dopo[verso] += 1
+            forza[verso].append(abs(d3))
+            for h in range(1, ORIZZONTE_DOPO + 1):
+                dopo[verso][h - 1].append(s_z[cronologia[i + h]] - s_z[cronologia[i]])
+    dopo_tendenza = {}
+    for verso, liste in dopo.items():
+        if casi_dopo[verso] < 30:
+            continue
+        medie_h = [sum(l) / len(l) for l in liste]
+        estremo = min(medie_h) if verso == "giu" else max(medie_h)
+        # il "giorno migliore": il primo in cui si è già visto l'80% della variazione massima
+        giorno = next(h + 1 for h, v in enumerate(medie_h) if abs(v) >= .8 * abs(estremo))
+        dopo_tendenza[verso] = {"variazione": [round(v, 4) for v in medie_h], "giorno": giorno,
+                                "attesa": round(abs(medie_h[giorno - 1]), 4), "casi": casi_dopo[verso],
+                                "d3_medio": round(sum(forza[verso]) / len(forza[verso]), 4)}
+    print(f"Dopo la tendenza: {dopo_tendenza}")
+
     # --- andamento recente per zona (Italia e province): serve al grafico "come si muovono i prezzi qui" ---
     ultimi = cronologia[-GIORNI_SERIE_ZONA:]
     serie_zone = defaultdict(dict)
@@ -227,7 +260,8 @@ def main():
     with open(SITE_DATA / "medie.json", "w", encoding="utf-8") as f:
         json.dump({"aggiornato": oggi, "nazionale": andamento, "province": province,
                    "tendenze": tendenze, "affidabilita": affidabilita,
-                   "giorni_serie": ultimi, "serie_zone": serie_zone},
+                   "giorni_serie": ultimi, "serie_zone": serie_zone,
+                   "dopo_tendenza": dopo_tendenza, "giorni_dati": len(cronologia)},
                   f, ensure_ascii=False, separators=(",", ":"))
 
     scrivi_storico(impianti, per_giorno)
