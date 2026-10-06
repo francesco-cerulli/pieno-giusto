@@ -1451,14 +1451,15 @@ function aggiornaLista() {
   $("titoloLista").textContent = titolo;
   $("conteggio").textContent = righe.length ? (vicinoATe ? `${righe.length} entro ${stato.raggio} km` : `${righe.length} distributori`) : "";
   if (!righe.length) { lista.innerHTML = '<li class="vuoto">Nessun distributore con questo carburante qui. Prova ad allontanare la mappa.</li>'; return; }
-  const minimo = Math.min(...righe.map((i) => i.prezzi[c][0]));
+  // un solo "Il più conveniente": a parità di prezzo vince il più vicino
+  const migliore = righe.reduce((m, i) => (!m || i.prezzi[c][0] < m.prezzi[c][0] || (i.prezzi[c][0] === m.prezzi[c][0] && i._km < m._km) ? i : m), null);
   const mostra = righe.slice(0, MQ_LATO.matches ? 50 : 25);
   lista.innerHTML = mostra.map((i, n) => {
     const [p, d, dal] = i.prezzi[c];
     const risparmio = (media - p) * PIENO_LITRI;
-    const etichetta = p === minimo ? '<span class="bollino">Il più conveniente</span>' : (n === 0 && stato.ordine === "distanza" ? '<span class="bollino neutro">Il più vicino</span>' : "");
+    const etichetta = i === migliore ? '<span class="bollino">Il più conveniente</span>' : (n === 0 && stato.ordine === "distanza" ? '<span class="bollino neutro">Il più vicino</span>' : "");
     const extra = risparmio >= .5 ? `<span class="risparmio" title="Rispetto alla media dei distributori in elenco, su ${PIENO_LITRI} litri">${risparmio.toFixed(2).replace(".", ",")} € in meno sul pieno</span>` : variazione(d, dal, false);
-    return `<li class="${p === minimo ? "migliore" : ""}"><button type="button" data-n="${n}">
+    return `<li class="${i === migliore ? "migliore" : ""}"><button type="button" data-n="${n}">
       <span class="nome">${etichetta}${esc(i.bandiera || i.nome)}</span>
       <span class="prezzo">${euro(p)}</span>
       <span class="dove"><b>${testoKm(i._km)}</b> · ${esc(i.indirizzo)}</span>
