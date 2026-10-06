@@ -1289,6 +1289,15 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
   .pannello:not(.chiuso) .espanso { display: block !important; overflow: visible; }
   .pannello .presa { position: sticky; top: 0; z-index: 2; background: var(--surface); }
 }
+
+/* dettagli del verdetto: tessere con i numeri */
+.v-tessere { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; }
+.v-tessera { background: var(--surface); border-radius: 14px; padding: 9px 10px; display: grid; gap: 1px; min-width: 0; }
+.vt-e { font-size: .68rem; color: var(--muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vt-v { font: 800 1.12rem/1.15 var(--f-display); letter-spacing: -.02em; white-space: nowrap; }
+.vt-v.giu { color: var(--down); } .vt-v.su { color: var(--up); }
+.vt-s { font-size: .68rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v-perche2 { margin: 0; font-size: .8rem; color: var(--fg); }
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1960,31 +1969,22 @@ function aggiornaTendenza() {
   // la riga "quando", sempre visibile sotto il titolo
   const quando = dir === "giu" ? (prev ? `Il momento migliore: ${prev.giorni === 1 ? "domani" : `verso ${giornoTra(prev.giorni)}`}` : "Il momento migliore: tra qualche giorno")
     : dir === "su" ? "Il momento migliore: oggi" : "Nessun giorno migliore in vista";
-  // i dettagli: perché, quando, quanto, e cosa fare se serve subito
-  const righe = [];
-  righe.push(["perche", "Perché", dir === "stabile"
-    ? `${nomeZona} i prezzi sono fermi da qualche giorno.`
-    : `${nomeZona} i distributori stanno ${dir === "giu" ? "abbassando" : "alzando"} i prezzi: ${dir === "giu" ? "−" : "+"}${cent(d3)} cent al litro negli ultimi 3 giorni. Cambiano un po' alla volta, quindi di solito il movimento continua ancora qualche giorno.`]);
-  if (prev) righe.push(["quando", "Quando", dir === "giu"
-    ? `Nelle ultime settimane, dopo un calo così, il prezzo ha toccato il minimo in circa ${prev.giorni === 1 ? "un giorno" : prev.giorni + " giorni"}.`
-    : `Nelle ultime settimane, dopo un aumento così, i prezzi sono saliti ancora per circa ${prev.giorni === 1 ? "un giorno" : prev.giorni + " giorni"}: prima fai il pieno, meglio è.`]);
-  if (prev && prev.pieno >= .2) righe.push(["quanto", "Quanto", dir === "giu"
-    ? `Aspettando: circa <b>${soldi(prev.pieno)} € in meno</b> su un pieno da ${PIENO_LITRI} litri.`
-    : `Aspettando potresti spendere circa <b>${soldi(prev.pieno)} € in più</b> su un pieno da ${PIENO_LITRI} litri.`]);
-  if (i && risparmioDove >= .5) righe.push(["adesso", dir === "giu" ? "Se ti serve adesso" : "Dove",
-    `${esc(i.bandiera || i.nome)} (${testoKm(i._km)}) costa già <b>${soldi(risparmioDove)} € meno</b> della media qui intorno: scegliere il distributore giusto è il risparmio più sicuro.`]);
+  // i dettagli: tre numeri da leggere al volo, più una riga sul perché
+  const tessere = [["Ultimi 3 giorni", dir === "stabile" ? "fermi" : `${dir === "giu" ? "−" : "+"}${cent(d3)} cent`, dir === "stabile" ? "nessuna fretta" : "al litro", dir === "stabile" ? "" : dir]];
+  if (prev && prev.pieno >= .2) tessere.push(["Aspettando", `${dir === "giu" ? "−" : "+"}${soldi(prev.pieno)} €`, "sul pieno", dir]);
+  if (i && risparmioDove >= .5) tessere.push(["Andando da", `−${soldi(risparmioDove)} €`, esc(i.bandiera || i.nome), "giu"]);
   box.className = `verdetto ${dir}`; box.hidden = false;
   box.innerHTML = `<div class="v-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ICONE_VERDETTO[dir]}</svg></div>
     <div class="v-testo">
       <p class="v-occhiello">${NOMI[c]} · ${zona === "IT" ? "Italia" : esc(PROVINCE[zona] || zona)}</p>
       <h2 class="v-titolo">${v.titolo}</h2>
       <p class="v-quando">${quando}</p>
-      <button type="button" class="v-espandi" id="vEspandi" aria-expanded="${!!stato.vAperto}" aria-controls="vDettagli">Perché, e quanto risparmi
+      <button type="button" class="v-espandi" id="vEspandi" aria-expanded="${!!stato.vAperto}" aria-controls="vDettagli">Quanto risparmi
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     </div>
     <div class="v-dettagli" id="vDettagli" ${stato.vAperto ? "" : "hidden"}>
-      ${righe.map(([k, tit, testo]) => `<div class="v-riga"><span class="v-ri" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONE_RIGA[k]}</svg></span><p><b>${tit}</b>${testo}</p></div>`).join("")}
-      <p class="v-fiducia">${prev ? `Stime basate su ${prev.casi.toLocaleString("it-IT")} casi in ${stato.medie.giorni_dati} giorni di prezzi: medie, non garanzie. ` : ""}${a?.percentuale ? `La tendenza si è confermata ${a.percentuale} volte su 100. ` : ""}<button type="button" id="vComeFunziona">Come lo calcoliamo</button></p>
+      <div class="v-tessere">${tessere.map(([et, val, sotto, tono]) => `<div class="v-tessera"><span class="vt-e">${et}</span><b class="vt-v ${tono || ""}">${val}</b><span class="vt-s">${sotto}</span></div>`).join("")}</div>
+      <p class="v-fiducia">${prev ? `Stima su ${prev.casi.toLocaleString("it-IT")} casi · ` : ""}può sbagliare · <button type="button" id="vComeFunziona">come funziona</button></p>
     </div>`;
   $("vEspandi").addEventListener("click", (e) => {
     e.stopPropagation(); stato.vAperto = !stato.vAperto;
@@ -2162,6 +2162,14 @@ $("presa").addEventListener("click", () => { if (stato.sel) { chiudiDettaglio();
   });
   p.addEventListener("touchcancel", () => { y0 = null; fine(); });
 })();
+
+// Tocco sulla mappa vuota (non su un prezzo): chiude la scheda o il pannello, come nelle app di mappe
+mappa.on("click", () => {
+  chiudiMenu();
+  if (MQ_LATO.matches) return;
+  if (stato.sel) chiudiDettaglio();
+  else if (aperto()) chiudiPannello();
+});
 
 let attesaMossa = null;
 mappa.on("moveend", () => {
