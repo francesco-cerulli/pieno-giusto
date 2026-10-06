@@ -970,6 +970,85 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 #avvio svg { position: absolute; width: clamp(84px, 22vw, 132px); height: auto; overflow: visible; transform: scale(0); opacity: 0; }
 #avvio .chevron { stroke-dasharray: 60; stroke-dashoffset: 60; }
 @media (prefers-reduced-motion: reduce) { #avvio { display: none; } }
+
+/* ===== menu ☰: carburante, tipo di mappa, installazione, guida ===== */
+.menu-ancora { position: relative; flex: none; }
+.menu { position: absolute; right: 0; top: calc(100% + 10px); z-index: 1300; width: min(330px, calc(100vw - 24px));
+  background: var(--surface); border-radius: 22px; box-shadow: 0 12px 40px rgb(11 31 23 / .18); padding: 14px; display: grid; gap: 8px; }
+.menu[hidden] { display: none; }
+.menu-t { margin: 4px 2px 0; font-size: .78rem; font-weight: 600; color: var(--muted); }
+.menu .carburanti { grid-template-columns: repeat(2, 1fr); background: var(--surface-2); box-shadow: none; border-radius: 16px; }
+.menu .carburanti button { border-radius: 12px; padding: 9px 6px; min-height: 52px; }
+.menu .basi { position: static; box-shadow: none; padding: 0; background: transparent; grid-template-columns: repeat(3, 1fr); }
+.menu .basi button { justify-items: stretch; }
+.menu .anteprima { width: 100%; }
+.voci { display: grid; border-top: 1px solid var(--line); margin-top: 4px; }
+.voce { border: 0; background: transparent; text-align: left; padding: 12px 4px; font-weight: 600; cursor: pointer; border-bottom: 1px solid var(--line); min-height: 44px; }
+.voce:hover { color: var(--down); }
+.fonte-menu { margin: 2px; font-size: .75rem; color: var(--muted); }
+@media (min-width: 1024px) { .menu { right: 0; } }
+
+/* medie di provincia quando la mappa è lontana */
+.prov { transform: translate(-50%, -50%); display: inline-flex; gap: 5px; align-items: baseline; white-space: nowrap; cursor: pointer;
+  background: var(--surface); color: var(--fg); border-radius: 999px; padding: 5px 10px; font: 600 13px/1.2 var(--f-body);
+  box-shadow: 0 2px 8px rgb(11 31 23 / .16); font-variant-numeric: tabular-nums; }
+.prov b { font-weight: 800; color: var(--muted); font-size: 11px; }
+.pin.scelto { background: var(--fg); color: var(--surface); transform: translate(-50%, -50%) scale(1.18); box-shadow: 0 6px 18px rgb(11 31 23 / .35); }
+.pin.scelto .freccia { color: inherit; }
+
+/* "sei qui" */
+.avatar { position: relative; width: 44px; height: 44px; transform: translate(-50%, -50%); pointer-events: none; }
+.avatar .faccia { position: absolute; inset: 0; border-radius: 50%; background: var(--brand); border: 3px solid #fff; box-shadow: 0 4px 14px rgb(11 31 23 / .3);
+  display: grid; place-items: center; box-sizing: border-box; }
+.avatar svg { width: 22px; height: 22px; stroke: #fff; }
+.avatar .alone { position: absolute; inset: 0; border-radius: 50%; background: var(--brand); opacity: .35; animation: alone 2.2s ease-out infinite; }
+@keyframes alone { from { transform: scale(1); opacity: .35; } to { transform: scale(2.8); opacity: 0; } }
+.avatar .etichetta { position: absolute; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%); white-space: nowrap;
+  background: var(--fg); color: var(--surface); font: 700 12px/1 var(--f-body); padding: 5px 8px; border-radius: 999px;
+  animation: etichetta 6s ease forwards; }
+@keyframes etichetta { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .avatar .alone { animation: none; opacity: .2; transform: scale(1.8); } }
+
+/* dettaglio della pompa dentro il pannello */
+.pannello.con-dettaglio .tendenza, .pannello.con-dettaglio .maniglia, .pannello.con-dettaglio .lista { display: none !important; }
+.pannello.con-dettaglio { max-height: 78%; }
+.dettaglio { overflow-y: auto; min-height: 0; overscroll-behavior: contain; padding: 10px 0 4px; display: grid; gap: 12px; }
+.det-testa { display: flex; gap: 10px; align-items: flex-start; }
+.det-testa h3 { margin: 0; font: 800 1.2rem/1.2 var(--f-display); }
+.det-testa .dove { margin: 2px 0 0; color: var(--muted); font-size: .85rem; }
+.indietro { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--surface-2); display: grid; place-items: center; cursor: pointer; }
+.indietro svg { width: 20px; height: 20px; stroke: var(--fg); }
+.dettaglio .altri { display: flex; gap: 6px; flex-wrap: wrap; }
+.dettaglio .altri button { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 6px 12px; font-size: .85rem; cursor: pointer; min-height: 36px; }
+.dettaglio .altri button[aria-pressed="true"] { background: var(--fg); color: var(--surface); border-color: var(--fg); }
+.dettaglio .grande { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.dettaglio .cifra { font: 800 2.9rem/1 var(--f-display); letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.dettaglio .cifra small { font: 500 .9rem var(--f-body); color: var(--muted); margin-left: 4px; letter-spacing: 0; }
+.dettaglio .cifra.dubbio { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+.dettaglio .attenzione { padding: 8px 10px; border-radius: 12px; font-size: .82rem; background: color-mix(in srgb, var(--up) 12%, var(--surface)); }
+.dettaglio .storico { margin: 0; padding: 12px 12px 8px; border-radius: 18px; background: var(--surface-2); }
+.storico .sintesi { font-size: .88rem; margin-bottom: 6px; }
+.storico .lettura { display: flex; gap: 8px; align-items: baseline; margin-bottom: 4px; min-height: 1.6em; }
+.storico .l-g { color: var(--muted); font-size: .82rem; }
+.storico .l-p { font: 800 1.15rem/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.storico .area-g { position: relative; height: 150px; touch-action: none; cursor: crosshair; }
+.storico .area-g svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.storico .griglia { stroke: var(--line); stroke-dasharray: 3 4; }
+.storico .cursore { stroke: var(--muted); stroke-width: 1; }
+.storico .cambio { fill: var(--surface); stroke-width: 2; }
+.storico .cambio.su { stroke: var(--up); } .storico .cambio.giu { stroke: var(--down); }
+.storico .punto { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--brand); border: 3px solid var(--surface);
+  transform: translate(-50%, -50%); box-shadow: 0 2px 6px rgb(11 31 23 / .3); pointer-events: none; }
+.storico .asse-y { position: absolute; left: 0; font-size: .7rem; color: var(--muted); background: var(--surface-2); padding: 0 4px 0 0; transform: translateY(-50%); pointer-events: none; }
+.storico .asse-y.alto { top: 12px; } .storico .asse-y.basso { top: calc(100% - 18px); }
+.storico .attesa { height: 190px; }
+.storico .assi { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-top: 2px; }
+.dettaglio .vai { display: block; text-align: center; border-radius: 999px; background: var(--fg); color: var(--surface); padding: 13px; font-weight: 700; text-decoration: none; }
+.dettaglio .puo-sbagliare { margin: 0 0 4px; }
+.lista .dove b { color: var(--fg); font-weight: 600; }
+@media (min-width: 1024px), (orientation: landscape) and (max-height: 520px) {
+  .pannello.con-dettaglio { max-height: none; }
+}
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1008,7 +1087,7 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 })();
 </script>
 <div class="app">
-<aside class="lato" aria-label="Ricerca e classifica">
+<aside class="lato" aria-label="Ricerca e distributori">
 <div class="testa">
   <div class="riga">
     <div class="marchio"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 8C50 8 18 46 18 64a32 32 0 0 0 64 0C82 46 50 8 50 8Z" fill="var(--brand)"/><path d="M36 58l14 14 14-14" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="nome-marchio">pumpy</span></div>
@@ -1017,42 +1096,45 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
       <input id="comune" list="comuni" placeholder="Cerca comune…" autocomplete="off" enterkeyhint="search">
       <datalist id="comuni"></datalist>
     </form>
-    <div class="livelli">
-      <button class="btn-icona" id="livelli" type="button" aria-label="Tipo di mappa" title="Tipo di mappa" aria-expanded="false" aria-controls="basi">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>
+    <button class="btn-icona" id="vicino" type="button" aria-label="Torna dove sei" title="Torna dove sei">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>
+    </button>
+    <div class="menu-ancora">
+      <button class="btn-icona" id="menuBtn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
-      <div class="basi" id="basi" role="group" aria-label="Tipo di mappa" hidden>
-        <button type="button" data-b="strade" aria-pressed="false"><i class="anteprima strade"></i>Strade</button>
-        <button type="button" data-b="essenziale" aria-pressed="false"><i class="anteprima essenziale"></i>Essenziale</button>
-        <button type="button" data-b="satellite" aria-pressed="false"><i class="anteprima satellite"></i>Satellite</button>
+      <div class="menu" id="menu" role="dialog" aria-label="Menu" hidden>
+        <p class="menu-t">Carburante</p>
+        <div class="carburanti" id="carburanti" role="group" aria-label="Carburante">
+          <button type="button" data-c="benzina" aria-pressed="true">Benzina<small>–</small></button>
+          <button type="button" data-c="gasolio" aria-pressed="false">Gasolio<small>–</small></button>
+          <button type="button" data-c="gpl" aria-pressed="false">GPL<small>–</small></button>
+          <button type="button" data-c="metano" aria-pressed="false">Metano<small>–</small></button>
+        </div>
+        <p class="menu-t">Mappa</p>
+        <div class="basi" id="basi" role="group" aria-label="Tipo di mappa">
+          <button type="button" data-b="strade" aria-pressed="false"><i class="anteprima strade"></i>Strade</button>
+          <button type="button" data-b="essenziale" aria-pressed="false"><i class="anteprima essenziale"></i>Essenziale</button>
+          <button type="button" data-b="satellite" aria-pressed="false"><i class="anteprima satellite"></i>Satellite</button>
+        </div>
+        <div class="voci">
+          <button type="button" class="voce" id="installaVoce" hidden>Installa Pumpy sul telefono</button>
+          <button type="button" class="voce" id="comeFunziona">Come funziona</button>
+        </div>
+        <p class="fonte-menu">Dati <abbr title="Ministero delle Imprese e del Made in Italy, Osservatorio Prezzi Carburanti (IODL 2.0)">MIMIT</abbr> · prezzi del <span id="data">–</span></p>
       </div>
     </div>
-    <button class="btn-icona" id="vicino" type="button" aria-label="Distributori vicino a me" title="Vicino a me">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="2"/></svg>
-    </button>
-  </div>
-  <div class="carburanti" id="carburanti" role="group" aria-label="Carburante">
-    <button type="button" data-c="benzina" aria-pressed="true">Benzina<small>–</small></button>
-    <button type="button" data-c="gasolio" aria-pressed="false">Gasolio<small>–</small></button>
-    <button type="button" data-c="gpl" aria-pressed="false">GPL<small>–</small></button>
-    <button type="button" data-c="metano" aria-pressed="false">Metano<small>–</small></button>
   </div>
   <div class="avviso" id="avviso" hidden></div>
-  <div class="installa" id="installa" hidden>
-    <img src="icone/icona-192.png" alt="">
-    <p>Tieni Pumpy sul telefono come un'app</p>
-    <button type="button" class="si" id="installaSi">Installa</button>
-    <button type="button" class="no" id="installaNo" aria-label="Chiudi">×</button>
-  </div>
 </div>
 
 <section class="pannello chiuso" id="pannello">
   <div class="tendenza" id="tendenza" hidden></div>
   <button class="maniglia" id="maniglia" type="button" aria-expanded="false" aria-controls="lista">
-    <h2>I più economici in zona <span id="conteggio">Caricamento…</span></h2>
+    <h2><span id="titoloLista">Vicino a te</span> <span id="conteggio">Caricamento…</span></h2>
   </button>
   <ol class="lista" id="lista"></ol>
-  <div class="fonte"><span>Dati <abbr title="Ministero delle Imprese e del Made in Italy, Osservatorio Prezzi Carburanti (IODL 2.0)">MIMIT</abbr> · prezzi del <span id="data">–</span></span><button type="button" id="comeFunziona">Come funziona</button></div>
+  <div class="dettaglio" id="dettaglio" hidden></div>
 </section>
 </aside>
 
@@ -1069,13 +1151,17 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
 
 <script>
 "use strict";
 const NOMI = { benzina: "Benzina", gasolio: "Gasolio", gpl: "GPL", metano: "Metano" };
-const ZOOM_PREZZI = 12;   // da questo zoom in su si vedono i singoli prezzi
-const stato = { carb: "benzina", impianti: [], medie: null, strato: null, comuni: new Map(), soglie: {} };
+const ZOOM_PREZZI = 11;     // da questo zoom in su i prezzi dei singoli distributori, sotto le medie di provincia
+const MAX_SEGNAPOSTI = 400; // oltre, solo i più vicini al centro: la mappa resta istantanea
+const RAGGIO_KM = 5;        // la lista "vicino a te" guarda prima entro 5 km
+// Layout attivo: "lato" = barra laterale fissa (PC, tablet/telefono in orizzontale); "largo" = 21:9
+const MQ_LATO = matchMedia("(min-width: 1024px), (orientation: landscape) and (max-height: 520px)");
+const MQ_LARGO = matchMedia("(min-width: 1800px) and (min-aspect-ratio: 2/1)");
+const stato = { carb: "benzina", impianti: [], medie: null, strato: null, comuni: new Map(), soglie: {}, centri: new Map(), pos: null, sel: null, detCarb: null };
 
 const $ = (id) => document.getElementById(id);
 const euro = (p) => p.toFixed(3).replace(".", ",");
@@ -1086,9 +1172,12 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 function leggiPreferenza() { try { return localStorage.getItem("carburante"); } catch { return null; } }
 function salvaPreferenza(c) { try { localStorage.setItem("carburante", c); } catch {} }
 
-const mappa = L.map("mappa", { zoomControl: false, preferCanvas: true, minZoom: 5, maxZoom: 18 })
-  .setView([42.3, 12.6], 6);
-L.control.zoom({ position: "topright" }).addTo(mappa);
+// Si riapre dove l'avevi lasciata; la prima volta sull'Italia (poi la posizione la porta sulla tua zona)
+const vistaSalvata = (() => { try { return JSON.parse(localStorage.getItem("vista")); } catch { return null; } })();
+const mappa = L.map("mappa", { zoomControl: false, minZoom: 5, maxZoom: 18 })
+  .setView(vistaSalvata ? [vistaSalvata[0], vistaSalvata[1]] : [42.3, 12.6], vistaSalvata ? vistaSalvata[2] : 6);
+L.control.zoom({ position: "bottomright" }).addTo(mappa);
+stato.strato = L.layerGroup().addTo(mappa);
 // Basi della mappa: "Strade" (stile navigatore), "Essenziale" (quasi solo strade), "Satellite".
 // In tema scuro le prime due usano la versione scura nativa invece di invertire i colori.
 const OSM = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
@@ -1145,140 +1234,193 @@ function calcolaSoglie() {
 }
 function fascia(p) { const [lo, hi] = stato.soglie[stato.carb]; return p <= lo ? "economico" : p >= hi ? "caro" : ""; }
 
+// --- distanza in km tra due punti ---
+function km(a, b) {
+  const R = 6371, r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+const testoKm = (d) => d < 1 ? `${Math.round(d * 1000 / 50) * 50} m` : `${d.toFixed(1).replace(".", ",")} km`;
+
+// --- segnaposti: solo i distributori dell'area inquadrata; da lontano, le medie per provincia ---
 function iconaPrezzo(i) {
   const [p, d] = i.prezzi[stato.carb];
-  if (!affidabile(i)) return L.divIcon({ className: "", iconSize: null, html: `<div class="pin dubbio" title="Prezzo da verificare">${euro(p)}?</div>` });
+  const sel = stato.sel === i ? " scelto" : "";
+  if (!affidabile(i)) return L.divIcon({ className: "", iconSize: null, html: `<div class="pin dubbio${sel}" title="Prezzo da verificare">${euro(p)}?</div>` });
   const dal = i.prezzi[stato.carb][2];
   const recente = d && dal && giorniDa(dal) <= GIORNI_FRECCIA;
-  return L.divIcon({ className: "", iconSize: null, html: `<div class="pin ${fascia(p)}">${euro(p)}${recente ? freccia(d) : ""}</div>` });
+  return L.divIcon({ className: "", iconSize: null, html: `<div class="pin ${fascia(p)}${sel}">${euro(p)}${recente ? freccia(d) : ""}</div>` });
 }
 
-function iconaGruppo(gruppo) {
-  const figli = gruppo.getAllChildMarkers();
-  let min = Infinity;
-  for (const m of figli) if (affidabile(m.impianto)) min = Math.min(min, m.impianto.prezzi[stato.carb][0]);
-  const n = figli.length, lato = n < 50 ? 40 : n < 500 ? 46 : 52;
-  return L.divIcon({ className: "", iconSize: null,
-    html: `<div class="gruppo" style="width:${lato}px;height:${lato}px"><div>${min < Infinity ? euro(min) : "–"}<span>${n} distr.</span></div></div>` });
+function disegna() {
+  stato.strato.clearLayers();
+  const c = stato.carb;
+  if (mappa.getZoom() < ZOOM_PREZZI) {
+    for (const [prov, centro] of stato.centri) {
+      const p = stato.medie?.province?.[prov]?.[c];
+      if (!p) continue;
+      const m = L.marker([centro.lat, centro.lon], { title: PROVINCE[prov] || prov, keyboard: true,
+        icon: L.divIcon({ className: "", iconSize: null, html: `<div class="prov"><b>${prov}</b>${euro(p)}</div>` }) });
+      m.on("click", () => mappa.setView([centro.lat, centro.lon], ZOOM_PREZZI + 1));
+      stato.strato.addLayer(m);
+    }
+    return;
+  }
+  const centro = mappa.getCenter(), cc = { lat: centro.lat, lon: centro.lng };
+  const b = mappa.getBounds().pad(0.2);
+  let qui = stato.impianti.filter((i) => i.prezzi[c] && b.contains([i.lat, i.lon]));
+  if (qui.length > MAX_SEGNAPOSTI) qui = qui.map((i) => [km(cc, i), i]).sort((x, y) => x[0] - y[0]).slice(0, MAX_SEGNAPOSTI).map((x) => x[1]);
+  if (stato.sel && stato.sel.prezzi[c] && !qui.includes(stato.sel)) qui.push(stato.sel);
+  for (const i of qui) {
+    const m = L.marker([i.lat, i.lon], { icon: iconaPrezzo(i), title: i.bandiera || i.nome, zIndexOffset: stato.sel === i ? 900 : 0 });
+    m.on("click", () => seleziona(i));
+    stato.strato.addLayer(m);
+  }
 }
 
-function scheda(i) {
-  const c = i.prezzi[stato.carb] ? stato.carb : Object.keys(NOMI).find((k) => i.prezzi[k]);
-  const [p, d, dal] = i.prezzi[c];
-  const dubbio = motivoDubbio(i.prezzi[c]);
-  const t = stato.medie?.tendenze?.[i.provincia]?.[c];
-  const chip = t ? `<span class="chip ${t[3]}">${t[3] === "su" ? "↑ in aumento" : t[3] === "giu" ? "↓ in calo" : "→ stabile"}</span>` : "";
-  const altri = Object.keys(NOMI).filter((k) => k !== c && i.prezzi[k])
-    .map((k) => `<button type="button" data-c="${k}">${NOMI[k]} <b>${euro(i.prezzi[k][0])}</b></button>`).join("");
-  const dest = `https://www.google.com/maps/dir/?api=1&destination=${i.lat},${i.lon}`;
-  return `<div class="scheda" data-id="${i.id}" data-c="${c}"><h3>${esc(i.bandiera || i.nome)}</h3>
-    <div class="dove">${esc(i.indirizzo)}, ${esc(i.comune)}</div>
-    <div class="grande"><div><span class="cifra${dubbio ? " dubbio" : ""}">${euro(p)}<small>€/l</small></span>
-      <span class="carb">${NOMI[c]} · ${d ? variazione(d, dal, false) : "invariato"}</span></div>${chip}</div>
-    ${dubbio ? `<div class="attenzione">Da verificare. ${dubbio}</div>` : ""}
-    <figure class="storico" aria-label="Storico del prezzo"><div class="attesa"></div></figure>
-    ${altri ? `<div class="altri">${altri}</div>` : ""}
-    <div class="azioni"><a href="${dest}" target="_blank" rel="noopener">Portami qui</a></div>
-    <p class="puo-sbagliare">Pumpy può sbagliare: controlla sempre il prezzo alla pompa.</p></div>`;
+// --- lista: i più economici vicino a te (entro pochi km), altrimenti nella zona inquadrata ---
+function aggiornaLista() {
+  if (stato.sel) return;
+  const lista = $("lista"), c = stato.carb;
+  const centro = mappa.getCenter(), cc = { lat: centro.lat, lon: centro.lng };
+  let righe, titolo;
+  const vicinoATe = stato.pos && km(stato.pos, cc) < 4;
+  if (vicinoATe) {
+    let raggio = RAGGIO_KM, vicini = [];
+    while (raggio <= RAGGIO_KM * 4) {
+      vicini = stato.impianti.filter((i) => affidabile(i) && km(stato.pos, i) <= raggio);
+      if (vicini.length >= 5) break;
+      raggio *= 2;
+    }
+    righe = vicini; titolo = `Vicino a te · entro ${raggio} km`;
+  } else if (mappa.getZoom() >= ZOOM_PREZZI) {
+    const b = mappa.getBounds();
+    righe = stato.impianti.filter((i) => affidabile(i) && b.contains([i.lat, i.lon])); titolo = "In questa zona";
+  } else {
+    $("titoloLista").textContent = "Avvicinati";
+    $("conteggio").textContent = "";
+    lista.innerHTML = '<li class="vuoto">Tocca una provincia o cerca un comune per vedere i prezzi.</li>';
+    return;
+  }
+  righe.sort((a, b) => a.prezzi[c][0] - b.prezzi[c][0]);
+  $("titoloLista").textContent = titolo;
+  $("conteggio").textContent = righe.length ? `${righe.length} distributori` : "";
+  if (!righe.length) { lista.innerHTML = '<li class="vuoto">Nessun distributore con questo carburante qui.</li>'; return; }
+  const mostra = righe.slice(0, MQ_LATO.matches ? 50 : 20);
+  lista.innerHTML = mostra.map((i, n) => {
+    const [p, d, dal] = i.prezzi[c];
+    const dist = stato.pos ? testoKm(km(stato.pos, i)) : "";
+    return `<li><button type="button" data-n="${n}"><span class="nome">${esc(i.bandiera || i.nome)}</span>
+      <span class="prezzo">${euro(p)}<small>${variazione(d, dal, false)}</small></span>
+      <span class="dove">${dist ? `<b>${dist}</b> · ` : ""}${esc(i.indirizzo)}, ${esc(i.comune)}</span></button></li>`;
+  }).join("");
+  lista.querySelectorAll("button").forEach((btn) => btn.addEventListener("click", () => seleziona(mostra[+btn.dataset.n])));
 }
 
-// Storico del singolo distributore: un file per provincia, caricato solo quando serve
+// --- dettaglio del distributore, nel pannello: prezzo, storico da leggere col dito, navigazione ---
 const storici = new Map();
 function caricaStorico(prov) {
   if (!storici.has(prov)) storici.set(prov, fetch(`data/storico/${prov}.json`, { cache: "no-cache" }).then((r) => r.ok ? r.json() : null).catch(() => null));
   return storici.get(prov);
 }
-function graficoStorico(dati, id, c) {
-  const punti = dati?.impianti?.[id]?.[c];
-  if (!punti || !punti.length) return '<div class="assi"><span>Storico non disponibile</span></div>';
-  const n = dati.giorni, W = 260, H = 74;
-  const valori = punti.map((x) => x[1] / 1000);
-  const min = Math.min(...valori), max = Math.max(...valori), span = Math.max(max - min, .02);
-  const x = (k) => (k / (n - 1)) * W;
-  const yy = (v) => 6 + (1 - (v - (max + min) / 2 + span / 2) / span) * (H - 12);
-  let d = `M${x(punti[0][0]).toFixed(1)},${yy(valori[0]).toFixed(1)}`;
-  for (let k = 1; k < punti.length; k++) d += `H${x(punti[k][0]).toFixed(1)}V${yy(valori[k]).toFixed(1)}`;
-  d += `H${W}`;
-  const ultimo = valori[valori.length - 1];
-  const inizio = new Date(dati.inizio), giornoDa = (k) => { const g = new Date(inizio); g.setDate(g.getDate() + k); return g.toLocaleDateString("it-IT", { day: "numeric", month: "short" }); };
-  const descr = `Prezzo dal ${giornoDa(punti[0][0])} a oggi: minimo ${euro(min)}, massimo ${euro(max)}, ora ${euro(ultimo)} euro`;
-  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${descr}">
-      <path class="area" d="${d}V${H}H${x(punti[0][0]).toFixed(1)}Z"/>
-      <path class="linea" d="${d}" vector-effect="non-scaling-stroke"/>
-      <circle class="fine" cx="${W}" cy="${yy(ultimo).toFixed(1)}" r="4" vector-effect="non-scaling-stroke"/></svg>
-    <div class="assi"><span>${giornoDa(punti[0][0])}</span><span>min ${euro(min)} · max ${euro(max)}</span><span>oggi</span></div>`;
+const giornoDa = (inizio, k, lungo) => { const g = new Date(inizio); g.setDate(g.getDate() + k);
+  return g.toLocaleDateString("it-IT", lungo ? { weekday: "short", day: "numeric", month: "long" } : { day: "numeric", month: "short" }); };
+
+function seleziona(i, carb) {
+  stato.sel = i; stato.detCarb = carb || (i.prezzi[stato.carb] ? stato.carb : Object.keys(NOMI).find((k) => i.prezzi[k]));
+  chiudiMenu();
+  const p = $("pannello");
+  p.classList.add("con-dettaglio"); p.classList.remove("chiuso");
+  $("dettaglio").hidden = false;
+  disegnaDettaglio();
+  // porta la pompa in vista, sopra il pannello su telefono
+  const z = Math.max(mappa.getZoom(), 14);
+  let punto = mappa.project([i.lat, i.lon], z);
+  if (!MQ_LATO.matches) punto = punto.add([0, Math.min(p.getBoundingClientRect().height, innerHeight * .6) / 2]);
+  mappa.setView(mappa.unproject(punto, z), z, { animate: true });
+  disegna();
 }
-async function riempiScheda(el) {
-  const sc = el.querySelector(".scheda"); if (!sc) return;
-  const i = stato.impianti.find((x) => String(x.id) === sc.dataset.id); if (!i) return;
+function chiudiDettaglio() {
+  stato.sel = null;
+  const p = $("pannello"); p.classList.remove("con-dettaglio");
+  $("dettaglio").hidden = true; $("dettaglio").innerHTML = "";
+  disegna(); aggiornaLista();
+}
+
+async function disegnaDettaglio() {
+  const i = stato.sel, c = stato.detCarb; if (!i) return;
+  const [p, d, dal] = i.prezzi[c];
+  const dubbio = motivoDubbio(i.prezzi[c]);
+  const t = stato.medie?.tendenze?.[i.provincia]?.[c];
+  const chip = t ? `<span class="chip ${t[3]}">${t[3] === "su" ? "↑ zona in aumento" : t[3] === "giu" ? "↓ zona in calo" : "→ zona stabile"}</span>` : "";
+  const altri = Object.keys(NOMI).filter((k) => i.prezzi[k])
+    .map((k) => `<button type="button" data-c="${k}" aria-pressed="${k === c}">${NOMI[k]} <b>${euro(i.prezzi[k][0])}</b></button>`).join("");
+  const dist = stato.pos ? ` · ${testoKm(km(stato.pos, i))} da te` : "";
+  const dest = `https://www.google.com/maps/dir/?api=1&destination=${i.lat},${i.lon}`;
+  $("dettaglio").innerHTML = `<div class="det-testa">
+      <button type="button" class="indietro" id="chiudiDettaglio" aria-label="Torna alla lista"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div><h3>${esc(i.bandiera || i.nome)}</h3><p class="dove">${esc(i.indirizzo)}, ${esc(i.comune)}${dist}</p></div></div>
+    <div class="altri" role="group" aria-label="Carburante">${altri}</div>
+    <div class="grande"><span class="cifra${dubbio ? " dubbio" : ""}">${euro(p)}<small>€/l</small></span>${chip}</div>
+    ${dubbio ? `<div class="attenzione">Da verificare. ${dubbio}</div>` : ""}
+    <figure class="storico" id="storico" aria-label="Storico del prezzo"><div class="attesa"></div></figure>
+    <a class="vai" href="${dest}" target="_blank" rel="noopener">Portami qui</a>
+    <p class="puo-sbagliare">Pumpy può sbagliare: controlla sempre il prezzo alla pompa.</p>`;
+  $("chiudiDettaglio").addEventListener("click", chiudiDettaglio);
+  $("dettaglio").querySelectorAll(".altri button").forEach((b) => b.addEventListener("click", () => { stato.detCarb = b.dataset.c; disegnaDettaglio(); }));
   const dati = await caricaStorico(i.provincia);
-  const fig = sc.querySelector(".storico"); if (fig) fig.innerHTML = graficoStorico(dati, String(i.id), sc.dataset.c);
+  if (stato.sel !== i || stato.detCarb !== c) return;
+  graficoStorico($("storico"), dati, String(i.id), c);
 }
 
-// Layout attivo: "lato" = barra laterale fissa (PC, tablet/telefono in orizzontale)
-const MQ_LATO = matchMedia("(min-width: 1024px), (orientation: landscape) and (max-height: 520px)");
-const MQ_LARGO = matchMedia("(min-width: 1800px) and (min-aspect-ratio: 2/1)");
-
-// Quando si apre una scheda la mappa si sposta per non finire sotto i comandi sovrapposti
-function margini(m) {
-  const pop = m.getPopup(); if (!pop) return;
-  if (MQ_LATO.matches) { pop.options.autoPanPaddingTopLeft = [20, 20]; pop.options.autoPanPaddingBottomRight = [20, 20]; return; }
-  const testa = document.querySelector(".testa").getBoundingClientRect();
-  const pann = $("pannello").getBoundingClientRect();
-  const sotto = pann.left < 20 || pann.right > innerWidth / 2 ? innerHeight - pann.top + 16 : 20;
-  pop.options.autoPanPaddingTopLeft = [16, testa.bottom + 16];
-  pop.options.autoPanPaddingBottomRight = [16, sotto];
-}
-function apri(m) { stato.strato.zoomToShowLayer(m, () => { margini(m); m.openPopup(); }); }
-
-function disegna() {
-  if (stato.strato) mappa.removeLayer(stato.strato);
-  const gruppi = L.markerClusterGroup({
-    chunkedLoading: true, showCoverageOnHover: false, spiderfyOnMaxZoom: true,
-    disableClusteringAtZoom: 16, maxClusterRadius: (z) => (z >= 13 ? 36 : 90), iconCreateFunction: iconaGruppo
-  });
-  const marcatori = [];
-  for (const i of stato.impianti) {
-    if (!i.prezzi[stato.carb]) continue;
-    const m = L.marker([i.lat, i.lon], { icon: iconaPrezzo(i), title: i.bandiera });
-    m.impianto = i;
-    m.on("click", () => margini(m));   // prima di bindPopup: aggiorna i margini prima dell'apertura
-    m.bindPopup(() => scheda(i), { maxWidth: 300, minWidth: 260 });
-    m.on("popupopen", (e) => riempiScheda(e.popup.getElement()));
-    marcatori.push(m);
-  }
-  gruppi.addLayers(marcatori);
-  stato.strato = gruppi.addTo(mappa);
-  aggiornaLista();
-  disegnaAndamento();
-}
-
-function aggiornaLista() {
-  const lista = $("lista");
-  if (mappa.getZoom() < 10) {
-    lista.innerHTML = '<li class="vuoto">Avvicinati sulla mappa, cerca un comune o usa “vicino a me” per vedere la classifica.</li>';
-    $("conteggio").textContent = "";
-    return;
-  }
-  const b = mappa.getBounds();
-  const inMappa = stato.impianti.filter((i) => i.prezzi[stato.carb] && b.contains([i.lat, i.lon]));
-  const visibili = inMappa.filter((i) => affidabile(i));
-  visibili.sort((a, b2) => a.prezzi[stato.carb][0] - b2.prezzi[stato.carb][0]);
-  const esclusi = inMappa.length - visibili.length;
-  $("conteggio").textContent = `${inMappa.length} nella mappa` + (esclusi ? ` · ${esclusi} da verificare esclusi` : "");
-  if (!visibili.length) { lista.innerHTML = '<li class="vuoto">Nessun distributore con questo carburante qui.</li>'; return; }
-  lista.innerHTML = visibili.slice(0, MQ_LATO.matches ? 50 : 20).map((i, n) => {
-    const [p, d, dal] = i.prezzi[stato.carb];
-    const v = variazione(d, dal, false);
-    return `<li><button type="button" data-n="${n}"><span class="nome">${esc(i.bandiera || i.nome)}</span>
-      <span class="prezzo">${euro(p)}<small>${v}</small></span>
-      <span class="dove">${esc(i.indirizzo)}, ${esc(i.comune)}</span></button></li>`;
-  }).join("");
-  lista.querySelectorAll("button").forEach((btn) => btn.addEventListener("click", () => {
-    const i = visibili[+btn.dataset.n];
-    const m = stato.strato.getLayers().find((x) => x.impianto === i);
-    if (m) apri(m);
-  }));
+// Grafico a gradini: ogni gradino è un cambio di prezzo. Scorrendo il dito (o il mouse) si legge giorno e prezzo.
+function graficoStorico(fig, dati, id, c) {
+  const punti = dati?.impianti?.[id]?.[c];
+  if (!punti || !punti.length) { fig.innerHTML = '<p class="vuoto">Storico non ancora disponibile per questo distributore.</p>'; return; }
+  const n = dati.giorni, W = 320, H = 150, T = 12, B = 18;
+  const val = punti.map((x) => x[1] / 1000);
+  let min = Math.min(...val), max = Math.max(...val);
+  if (max - min < .02) { const m = (max + min) / 2; min = m - .01; max = m + .01; }
+  const x = (k) => (k / Math.max(n - 1, 1)) * W, y = (v) => T + (1 - (v - min) / (max - min)) * (H - T - B);
+  const k0 = punti[0][0];
+  let d = `M${x(k0).toFixed(1)},${y(val[0]).toFixed(1)}`;
+  for (let k = 1; k < punti.length; k++) d += `H${x(punti[k][0]).toFixed(1)}V${y(val[k]).toFixed(1)}`;
+  d += `H${W}`;
+  const cambi = punti.slice(1).map((pt, k) => `<circle class="cambio ${val[k + 1] > val[k] ? "su" : "giu"}" cx="${x(pt[0]).toFixed(1)}" cy="${y(val[k + 1]).toFixed(1)}" r="3.5" vector-effect="non-scaling-stroke"/>`).join("");
+  const primo = val[0], ultimo = val[val.length - 1], diff = ultimo - primo, giorni = n - 1 - k0;
+  const sintesi = Math.abs(diff) < .0005 ? `Fermo a ${euro(ultimo)} € negli ultimi ${giorni} giorni`
+    : `<b class="${diff > 0 ? "var-su" : "var-giu"}">${diff > 0 ? "Salito" : "Sceso"} di ${cent(diff)} cent</b> in ${giorni} giorni · ${punti.length - 1} cambi di prezzo`;
+  const descr = `Prezzo dal ${giornoDa(dati.inizio, k0)} a oggi: da ${euro(primo)} a ${euro(ultimo)} euro, minimo ${euro(Math.min(...val))}, massimo ${euro(Math.max(...val))}`;
+  fig.innerHTML = `<figcaption class="sintesi">${sintesi}</figcaption>
+    <div class="lettura" aria-live="polite"><span class="l-g">Oggi</span> <b class="l-p">${euro(ultimo)} €</b></div>
+    <div class="area-g">
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${descr}">
+        <line class="griglia" x1="0" x2="${W}" y1="${y(max).toFixed(1)}" y2="${y(max).toFixed(1)}" vector-effect="non-scaling-stroke"/>
+        <line class="griglia" x1="0" x2="${W}" y1="${y(min).toFixed(1)}" y2="${y(min).toFixed(1)}" vector-effect="non-scaling-stroke"/>
+        <path class="area" d="${d}V${H - B}H${x(k0).toFixed(1)}Z"/>
+        <path class="linea" d="${d}" vector-effect="non-scaling-stroke"/>
+        ${cambi}
+        <line class="cursore" x1="${W}" x2="${W}" y1="${T - 6}" y2="${H - B}" vector-effect="non-scaling-stroke"/>
+      </svg>
+      <span class="punto" style="left:100%;top:${(y(ultimo) / H * 100).toFixed(2)}%"></span>
+      <span class="asse-y alto">${euro(max)}</span><span class="asse-y basso">${euro(min)}</span>
+    </div>
+    <div class="assi"><span>${giornoDa(dati.inizio, k0)}</span><span>oggi</span></div>`;
+  const area = fig.querySelector(".area-g"), cur = fig.querySelector(".cursore"), pt = fig.querySelector(".punto");
+  const lg = fig.querySelector(".l-g"), lp = fig.querySelector(".l-p");
+  const prezzoAl = (k) => { let v = null; for (let j = 0; j < punti.length && punti[j][0] <= k; j++) v = val[j]; return v; };
+  const leggi = (clientX) => {
+    const r = area.getBoundingClientRect();
+    const k = Math.max(k0, Math.min(n - 1, Math.round(((clientX - r.left) / r.width) * (n - 1))));
+    const v = prezzoAl(k), xx = x(k);
+    cur.setAttribute("x1", xx); cur.setAttribute("x2", xx);
+    pt.style.left = `${(xx / W) * 100}%`; pt.style.top = `${(y(v) / H) * 100}%`;
+    lg.textContent = k === n - 1 ? "Oggi" : giornoDa(dati.inizio, k, true); lp.textContent = `${euro(v)} €`;
+  };
+  const reset = () => leggi(area.getBoundingClientRect().right);
+  area.addEventListener("pointerdown", (e) => { area.setPointerCapture(e.pointerId); leggi(e.clientX); });
+  area.addEventListener("pointermove", (e) => leggi(e.clientX));
+  area.addEventListener("pointerup", reset); area.addEventListener("pointerleave", reset); area.addEventListener("pointercancel", reset);
 }
 
 // --- colonna 21:9: andamento nazionale per carburante + riepilogo della zona inquadrata ---
@@ -1439,65 +1581,75 @@ function aggiornaMedie() {
 function scegliCarburante(c) {
   stato.carb = c; salvaPreferenza(c);
   document.querySelectorAll("#carburanti button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.c === c));
-  disegna();
-  aggiornaZona();
-  aggiornaTendenza();
+  if (stato.sel && stato.sel.prezzi[c]) { stato.detCarb = c; disegnaDettaglio(); }
+  disegna(); aggiornaLista(); aggiornaZona(); aggiornaTendenza();
 }
 
-$("comeFunziona").addEventListener("click", spiegaTendenza);
-$("livelli").addEventListener("click", () => {
-  const b = $("basi"); b.hidden = !b.hidden; $("livelli").setAttribute("aria-expanded", !b.hidden);
-});
-$("basi").addEventListener("click", (e) => {
-  const b = e.target.closest("button"); if (!b) return;
-  scegliBase(b.dataset.b); $("basi").hidden = true; $("livelli").setAttribute("aria-expanded", false);
-});
-document.addEventListener("click", (e) => {
-  if (!e.target.closest(".livelli")) { $("basi").hidden = true; $("livelli").setAttribute("aria-expanded", false); }
-});
-
+// --- menu ☰ ---
+function chiudiMenu() { $("menu").hidden = true; $("menuBtn").setAttribute("aria-expanded", false); }
+$("menuBtn").addEventListener("click", (e) => { e.stopPropagation(); const m = $("menu"); m.hidden = !m.hidden; $("menuBtn").setAttribute("aria-expanded", !m.hidden); });
+document.addEventListener("click", (e) => { if (!e.target.closest(".menu-ancora")) chiudiMenu(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { chiudiMenu(); if (stato.sel) chiudiDettaglio(); } });
 $("carburanti").addEventListener("click", (e) => {
-  const b = e.target.closest("button"); if (b && b.dataset.c !== stato.carb) scegliCarburante(b.dataset.c);
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.c !== stato.carb) scegliCarburante(b.dataset.c);
+  chiudiMenu();
 });
+$("basi").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { scegliBase(b.dataset.b); chiudiMenu(); } });
+$("comeFunziona").addEventListener("click", () => { chiudiMenu(); spiegaTendenza(); });
 $("maniglia").addEventListener("click", () => {
   const p = $("pannello"); const chiuso = p.classList.toggle("chiuso");
   $("maniglia").setAttribute("aria-expanded", !chiuso);
 });
-mappa.on("moveend", () => { aggiornaLista(); aggiornaZona(); aggiornaTendenza(); });
-// nella scheda, toccare un altro carburante mostra il suo prezzo e il suo storico
-document.addEventListener("click", (e) => {
-  const b = e.target.closest(".scheda .altri button"); if (!b) return;
-  const sc = b.closest(".scheda"), i = stato.impianti.find((x) => String(x.id) === sc.dataset.id);
-  if (!i) return;
-  const prima = stato.carb; stato.carb = b.dataset.c;
-  const html = scheda(i); stato.carb = prima;
-  const box = sc.parentElement; box.innerHTML = html;
-  riempiScheda(box);
+function apriPannello() { $("pannello").classList.remove("chiuso"); $("maniglia").setAttribute("aria-expanded", true); }
+
+let attesaMossa = null;
+mappa.on("moveend", () => {
+  clearTimeout(attesaMossa);
+  attesaMossa = setTimeout(() => { disegna(); aggiornaLista(); aggiornaZona(); aggiornaTendenza(); salvaVista(); }, 60);
 });
 new ResizeObserver(() => mappa.invalidateSize()).observe($("mappa"));
 MQ_LATO.addEventListener("change", aggiornaLista);
 MQ_LARGO.addEventListener("change", () => { disegnaAndamento(); aggiornaZona(); });
 
-function apriPannello() { $("pannello").classList.remove("chiuso"); $("maniglia").setAttribute("aria-expanded", true); }
+function salvaVista() { try { const c = mappa.getCenter(); localStorage.setItem("vista", JSON.stringify([c.lat, c.lng, mappa.getZoom()])); } catch {} }
 
 function vaiAComune(nome) {
   const lista = stato.comuni.get(nome.trim().toLowerCase());
   if (!lista) { avviso(`Nessun distributore trovato a “${nome}”.`); return; }
-  avviso(""); apriPannello();
+  avviso(""); if (stato.sel) chiudiDettaglio(); apriPannello();
   mappa.fitBounds(L.latLngBounds(lista.map((i) => [i.lat, i.lon])).pad(.15), { maxZoom: 14 });
   $("comune").blur();
 }
 $("cerca").addEventListener("submit", (e) => { e.preventDefault(); vaiAComune($("comune").value); });
 $("comune").addEventListener("change", (e) => { if (stato.comuni.has(e.target.value.trim().toLowerCase())) vaiAComune(e.target.value); });
 
-$("vicino").addEventListener("click", () => {
-  if (!navigator.geolocation) { avviso("Il tuo browser non condivide la posizione: cerca il comune."); return; }
-  avviso("Cerco la tua posizione…");
-  navigator.geolocation.getCurrentPosition(
-    (pos) => { avviso(""); apriPannello(); mappa.setView([pos.coords.latitude, pos.coords.longitude], 13); },
-    () => avviso("Posizione non disponibile. Controlla i permessi o cerca il comune."),
-    { enableHighAccuracy: false, timeout: 10000 });
-});
+// --- "sei qui": avatar sulla mappa, posizione seguita mentre l'app è aperta ---
+const AVATAR = `<div class="avatar"><span class="alone"></span><span class="faccia"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 16V11l2-5h10l2 5v5"/><path d="M4 11h16v5H4z"/><circle cx="7.5" cy="16.5" r="1.5"/><circle cx="16.5" cy="16.5" r="1.5"/></svg></span><span class="etichetta">Sei qui</span></div>`;
+let osservatore = null, avatar = null, precisione = null, primaPosizione = true;
+function aggiornaAvatar() {
+  const p = [stato.pos.lat, stato.pos.lon];
+  if (!avatar) {
+    precisione = L.circle(p, { radius: stato.pos.acc, interactive: false, stroke: false, fillColor: "#0e9f6e", fillOpacity: .1 }).addTo(mappa);
+    avatar = L.marker(p, { interactive: false, keyboard: false, zIndexOffset: 1000, icon: L.divIcon({ className: "", iconSize: null, html: AVATAR }) }).addTo(mappa);
+  } else { avatar.setLatLng(p); precisione.setLatLng(p); }
+  precisione.setRadius(Math.min(stato.pos.acc, 800));
+}
+function localizza(centra) {
+  if (!navigator.geolocation) { if (centra) avviso("Il tuo browser non condivide la posizione: cerca il comune."); return; }
+  if (centra && stato.pos) { if (stato.sel) chiudiDettaglio(); mappa.setView([stato.pos.lat, stato.pos.lon], 14); apriPannello(); return; }
+  if (osservatore != null) return;
+  osservatore = navigator.geolocation.watchPosition((pos) => {
+    stato.pos = { lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy || 50 };
+    aggiornaAvatar(); avviso("");
+    if (primaPosizione) { primaPosizione = false; mappa.setView([stato.pos.lat, stato.pos.lon], 14); }
+    else if (!stato.sel) aggiornaLista();
+  }, (err) => {
+    osservatore = null;
+    if (centra || err.code !== 1) avviso(err.code === 1 ? "Posizione non concessa: cerca un comune, oppure consentila dalle impostazioni del browser." : "Posizione non disponibile al momento: cerca il comune.");
+  }, { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 });
+}
+$("vicino").addEventListener("click", () => localizza(true));
 
 async function carica() {
   try {
@@ -1508,11 +1660,17 @@ async function carica() {
     stato.aggiornato = dati.aggiornato;
     stato.impianti = dati.impianti.map((r) => ({ id: r[0], nome: r[1], bandiera: r[2], indirizzo: r[3],
       comune: r[4], provincia: r[5], lat: r[6], lon: r[7], autostrada: r[8], prezzi: r[9] }));
+    const somme = new Map();
     for (const i of stato.impianti) {
       const k = i.comune.toLowerCase();
       if (!stato.comuni.has(k)) stato.comuni.set(k, []);
       stato.comuni.get(k).push(i);
+      if (!i.autostrada && i.provincia) {
+        const s = somme.get(i.provincia) || { lat: 0, lon: 0, n: 0 };
+        s.lat += i.lat; s.lon += i.lon; s.n++; somme.set(i.provincia, s);
+      }
     }
+    stato.centri = new Map([...somme].map(([p, s]) => [p, { lat: s.lat / s.n, lon: s.lon / s.n }]));
     const nomi = [...new Set(stato.impianti.map((i) => `${i.comune}`))].sort((a, b) => a.localeCompare(b, "it"));
     $("comuni").innerHTML = nomi.map((n) => `<option value="${esc(n)}"></option>`).join("");
     $("data").textContent = new Date(dati.aggiornato).toLocaleDateString("it-IT");
@@ -1520,6 +1678,7 @@ async function carica() {
     aggiornaMedie();
     const pref = leggiPreferenza();
     scegliCarburante(NOMI[pref] ? pref : "benzina");
+    disegnaAndamento();
   } catch (err) {
     $("conteggio").textContent = "";
     avviso("Non riesco a caricare i prezzi. Riprova tra qualche minuto.");
@@ -1527,20 +1686,24 @@ async function carica() {
   }
 }
 carica();
+// Posizione chiesta subito (un solo permesso del browser): l'app si apre già sulla tua zona.
+(async () => {
+  try { const p = await navigator.permissions?.query({ name: "geolocation" }); if (p && p.state === "denied") return; } catch {}
+  localizza(false);
+})();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 
-// --- invito a installare l'app (solo su telefoni e tablet, non se è già installata) ---
+// --- installazione come app: una voce nel menu (solo su telefoni e tablet, non se è già installata) ---
 (() => {
   const ua = navigator.userAgent;
   const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const android = /Android/.test(ua);
   const installata = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
-  let chiuso = false; try { chiuso = localStorage.getItem("installa-chiuso") === "1"; } catch {}
-  if (installata || chiuso || !(ios || android)) return;
+  if (installata || !(ios || android)) return;
   let richiesta = null;
   window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); richiesta = e; });
-  window.addEventListener("appinstalled", () => { $("installa").hidden = true; });
-  $("installa").hidden = false;
+  window.addEventListener("appinstalled", () => { $("installaVoce").hidden = true; });
+  $("installaVoce").hidden = false;
 
   function guida() {
     const safari = ios && !/CriOS|FxiOS|EdgiOS|GSA/.test(ua);
@@ -1564,15 +1727,14 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
     document.body.appendChild(el);
     el.querySelector("button").focus();
   }
-  $("installaSi").addEventListener("click", async () => {
+  $("installaVoce").addEventListener("click", async () => {
+    chiudiMenu();
     if (richiesta) {             // Chrome su Android: finestra di installazione ufficiale
       richiesta.prompt();
       const { outcome } = await richiesta.userChoice; richiesta = null;
-      if (outcome === "accepted") $("installa").hidden = true;
+      if (outcome === "accepted") $("installaVoce").hidden = true;
     } else guida();              // iPhone o browser senza installazione automatica: istruzioni
-  });
-  $("installaNo").addEventListener("click", () => {
-    $("installa").hidden = true; try { localStorage.setItem("installa-chiuso", "1"); } catch {}
   });
 })();
 </script>
+
