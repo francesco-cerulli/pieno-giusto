@@ -1075,6 +1075,7 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 .voce-nav { display: block; padding: 14px 16px; border-radius: 16px; background: var(--surface-2); color: var(--fg); font-weight: 600; text-decoration: none; }
 .voce-nav:hover { background: var(--mint); }
 .guida .annulla { background: var(--surface-2); color: var(--fg); }
+.base-notte { filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.9) saturate(.6); }
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1210,19 +1211,32 @@ const OSM = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreet
 const CARTO = OSM + ' &copy; <a href="https://carto.com/attributions">CARTO</a>';
 const MQ_SCURO = matchMedia("(prefers-color-scheme: dark)");
 function scuro() { const t = document.documentElement.dataset.theme; return t ? t === "dark" : MQ_SCURO.matches; }
+// Sfondi senza chiave d'accesso (Esri). Se un giorno si aggiunge una chiave CARTO gratuita,
+// basta scriverla qui sotto e "Strade"/"Essenziale" tornano allo stile CARTO.
+const CARTO_KEY = "";
+const ESRI = (servizio) => `https://server.arcgisonline.com/ArcGIS/rest/services/${servizio}/MapServer/tile/{z}/{y}/{x}`;
+const ATTR_ESRI = "Mappa &copy; Esri, HERE, Garmin, &copy; OpenStreetMap";
 const BASI = {
-  strade: { nome: "Strade", url: () => `https://{s}.basemaps.cartocdn.com/${scuro() ? "dark_all" : "rastertiles/voyager"}/{z}/{x}/{y}{r}.png`, attr: CARTO, sub: "abcd" },
-  // Essenziale: la stessa base di "Strade" (strade, nomi, parchi, acqua) ma con colori attenuati da un filtro
-  essenziale: { nome: "Essenziale", url: () => `https://{s}.basemaps.cartocdn.com/${scuro() ? "dark_all" : "rastertiles/voyager"}/{z}/{x}/{y}{r}.png`, attr: CARTO, sub: "abcd", classe: "base-tenue" },
-  satellite: { nome: "Satellite", url: () => "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attr: "Immagini &copy; Esri, Maxar, Earthstar Geographics", sub: "" },
+  // Essenziale: grigio chiaro con strade e nomi in un livello a parte, sopra lo sfondo
+  essenziale: { nome: "Essenziale", strati: () => CARTO_KEY
+      ? [{ url: `https://{s}.basemaps.cartocdn.com/${scuro() ? "dark_all" : "rastertiles/voyager"}/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`, attr: CARTO, sub: "abcd", classe: "base-tenue" }]
+      : [{ url: ESRI(scuro() ? "Canvas/World_Dark_Gray_Base" : "Canvas/World_Light_Gray_Base"), attr: ATTR_ESRI, nativo: 16 },
+         { url: ESRI(scuro() ? "Canvas/World_Dark_Gray_Reference" : "Canvas/World_Light_Gray_Reference"), attr: "", nativo: 16 }] },
+  // Strade: a colori, stile navigatore
+  strade: { nome: "Strade", strati: () => CARTO_KEY
+      ? [{ url: `https://{s}.basemaps.cartocdn.com/${scuro() ? "dark_all" : "rastertiles/voyager"}/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`, attr: CARTO, sub: "abcd" }]
+      : [{ url: ESRI("World_Street_Map"), attr: ATTR_ESRI, classe: scuro() ? "base-notte" : "" }] },
+  satellite: { nome: "Satellite", strati: () => [
+      { url: ESRI("World_Imagery"), attr: "Immagini &copy; Esri, Maxar, Earthstar Geographics" },
+      { url: ESRI("Reference/World_Transportation"), attr: "" }] },
 };
 let base = null;
 function leggiBase() { try { return localStorage.getItem("base-v2") || "essenziale"; } catch { return "essenziale"; } }
 function scegliBase(k) {
   if (!BASI[k]) k = "essenziale";
   if (base) mappa.removeLayer(base);
-  const b = BASI[k];
-  base = L.tileLayer(b.url(), { maxZoom: 19, attribution: b.attr, subdomains: b.sub || "abc", detectRetina: true, className: b.classe || "" }).addTo(mappa);
+  base = L.layerGroup(BASI[k].strati().map((x) => L.tileLayer(x.url, { maxZoom: 19, maxNativeZoom: x.nativo || 19,
+    attribution: x.attr, subdomains: x.sub || "abc", className: x.classe || "" }))).addTo(mappa);
   base.chiave = k;
   try { localStorage.setItem("base-v2", k); } catch {}
   document.querySelectorAll("#basi button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.b === k));
