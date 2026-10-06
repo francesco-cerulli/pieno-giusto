@@ -1978,8 +1978,8 @@ function aggiornaTendenza() {
       : "Nessun giorno migliore in vista: conta solo dove";
   // i dettagli: tre numeri da leggere al volo, più una riga sul perché
   const tessere = [["Ultimi 3 giorni", dir === "stabile" ? "fermi" : `${dir === "giu" ? "−" : "+"}${cent(d3)} cent`, dir === "stabile" ? "nessuna fretta" : "al litro", dir === "stabile" ? "" : dir]];
-  if (prev) tessere.push([dir === "giu" ? "Calo previsto" : "Sale ancora", `${prev.giorni === 1 ? "1 giorno" : prev.giorni + " giorni"}`, "di solito", dir]);
-  if (a?.percentuale) tessere.push(["Ci prende", `${a.percentuale} su 100`, "volte"]);
+  // stesso formato dei 3 giorni passati, così il confronto passato/futuro è immediato
+  if (prev && prev.litro >= .001) tessere.push([prev.giorni === 1 ? "Domani" : `Prossimi ${prev.giorni} giorni`, `${dir === "giu" ? "−" : "+"}${cent(prev.litro)} cent`, "al litro, stimati", dir]);
   // (il risparmio scegliendo il distributore è già nella carta del consigliato, subito sotto: non si ripete)
   box.className = `verdetto ${dir}`; box.hidden = false;
   box.innerHTML = `<div class="v-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ICONE_VERDETTO[dir]}</svg></div>
@@ -1992,7 +1992,7 @@ function aggiornaTendenza() {
     </div>
     <div class="v-dettagli" id="vDettagli" ${stato.vAperto ? "" : "hidden"}>
       <div class="v-tessere">${tessere.map(([et, val, sotto, tono]) => `<div class="v-tessera"><span class="vt-e">${et}</span><b class="vt-v ${tono || ""}">${val}</b><span class="vt-s">${sotto}</span></div>`).join("")}</div>
-      <p class="v-fiducia">Stima${prev ? ` su ${prev.casi.toLocaleString("it-IT")} casi reali` : ""}, su un pieno da ${PIENO_LITRI} litri: può sbagliare · <button type="button" id="vComeFunziona">come funziona</button></p>
+      <p class="v-fiducia">Stima${prev ? ` basata su ${prev.casi.toLocaleString("it-IT")} casi reali` : ""}${a?.percentuale ? `, confermata ${a.percentuale} volte su 100` : ""}. Può sbagliare · <button type="button" id="vComeFunziona">come funziona</button></p>
     </div>`;
   $("vEspandi").addEventListener("click", (e) => {
     e.stopPropagation(); stato.vAperto = !stato.vAperto;
