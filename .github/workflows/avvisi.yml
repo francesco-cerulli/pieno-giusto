@@ -34,6 +34,21 @@ jobs:
             echo "::error::Mancano i segreti CLOUDFLARE_API_TOKEN e/o CLOUDFLARE_ACCOUNT_ID"; exit 1
           fi
 
+      - name: Diagnosi accesso Cloudflare (senza mostrare il token)
+        run: |
+          set +e
+          A="$CLOUDFLARE_ACCOUNT_ID"
+          FORMATO=$(printf '%s' "$A" | grep -qE '^[0-9a-f]{32}$' && echo "giusto" || echo "SBAGLIATO (lunghezza ${#A})")
+          T_LEN=${#CLOUDFLARE_API_TOKEN}
+          SPAZI=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | grep -q '[[:space:]]' && echo "SI" || echo "no")
+          U=$(curl -s https://api.cloudflare.com/client/v4/user/tokens/verify -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);console.log(j.success?("ok, stato "+j.result.status):("no: "+(j.errors||[]).map(e=>e.code+" "+e.message).join("; ")))}catch{console.log("risposta illeggibile")}})')
+          AC=$(curl -s "https://api.cloudflare.com/client/v4/accounts/$A/tokens/verify" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);console.log(j.success?("ok, stato "+j.result.status):("no: "+(j.errors||[]).map(e=>e.code+" "+e.message).join("; ")))}catch{console.log("risposta illeggibile")}})')
+          KV=$(curl -s "https://api.cloudflare.com/client/v4/accounts/$A/storage/kv/namespaces" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);console.log(j.success?("ok ("+j.result.length+" archivi)"):("no: "+(j.errors||[]).map(e=>e.code+" "+e.message).join("; ")))}catch{console.log("risposta illeggibile")}})')
+          ACC=$(curl -s "https://api.cloudflare.com/client/v4/accounts" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);console.log(j.success?("account visibili: "+j.result.length+(j.result.some(a=>a.id===process.env.A)?" (contiene l ID salvato)":" (NON contiene l ID salvato)")):("no: "+(j.errors||[]).map(e=>e.code+" "+e.message).join("; ")))}catch{console.log("risposta illeggibile")}})')
+          echo "::notice title=Diagnosi::ID account: $FORMATO · token: $T_LEN caratteri, spazi: $SPAZI · token utente: $U · token account: $AC · elenco account: $ACC · archivi KV: $KV"
+        env:
+          A: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Installa wrangler
         working-directory: avvisi
         run: npm install --no-audit --no-fund
