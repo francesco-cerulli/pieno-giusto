@@ -8,6 +8,7 @@ Output:
 - docs/data/impianti.json  → distributori con prezzi e variazioni
 - docs/data/medie.json     → medie nazionali e provinciali, andamento storico,
                              tendenza (su/giù/stabile) per provincia e quanto si è rivelata affidabile
+- docs/data/storico/XX.json → per provincia, i cambi di prezzo di ogni distributore negli ultimi 30 giorni
 Uso: python scripts/elabora.py
 """
 import json
@@ -29,6 +30,7 @@ MIN_IMPIANTI_MEDIANA = 10           # sotto questo numero uso la mediana naziona
 GIORNI_ANDAMENTO = 90               # lunghezza della serie delle medie nazionali
 GIORNI_TENDENZA = 3                 # la tendenza guarda gli ultimi 3 giorni...
 SOGLIA_TENDENZA = 0.005             # ...e conta solo se la media si è mossa di almeno mezzo centesimo
+GIORNI_PUNTO = 30                   # storico del singolo distributore mostrato nella scheda
 
 
 def prezzi_del_giorno(giorno: str):
@@ -157,9 +159,12 @@ def main():
     province = {p: {c: media(v) for c, v in carb.items()} for p, carb in per_provincia.items()}
 
     andamento = []
+    per_giorno = {}             # giorno -> prezzi, per lo storico dei singoli distributori
     serie = defaultdict(dict)   # (provincia o "IT", carburante) -> {giorno: media}
     for g in reversed(giorni[:GIORNI_ANDAMENTO]):
         gp = storico[giorni.index(g)] if giorni.index(g) < len(storico) else pulisci(prezzi_del_giorno(g))
+        if g in giorni[:GIORNI_PUNTO]:
+            per_giorno[g] = gp
         gd = date.fromisoformat(g)
         acc = defaultdict(list)
         acc_prov = defaultdict(list)
@@ -211,8 +216,47 @@ def main():
                    "tendenze": tendenze, "affidabilita": affidabilita},
                   f, ensure_ascii=False, separators=(",", ":"))
 
+    scrivi_storico(impianti, per_giorno)
+
     cambiati = sum(1 for d, _ in variazioni.values() if d)
     print(f"Scritti {len(impianti)} distributori, {cambiati} prezzi con variazione registrata.")
+
+
+def scrivi_storico(impianti, per_giorno):
+    """Un file per provincia: per ogni distributore e carburante, solo i giorni in cui il prezzo
+    cambia (giorno = indice dal primo giorno della finestra, prezzo in millesimi di euro).
+    Così il file resta piccolo e la scheda può disegnare il grafico a gradini."""
+    giorni = sorted(per_giorno)
+    if not giorni:
+        return
+    cartella = SITE_DATA / "storico"
+    cartella.mkdir(parents=True, exist_ok=True)
+    per_prov = defaultdict(dict)
+    for imp in impianti:
+        pid, prov = str(imp[0]), imp[5]
+        punti_imp = {}
+        for carb in imp[9]:
+            punti, ultimo = [], None
+            for k, g in enumerate(giorni):
+                v = per_giorno[g].get((pid, carb))
+                if v is None:
+                    continue
+                milli = round(v[0] * 1000)
+                if milli != ultimo:
+                    punti.append([k, milli])
+                    ultimo = milli
+            if punti:
+                punti_imp[carb] = punti
+        if punti_imp:
+            per_prov[prov or "XX"][pid] = punti_imp
+    for vecchio in cartella.glob("*.json"):
+        if vecchio.stem not in per_prov:
+            vecchio.unlink()
+    for prov, dati in per_prov.items():
+        with open(cartella / f"{prov}.json", "w", encoding="utf-8") as f:
+            json.dump({"inizio": giorni[0], "giorni": len(giorni), "impianti": dati},
+                      f, ensure_ascii=False, separators=(",", ":"))
+    print(f"Storico: {len(per_prov)} province, {len(giorni)} giorni")
 
 
 if __name__ == "__main__":

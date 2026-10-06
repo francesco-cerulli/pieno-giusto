@@ -17,7 +17,8 @@ Ministero (MIMIT)  ──►  scripts/scarica.py  ──►  data/raw/  (storico
 - **scarica.py**: prende i due file del giorno dal Ministero e salva i prezzi in `data/raw/AAAA/MM/`.
   Se il sito del Ministero è giù, usa l'archivio pubblico di riserva.
 - **elabora.py**: unisce distributori e prezzi, scarta gli errori evidenti e calcola per ogni prezzo
-  di quanto è cambiato rispetto al valore precedente e da quando. Produce `impianti.json` e `medie.json`.
+  di quanto è cambiato rispetto al valore precedente e da quando. Produce `impianti.json`, `medie.json`
+  e `storico/XX.json` (per provincia: i cambi di prezzo di ogni distributore negli ultimi 30 giorni, per il grafico nella scheda).
 - **importa_storico.py**: importa i giorni passati dall'archivio pubblico `LucaDDDD/benzina-data`.
   Serve solo all'inizio (lo zip contiene già gli ultimi 20 giorni).
 - **.github/workflows/aggiorna.yml**: GitHub esegue i due script ogni mattina e salva il risultato.

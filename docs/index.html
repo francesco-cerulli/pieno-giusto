@@ -617,11 +617,11 @@ print-color-adjust: exact;
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #121816; --surface: #1b2320; --surface-2: #232d29; --fg: #e8eeeb; --muted: #97a6a1;
   --line: #33403b; --accent: #3fb8a0; --accent-fg: #07201b; --up: #fb923c; --down: #4ade80;
-  --shadow: 0 6px 24px rgb(0 0 0 / .45); --tiles: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); color-scheme: dark; } }
+  --shadow: 0 6px 24px rgb(0 0 0 / .45); color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #121816; --surface: #1b2320; --surface-2: #232d29; --fg: #e8eeeb; --muted: #97a6a1;
   --line: #33403b; --accent: #3fb8a0; --accent-fg: #07201b; --up: #fb923c; --down: #4ade80;
-  --shadow: 0 6px 24px rgb(0 0 0 / .45); --tiles: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9); color-scheme: dark; }
+  --shadow: 0 6px 24px rgb(0 0 0 / .45); color-scheme: dark; }
 
 html, body { height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.4 var(--f-body); overflow: hidden; }
@@ -642,7 +642,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .riga { display: flex; gap: 8px; align-items: center; }
 .marchio { font: 700 1.1rem/1 var(--f-display); letter-spacing: .02em; text-transform: uppercase;
   background: var(--accent); color: var(--accent-fg); padding: 10px 9px; border-radius: 10px; box-shadow: var(--shadow); white-space: nowrap; }
-@media (max-width: 380px) { .marchio { display: none; } }
+@media (max-width: 699px) { .marchio { display: none; } }
 .cerca { flex: 1; min-width: 0; display: flex; background: var(--surface); border-radius: 10px; box-shadow: var(--shadow); }
 .cerca input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 9px 12px; }
 .cerca input:focus-visible { outline-offset: -2px; border-radius: 10px; }
@@ -761,7 +761,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   .marchio, .cerca, .btn-icona, .carburanti, .avviso { box-shadow: none; }
   .cerca, .btn-icona, .carburanti, .avviso { background: var(--surface-2); }
   .pannello, .pannello.chiuso { flex: 1; width: auto; margin: 0; max-height: none; box-shadow: none; border-radius: 0; background: transparent; padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 12px); }
-  .pannello.chiuso .lista, .pannello.chiuso .fonte { display: block; }
+  .pannello.chiuso .lista { display: block; }
+  .pannello.chiuso .fonte { display: flex; }
   .maniglia { cursor: default; padding-top: 0; }
   .pannello::before { display: none; }
   .pannello .tendenza { margin-top: 0; }
@@ -825,6 +826,20 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   .leaflet-control-zoom { display: none; }
 }
 
+/* --- scelta del tipo di mappa --- */
+.livelli { position: relative; flex: none; }
+.basi { position: absolute; right: 0; top: calc(100% + 8px); z-index: 1200; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow);
+  padding: 8px; display: grid; grid-template-columns: repeat(3, 76px); gap: 6px; }
+.basi[hidden] { display: none; }
+.basi button { border: 0; background: transparent; border-radius: 10px; padding: 4px 4px 6px; cursor: pointer; font-size: .78rem; color: var(--muted); display: grid; gap: 4px; justify-items: center; }
+.basi button[aria-pressed="true"] { color: var(--fg); font-weight: 600; }
+.basi button[aria-pressed="true"] .anteprima { box-shadow: 0 0 0 2px var(--accent); }
+.anteprima { width: 64px; height: 44px; border-radius: 8px; display: block; }
+.anteprima.strade { background: linear-gradient(160deg, transparent 44%, #f7c873 44% 52%, transparent 52%), linear-gradient(70deg, transparent 46%, #fff 46% 54%, transparent 54%), #e9eee4; }
+.anteprima.essenziale { background: linear-gradient(160deg, transparent 45%, #fff 45% 51%, transparent 51%), linear-gradient(70deg, transparent 47%, #fff 47% 53%, transparent 53%), #eef0f1; border: 1px solid var(--line); }
+.anteprima.satellite { background: radial-gradient(circle at 30% 30%, #6d7f4e, transparent 45%), radial-gradient(circle at 75% 70%, #4b5a3a, transparent 50%), #3d4a35; }
+@media (min-width: 1024px) { .basi { right: auto; left: 0; } }
+
 /* --- scheda del distributore (popup) --- */
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface); color: var(--fg); box-shadow: var(--shadow); }
 .leaflet-popup-content { margin: 12px 14px; font: 14px/1.4 var(--f-body); min-width: 230px; }
@@ -840,6 +855,38 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .scheda .azioni { margin-top: 10px; display: flex; gap: 8px; }
 .scheda .azioni a { flex: 1; text-align: center; background: var(--accent); color: var(--accent-fg); text-decoration: none; border-radius: 8px; padding: 7px; font-weight: 600; }
 .scheda .nota { font-size: .75rem; color: var(--muted); margin-top: 6px; }
+.scheda .grande { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 2px 0 4px; }
+.scheda .grande .cifra { font: 700 2.3rem/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.scheda .grande .cifra.dubbio { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+.scheda .grande .cifra small { font: 500 .85rem var(--f-body); color: var(--muted); margin-left: 3px; }
+.scheda .grande .carb { font-size: .8rem; color: var(--muted); display: block; margin-top: 2px; }
+.chip { font-size: .78rem; font-weight: 600; padding: 4px 8px; border-radius: 999px; white-space: nowrap; background: var(--surface-2); color: var(--muted); }
+.chip.su { background: color-mix(in srgb, var(--up) 14%, var(--surface)); color: var(--up); }
+.chip.giu { background: color-mix(in srgb, var(--down) 14%, var(--surface)); color: var(--down); }
+.storico { margin: 6px 0 2px; }
+.storico svg { width: 100%; height: 74px; display: block; overflow: visible; }
+.storico .area { fill: var(--accent); opacity: .1; }
+.storico .linea { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+.storico .fine { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.storico .assi { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); font-variant-numeric: tabular-nums; margin-top: 3px; }
+.storico .attesa { height: 74px; border-radius: 8px; background: var(--surface-2); }
+.scheda .altri { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 2px; }
+.scheda .altri button { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 3px 9px; font-size: .78rem; cursor: pointer; font-variant-numeric: tabular-nums; }
+.scheda .altri button b { font-weight: 600; }
+.puo-sbagliare { font-size: .72rem; color: var(--muted); margin: 8px 0 0; text-align: center; }
+.fonte { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.fonte button { border: 0; background: none; color: var(--accent); font-weight: 600; cursor: pointer; padding: 4px 0; font-size: inherit; }
+/* guida "come funziona": figure al posto delle parole */
+.flusso { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 6px; margin: 4px 0 16px; text-align: center; font-size: .78rem; color: var(--muted); }
+.flusso .passo { display: grid; justify-items: center; gap: 6px; }
+.flusso .icona { width: 46px; height: 46px; border-radius: 14px; background: var(--surface-2); display: grid; place-items: center; }
+.flusso .icona svg { width: 24px; height: 24px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.flusso .freccia-f { color: var(--line); font-size: 1.2rem; }
+.guida figure { margin: 0 0 14px; }
+.guida figure svg { width: 100%; height: 90px; display: block; overflow: visible; }
+.guida figcaption { font-size: .78rem; color: var(--muted); display: flex; justify-content: space-between; margin-top: 4px; }
+.barra-aff { height: 10px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin: 6px 0 4px; }
+.barra-aff i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
 .leaflet-control-attribution { font-size: 10px; background: color-mix(in srgb, var(--surface) 80%, transparent) !important; color: var(--muted); }
 .leaflet-control-attribution a { color: inherit; }
 .leaflet-bar a { background: var(--surface); color: var(--fg); border-color: var(--line); }
@@ -859,6 +906,16 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
       <input id="comune" list="comuni" placeholder="Cerca comune…" autocomplete="off" enterkeyhint="search">
       <datalist id="comuni"></datalist>
     </form>
+    <div class="livelli">
+      <button class="btn-icona" id="livelli" type="button" aria-label="Tipo di mappa" title="Tipo di mappa" aria-expanded="false" aria-controls="basi">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>
+      </button>
+      <div class="basi" id="basi" role="group" aria-label="Tipo di mappa" hidden>
+        <button type="button" data-b="strade" aria-pressed="false"><i class="anteprima strade"></i>Strade</button>
+        <button type="button" data-b="essenziale" aria-pressed="false"><i class="anteprima essenziale"></i>Essenziale</button>
+        <button type="button" data-b="satellite" aria-pressed="false"><i class="anteprima satellite"></i>Satellite</button>
+      </div>
+    </div>
     <button class="btn-icona" id="vicino" type="button" aria-label="Distributori vicino a me" title="Vicino a me">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="2"/></svg>
     </button>
@@ -884,7 +941,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
     <h2>I più economici in zona <span id="conteggio">Caricamento…</span></h2>
   </button>
   <ol class="lista" id="lista"></ol>
-  <div class="fonte">Dati: Ministero delle Imprese e del Made in Italy — Osservatorio Prezzi Carburanti (IODL 2.0), prezzi in vigore alle 8 del <span id="data">–</span>. ▲▼ accanto a un prezzo: ultima variazione di quel distributore, negli ultimi 7 giorni.</div>
+  <div class="fonte"><span>Dati <abbr title="Ministero delle Imprese e del Made in Italy, Osservatorio Prezzi Carburanti (IODL 2.0)">MIMIT</abbr> · prezzi del <span id="data">–</span></span><button type="button" id="comeFunziona">Come funziona</button></div>
 </section>
 </aside>
 
@@ -920,9 +977,30 @@ function salvaPreferenza(c) { try { localStorage.setItem("carburante", c); } cat
 const mappa = L.map("mappa", { zoomControl: false, preferCanvas: true, minZoom: 5, maxZoom: 18 })
   .setView([42.3, 12.6], 6);
 L.control.zoom({ position: "topright" }).addTo(mappa);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(mappa);
+// Basi della mappa: "Strade" (stile navigatore), "Essenziale" (quasi solo strade), "Satellite".
+// In tema scuro le prime due usano la versione scura nativa invece di invertire i colori.
+const OSM = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+const CARTO = OSM + ' &copy; <a href="https://carto.com/attributions">CARTO</a>';
+const MQ_SCURO = matchMedia("(prefers-color-scheme: dark)");
+function scuro() { const t = document.documentElement.dataset.theme; return t ? t === "dark" : MQ_SCURO.matches; }
+const BASI = {
+  strade: { nome: "Strade", url: () => `https://{s}.basemaps.cartocdn.com/${scuro() ? "dark_all" : "rastertiles/voyager"}/{z}/{x}/{y}{r}.png`, attr: CARTO, sub: "abcd" },
+  essenziale: { nome: "Essenziale", url: () => `https://{s}.basemaps.cartocdn.com/${scuro() ? "dark_nolabels" : "light_all"}/{z}/{x}/{y}{r}.png`, attr: CARTO, sub: "abcd" },
+  satellite: { nome: "Satellite", url: () => "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", attr: "Immagini &copy; Esri, Maxar, Earthstar Geographics", sub: "" },
+};
+let base = null;
+function leggiBase() { try { return localStorage.getItem("base"); } catch { return null; } }
+function scegliBase(k) {
+  if (!BASI[k]) k = "strade";
+  if (base) mappa.removeLayer(base);
+  const b = BASI[k];
+  base = L.tileLayer(b.url(), { maxZoom: 19, attribution: b.attr, subdomains: b.sub || "abc", detectRetina: true }).addTo(mappa);
+  base.chiave = k;
+  try { localStorage.setItem("base", k); } catch {}
+  document.querySelectorAll("#basi button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.b === k));
+}
+scegliBase(leggiBase());
+MQ_SCURO.addEventListener("change", () => scegliBase(base.chiave));
 
 function avviso(testo) { const a = $("avviso"); a.textContent = testo || ""; a.hidden = !testo; }
 
@@ -973,21 +1051,56 @@ function iconaGruppo(gruppo) {
 }
 
 function scheda(i) {
-  const righe = Object.keys(NOMI).filter((c) => i.prezzi[c]).map((c) => {
-    const [p, d, dal, com] = i.prezzi[c];
-    const v = variazione(d, dal, true);
-    const dubbio = motivoDubbio(i.prezzi[c]);
-    return `<tr class="${c === stato.carb ? "scelto" : ""}${dubbio ? " dubbio" : ""}"><td>${NOMI[c]}</td>
-      <td><div class="p">${euro(p)} €</div><div class="var">${v}</div><div class="var">comunicato il ${dataIt(com)}</div>
-      ${dubbio ? `<div class="attenzione">Da verificare. ${dubbio}</div>` : ""}</td></tr>`;
-  }).join("");
+  const c = i.prezzi[stato.carb] ? stato.carb : Object.keys(NOMI).find((k) => i.prezzi[k]);
+  const [p, d, dal] = i.prezzi[c];
+  const dubbio = motivoDubbio(i.prezzi[c]);
+  const t = stato.medie?.tendenze?.[i.provincia]?.[c];
+  const chip = t ? `<span class="chip ${t[3]}">${t[3] === "su" ? "↑ in aumento" : t[3] === "giu" ? "↓ in calo" : "→ stabile"}</span>` : "";
+  const altri = Object.keys(NOMI).filter((k) => k !== c && i.prezzi[k])
+    .map((k) => `<button type="button" data-c="${k}">${NOMI[k]} <b>${euro(i.prezzi[k][0])}</b></button>`).join("");
   const dest = `https://www.google.com/maps/dir/?api=1&destination=${i.lat},${i.lon}`;
-  return `<div class="scheda"><h3>${esc(i.bandiera || i.nome)}</h3>
-    <div class="dove">${esc(i.indirizzo)}, ${esc(i.comune)} (${esc(i.provincia)})</div>
-    <table>${righe}</table>
-    ${zonaTesto(i.provincia)}
-    ${i.autostrada ? '<div class="nota">Impianto autostradale.</div>' : ""}
-    <div class="azioni"><a href="${dest}" target="_blank" rel="noopener">Portami qui</a></div></div>`;
+  return `<div class="scheda" data-id="${i.id}" data-c="${c}"><h3>${esc(i.bandiera || i.nome)}</h3>
+    <div class="dove">${esc(i.indirizzo)}, ${esc(i.comune)}</div>
+    <div class="grande"><div><span class="cifra${dubbio ? " dubbio" : ""}">${euro(p)}<small>€/l</small></span>
+      <span class="carb">${NOMI[c]} · ${d ? variazione(d, dal, false) : "invariato"}</span></div>${chip}</div>
+    ${dubbio ? `<div class="attenzione">Da verificare. ${dubbio}</div>` : ""}
+    <figure class="storico" aria-label="Storico del prezzo"><div class="attesa"></div></figure>
+    ${altri ? `<div class="altri">${altri}</div>` : ""}
+    <div class="azioni"><a href="${dest}" target="_blank" rel="noopener">Portami qui</a></div>
+    <p class="puo-sbagliare">Possiamo sbagliare: controlla sempre il prezzo alla pompa.</p></div>`;
+}
+
+// Storico del singolo distributore: un file per provincia, caricato solo quando serve
+const storici = new Map();
+function caricaStorico(prov) {
+  if (!storici.has(prov)) storici.set(prov, fetch(`data/storico/${prov}.json`, { cache: "no-cache" }).then((r) => r.ok ? r.json() : null).catch(() => null));
+  return storici.get(prov);
+}
+function graficoStorico(dati, id, c) {
+  const punti = dati?.impianti?.[id]?.[c];
+  if (!punti || !punti.length) return '<div class="assi"><span>Storico non disponibile</span></div>';
+  const n = dati.giorni, W = 260, H = 74;
+  const valori = punti.map((x) => x[1] / 1000);
+  const min = Math.min(...valori), max = Math.max(...valori), span = Math.max(max - min, .02);
+  const x = (k) => (k / (n - 1)) * W;
+  const yy = (v) => 6 + (1 - (v - (max + min) / 2 + span / 2) / span) * (H - 12);
+  let d = `M${x(punti[0][0]).toFixed(1)},${yy(valori[0]).toFixed(1)}`;
+  for (let k = 1; k < punti.length; k++) d += `H${x(punti[k][0]).toFixed(1)}V${yy(valori[k]).toFixed(1)}`;
+  d += `H${W}`;
+  const ultimo = valori[valori.length - 1];
+  const inizio = new Date(dati.inizio), giornoDa = (k) => { const g = new Date(inizio); g.setDate(g.getDate() + k); return g.toLocaleDateString("it-IT", { day: "numeric", month: "short" }); };
+  const descr = `Prezzo dal ${giornoDa(punti[0][0])} a oggi: minimo ${euro(min)}, massimo ${euro(max)}, ora ${euro(ultimo)} euro`;
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${descr}">
+      <path class="area" d="${d}V${H}H${x(punti[0][0]).toFixed(1)}Z"/>
+      <path class="linea" d="${d}" vector-effect="non-scaling-stroke"/>
+      <circle class="fine" cx="${W}" cy="${yy(ultimo).toFixed(1)}" r="4" vector-effect="non-scaling-stroke"/></svg>
+    <div class="assi"><span>${giornoDa(punti[0][0])}</span><span>min ${euro(min)} · max ${euro(max)}</span><span>oggi</span></div>`;
+}
+async function riempiScheda(el) {
+  const sc = el.querySelector(".scheda"); if (!sc) return;
+  const i = stato.impianti.find((x) => String(x.id) === sc.dataset.id); if (!i) return;
+  const dati = await caricaStorico(i.provincia);
+  const fig = sc.querySelector(".storico"); if (fig) fig.innerHTML = graficoStorico(dati, String(i.id), sc.dataset.c);
 }
 
 // Layout attivo: "lato" = barra laterale fissa (PC, tablet/telefono in orizzontale)
@@ -1018,7 +1131,8 @@ function disegna() {
     const m = L.marker([i.lat, i.lon], { icon: iconaPrezzo(i), title: i.bandiera });
     m.impianto = i;
     m.on("click", () => margini(m));   // prima di bindPopup: aggiorna i margini prima dell'apertura
-    m.bindPopup(() => scheda(i), { maxWidth: 300 });
+    m.bindPopup(() => scheda(i), { maxWidth: 300, minWidth: 260 });
+    m.on("popupopen", (e) => riempiScheda(e.popup.getElement()));
     marcatori.push(m);
   }
   gruppi.addLayers(marcatori);
@@ -1150,10 +1264,8 @@ function aggiornaTendenza() {
     : `${d3 > 0 ? "+" : "−"}${cent(d3)} cent in 3 giorni · media ${euro(media)} €`;
   box.innerHTML = `<div class="segno" aria-hidden="true">${segno}</div>
     <div class="testo"><span class="titolo">${NOMI[c]} ${TITOLI[dir]}</span>
-      <span class="dove">${nomeZona(z === "IT" || stato.medie.tendenze[z]?.[c] ? z : "IT")}</span>
-      <span class="numeri">${numeri}</span></div>
-    <button type="button" class="info" id="tendenzaInfo" aria-label="Come funziona la tendenza">?</button>
-    <div class="consiglio">${CONSIGLI[dir]}</div>`;
+      <span class="dove">${CONSIGLI[dir]} · <b>${z === "IT" ? "Italia" : esc(PROVINCE[z] || z)}</b></span></div>
+    <button type="button" class="info" id="tendenzaInfo" aria-label="Come funziona" title="${esc(numeri)}">?</button>`;
   $("tendenzaInfo").addEventListener("click", spiegaTendenza);
 }
 
@@ -1167,15 +1279,34 @@ function zonaTesto(prov) {
 
 function spiegaTendenza() {
   const a = stato.medie?.affidabilita || {};
+  const serie = (stato.medie?.nazionale || []).filter((g) => g[stato.carb] != null);
+  let figura = "";
+  if (serie.length > 4) {
+    const W = 300, H = 90, v = serie.map((g) => g[stato.carb]);
+    const min = Math.min(...v), max = Math.max(...v), span = max - min || .01;
+    const x = (k) => (k / (v.length - 1)) * W, y = (p) => 8 + (1 - (p - min) / span) * (H - 16);
+    const linea = v.map((p, k) => `${k ? "L" : "M"}${x(k).toFixed(1)},${y(p).toFixed(1)}`).join("");
+    const k3 = v.length - 4;
+    figura = `<figure><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Media italiana della ${NOMI[stato.carb].toLowerCase()} negli ultimi ${v.length} giorni">
+        <rect x="${x(k3)}" y="0" width="${W - x(k3)}" height="${H}" fill="var(--accent)" opacity=".1" rx="6"/>
+        <path d="${linea}" fill="none" stroke="var(--fg)" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+        <circle cx="${W}" cy="${y(v[v.length - 1]).toFixed(1)}" r="4" fill="var(--accent)"/></svg>
+      <figcaption><span>${dataIt(serie[0].giorno)}</span><span>ultimi 3 giorni = la tendenza</span><span>${dataIt(serie[serie.length - 1].giorno)}</span></figcaption></figure>`;
+  }
+  const icona = (path) => `<span class="icona"><svg viewBox="0 0 24 24">${path}</svg></span>`;
   const el = document.createElement("div");
-  el.className = "guida"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
-  el.innerHTML = `<div><h2>Come leggere i prezzi</h2>
-    <ol>
-      <li><b>La tendenza</b> (il riquadro colorato) dice dove si sono mossi i prezzi medi della zona negli ultimi 3 giorni. I distributori cambiano prezzo un po' alla volta, quindi di solito la direzione continua anche nei giorni successivi.</li>
-      <li><b>Le frecce ▲▼ sui singoli prezzi</b> mostrano l'ultima variazione di quel distributore, già avvenuta, se è successa negli ultimi ${GIORNI_FRECCIA} giorni.</li>
-    </ol>
-    ${a.percentuale != null ? `<p><span class="affid">${a.percentuale}%</span><br>Negli ultimi ${a.giorni} giorni, quando la media di una zona si è mossa in una direzione, nei ${a.orizzonte} giorni successivi ha continuato così ${a.percentuale} volte su 100 (${a.casi.toLocaleString("it-IT")} casi verificati).</p>` : ""}
-    <p class="nota">È una tendenza calcolata sui dati del Ministero, non una garanzia: sbaglia soprattutto quando i prezzi cambiano direzione. La percentuale si aggiorna ogni giorno con i dati nuovi.</p>
+  el.className = "guida"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Come funziona");
+  el.innerHTML = `<div><h2>Come funziona</h2>
+    <div class="flusso">
+      <div class="passo">${icona('<path d="M4 20h16M6 20V10M10 20V10M14 20V10M18 20V10M3 10l9-6 9 6z"/>')}Prezzi ufficiali del Ministero</div><span class="freccia-f">›</span>
+      <div class="passo">${icona('<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>')}Ogni giorno</div><span class="freccia-f">›</span>
+      <div class="passo">${icona('<path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/>')}Media e tendenza</div>
+    </div>
+    ${figura}
+    ${a.percentuale != null ? `<p style="margin:0"><span class="affid">${a.percentuale}%</span> tendenze confermate nei ${a.orizzonte} giorni dopo</p>
+      <div class="barra-aff" aria-hidden="true"><i style="width:${a.percentuale}%"></i></div>
+      <p class="nota">${a.casi.toLocaleString("it-IT")} casi verificati in ${a.giorni} giorni.</p>` : ""}
+    <p class="nota">Possiamo sbagliare, soprattutto quando i prezzi cambiano direzione. Controlla sempre il prezzo alla pompa.</p>
     <button type="button">Ho capito</button></div>`;
   el.addEventListener("click", (e) => { if (e.target === el || e.target.tagName === "BUTTON") el.remove(); });
   document.body.appendChild(el);
@@ -1201,6 +1332,18 @@ function scegliCarburante(c) {
   aggiornaTendenza();
 }
 
+$("comeFunziona").addEventListener("click", spiegaTendenza);
+$("livelli").addEventListener("click", () => {
+  const b = $("basi"); b.hidden = !b.hidden; $("livelli").setAttribute("aria-expanded", !b.hidden);
+});
+$("basi").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  scegliBase(b.dataset.b); $("basi").hidden = true; $("livelli").setAttribute("aria-expanded", false);
+});
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".livelli")) { $("basi").hidden = true; $("livelli").setAttribute("aria-expanded", false); }
+});
+
 $("carburanti").addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (b && b.dataset.c !== stato.carb) scegliCarburante(b.dataset.c);
 });
@@ -1209,6 +1352,16 @@ $("maniglia").addEventListener("click", () => {
   $("maniglia").setAttribute("aria-expanded", !chiuso);
 });
 mappa.on("moveend", () => { aggiornaLista(); aggiornaZona(); aggiornaTendenza(); });
+// nella scheda, toccare un altro carburante mostra il suo prezzo e il suo storico
+document.addEventListener("click", (e) => {
+  const b = e.target.closest(".scheda .altri button"); if (!b) return;
+  const sc = b.closest(".scheda"), i = stato.impianti.find((x) => String(x.id) === sc.dataset.id);
+  if (!i) return;
+  const prima = stato.carb; stato.carb = b.dataset.c;
+  const html = scheda(i); stato.carb = prima;
+  const box = sc.parentElement; box.innerHTML = html;
+  riempiScheda(box);
+});
 new ResizeObserver(() => mappa.invalidateSize()).observe($("mappa"));
 MQ_LATO.addEventListener("change", aggiornaLista);
 MQ_LARGO.addEventListener("change", () => { disegnaAndamento(); aggiornaZona(); });
