@@ -1,3 +1,5 @@
+<!doctype html>
+<html lang="it">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Pumpy · prezzi carburanti</title>
@@ -607,7 +609,7 @@ print-color-adjust: exact;
   --muted: #56695f;
   --line: #dde5e0;
   --brand: #0e9f6e;       /* verde Pumpy (logo, segnaposti) */
-  --accent: #0b8a5e;      /* verde per pulsanti con testo bianco */
+  --accent: #087a53;      /* verde per pulsanti con testo bianco (contrasto AA anche sui testi piccoli) */
   --accent-fg: #ffffff;
   --mint: #eaf7f0;
   --up: #c2410c;          /* prezzo in aumento */
@@ -1332,6 +1334,15 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 .toast.su { transform: translate(-50%, 0); }
 .pannello.con-dettaglio:not(.chiuso) .espanso, .pannello.con-dettaglio .verdetto, .pannello.con-dettaglio .consigliato { display: none !important; }
 .toast { white-space: nowrap; }
+
+/* rifiniture dal collaudo */
+.v-espandi { min-height: 36px; padding: 6px 2px; }
+.c-dove { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.cerca input::-webkit-calendar-picker-indicator { display: none !important; }
+@media (max-width: 1023px) and (max-height: 760px) { .pannello:not(.chiuso):not(.con-dettaglio) { max-height: 56%; } }
+@media (orientation: landscape) and (max-height: 520px) { .app { --lato-w: 340px; } .v-titolo { font-size: 1.2rem; } }
+.dettaglio .nav-riga { margin-top: -2px; }
+@media (max-width: 1023px) and (max-height: 760px) { .pannello.con-dettaglio { max-height: 64%; } }
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1619,7 +1630,9 @@ function disegna() {
 }
 // Mette i segnaposti in ordine e salta quelli che coprirebbero uno già piazzato (da zoom 16 si vedono tutti)
 function piazza(lista) {
-  const tutti = mappa.getZoom() >= 16, presi = [], H = 28;
+  const tutti = mappa.getZoom() >= 16, H = 28;
+  // la barra in alto (telefono) conta come già occupata: un prezzo lì sotto non si leggerebbe
+  const presi = MQ_LATO.matches ? [] : [[-99, -99, innerWidth + 99, document.querySelector(".testa").getBoundingClientRect().bottom - mappa.getContainer().getBoundingClientRect().top + 4]];
   for (const m of lista) {
     const pt = mappa.latLngToContainerPoint(m.getLatLng()), w = m.largo;
     const box = [pt.x - w / 2, pt.y - H / 2, pt.x + w / 2, pt.y + H / 2];
@@ -1676,6 +1689,7 @@ function aggiornaLista() {
   const migliore = righe.reduce((m, i) => (!m || i.prezzi[c][0] < m.prezzi[c][0] || (i.prezzi[c][0] === m.prezzi[c][0] && i._km < m._km) ? i : m), null);
   const cambiato = stato.migliore !== migliore;
   stato.migliore = migliore;
+  migliore.vicino = vicinoATe;
   disegnaConsigliato(migliore, media, vicinoATe);
   $("vediTesto").textContent = `Tutti i ${righe.length} distributori ${vicinoATe ? `entro ${stato.raggio} km` : "in zona"}`;
   if (cambiato) disegna();
@@ -1688,7 +1702,7 @@ function aggiornaLista() {
     return `<li class="${i === migliore ? "migliore" : ""}"><button type="button" data-n="${n}">
       <span class="nome">${etichetta}${esc(i.bandiera || i.nome)}</span>
       <span class="prezzo">${euro(p)}</span>
-      <span class="dove"><b>${testoKm(i._km)}</b> · ${esc(i.indirizzo)}</span>
+      <span class="dove">${vicinoATe ? `<b>${testoKm(i._km)}</b> · ` : `<b>${esc(i.comune)}</b> · `}${esc(i.indirizzo)}</span>
       <span class="extra">${extra}</span></button>
       <a class="nav-veloce" ${attrNav(i)} aria-label="Portami a ${esc(i.bandiera || i.nome)}" title="Portami qui">${ICONA_NAV}</a></li>`;
   }).join("");
@@ -1705,12 +1719,16 @@ function disegnaConsigliato(i, media, vicinoATe) {
   box.innerHTML = `<button type="button" class="c-scheda" id="cApri">
       <span class="c-etichetta">${etichetta}</span>
       <span class="c-nome">${esc(i.bandiera || i.nome)}</span>
-      <span class="c-dove">${testoKm(i._km)}${risparmio >= .5 ? ` · <b>−${risparmio.toFixed(2).replace(".", ",")} €</b> sul pieno` : ""}</span>
+      <span class="c-dove">${vicinoATe ? testoKm(i._km) : esc(i.comune)}${risparmio >= .5 ? ` · <b>−${risparmio.toFixed(2).replace(".", ",")} €</b> sul pieno` : ""}</span>
       <span class="c-prezzo">${euro(p)}<small>€/l</small></span>
     </button>
     <a class="c-vai" ${attrNav(i)} aria-label="Portami a ${esc(i.bandiera || i.nome)}">${ICONA_NAV}<span>Vai</span></a>`;
   $("cApri").addEventListener("click", () => seleziona(i));
   aggiornaTendenza();
+  if (!stato.reinquadrato && vicinoATe && stato.pos && !mossaDaTe && !stato.sel) {
+    stato.reinquadrato = true;
+    requestAnimationFrame(() => { if (!mossaDaTe && !stato.sel) inquadraVicino(stato.pos); });
+  }
 }
 function mostraSenzaPosizione() {
   $("titoloLista").textContent = "Dove sei?"; $("conteggio").textContent = ""; $("consigliato").hidden = true;
@@ -1891,7 +1909,13 @@ function seleziona(i, carb) {
   // porta la pompa in vista, sopra il pannello su telefono
   const z = Math.max(mappa.getZoom(), 14);
   let punto = mappa.project([i.lat, i.lon], z);
-  if (!MQ_LATO.matches) punto = punto.add([0, Math.min(p.getBoundingClientRect().height, innerHeight * .6) / 2]);
+  if (!MQ_LATO.matches) {
+    // la pompa va a metà dello spazio di mappa libero, tra la barra in alto e il pannello
+    const box = mappa.getContainer().getBoundingClientRect();
+    const sopra = document.querySelector(".testa").getBoundingClientRect().bottom - box.top;
+    const sotto = Math.min(p.getBoundingClientRect().top, innerHeight * .45) - box.top;
+    punto = punto.add([0, box.height / 2 - (sopra + sotto) / 2]);
+  }
   mappa.setView(mappa.unproject(punto, z), z, { animate: true });
   disegna();
 }
@@ -1924,9 +1948,9 @@ async function disegnaDettaglio() {
     <div class="altri" role="group" aria-label="Carburante">${altri}</div>
     <div class="grande"><span class="cifra${dubbio ? " dubbio" : ""}">${euro(p)}<small>€/l</small></span>${chip}</div>
     ${dubbio ? `<div class="attenzione">Da verificare. ${dubbio}</div>` : ""}
-    <figure class="storico" id="storico" aria-label="Storico del prezzo"><div class="attesa"></div></figure>
     <div class="nav-riga"><a class="vai" ${attrNav(i)}>${ICONA_NAV}<span>Portami qui<small>con ${NAVIGATORI[navPreferito()].nome}</small></span></a>
       <button type="button" class="cambia-nav" id="cambiaNav">Cambia app</button></div>
+    <figure class="storico" id="storico" aria-label="Storico del prezzo"><div class="attesa"></div></figure>
     <p class="puo-sbagliare">Pumpy può sbagliare: controlla sempre il prezzo alla pompa.</p>`;
   $("chiudiDettaglio").addEventListener("click", chiudiDettaglio);
   $("stellaBtn").addEventListener("click", () => {
@@ -2560,7 +2584,8 @@ fetch("data/medie.json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : nu
     else caricaTutto().then(apri);
   }
   // il resto d'Italia arriva in sottofondo, senza rallentare i prezzi vicini
-  setTimeout(caricaTutto, ultimaPos ? 2500 : 6000);
+  // si scarica solo se serve: ricerca, vista Italia, mappa spostata lontano, o GPS che non arriva
+  if (!ultimaPos) setTimeout(() => { if (!stato.pos) caricaTutto(); }, 6000);
 })();
 // --- Benvenuto: tre schermate al primo avvio, poi la richiesta della posizione (spiegata, non a sorpresa) ---
 function primaVolta() { try { return !localStorage.getItem("benvenuto"); } catch { return false; } }
