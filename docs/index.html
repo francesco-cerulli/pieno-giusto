@@ -2276,14 +2276,14 @@ fetch("data/medie.json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : nu
   let negata = false;
   try { const p = await navigator.permissions?.query({ name: "geolocation" }); negata = p?.state === "denied"; } catch {}
   if (negata) { stato.posNegata = !ultimaPos; stato.posErrore = 1; caricaTutto(); aggiornaLista(); aggiornaStatoPos(); }
-  else if (primaVolta()) { caricaTutto(); benvenuto(); }   // prima spieghiamo, poi chiediamo la posizione
-  else localizza(false);
+  if (primaVolta()) { caricaTutto(); benvenuto(negata); }   // prima spieghiamo, poi chiediamo la posizione
+  else if (!negata) localizza(false);
   // il resto d'Italia arriva in sottofondo, senza rallentare i prezzi vicini
   setTimeout(caricaTutto, ultimaPos ? 2500 : 6000);
 })();
 // --- Benvenuto: tre schermate al primo avvio, poi la richiesta della posizione (spiegata, non a sorpresa) ---
 function primaVolta() { try { return !localStorage.getItem("benvenuto"); } catch { return false; } }
-function benvenuto() {
+function benvenuto(negata) {
   const passi = [
     { icona: '<path d="M12 4v16M6 14l6 6 6-6"/>', titolo: "Fare il pieno oggi<br>o aspettare?",
       testo: "Pumpy guarda come si stanno muovendo i prezzi nella tua zona e ti dà una risposta semplice: fai il pieno adesso, oppure aspetta qualche giorno." },
@@ -2298,7 +2298,8 @@ function benvenuto() {
   const fine = (chiedi) => {
     try { localStorage.setItem("benvenuto", "1"); } catch {}
     el.classList.add("via"); setTimeout(() => el.remove(), 300);
-    if (chiedi) localizza(false);
+    if (chiedi && negata) aiutoPosizione();      // la posizione è bloccata: spieghiamo come sbloccarla
+    else if (chiedi) localizza(false);
     else { stato.posNegata = true; aggiornaLista(); aggiornaStatoPos(); }
   };
   const mostra = () => {
