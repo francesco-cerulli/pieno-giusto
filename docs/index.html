@@ -1460,7 +1460,7 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
   .v-azioni { flex-wrap: nowrap; margin-top: 6px; } .v-avvisa { min-height: 40px; padding: 0 14px; }
 }
 /* iPhone: l'app copre tutto lo schermo; sotto al pannello si vede il suo stesso colore, mai una striscia vuota */
-.ios-app .app { bottom: auto; height: var(--alto, 100%); }
+@media (max-width: 1023px) { .ios-striscia .pannello, .ios-striscia .pannello.chiuso { padding-bottom: 6px; } }
 @media (max-width: 1023px) { html, body { background: var(--surface); } }
 /* pannello chiuso: meno spazio vuoto sotto la barra (la fascia del tasto Home resta libera solo quanto serve) */
 @media (max-width: 1023px) { .pannello.chiuso { padding-bottom: calc(env(safe-area-inset-bottom, 0px) * .6 + 4px); } }
@@ -1963,18 +1963,17 @@ document.querySelectorAll("#ordina button").forEach((x) => x.setAttribute("aria-
 // iPhone/iPad: Mappe di Apple. PC: Google Maps nel browser. Si può fissare un'altra app dal pulsante "Cambia".
 const UA = navigator.userAgent;
 const IOS = /iPhone|iPad|iPod/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-// iPhone con Pumpy sulla schermata Home: alcune versioni di iOS calcolano l'altezza senza la fascia in basso
-// e lasciano una striscia vuota. L'app prende sempre tutta l'altezza dello schermo.
+// iPhone con Pumpy sulla schermata Home: alcune versioni di iOS danno alla pagina un'altezza più corta dello
+// schermo e lasciano in fondo una fascia che la pagina non può usare. La fascia prende il colore del pannello
+// (sembra il suo bordo) e il pannello non aggiunge altro spazio vuoto sotto la barra.
 if (IOS && (navigator.standalone || matchMedia("(display-mode: standalone)").matches)) {
-  const tutto = () => {
+  const controlla = () => {
     const verticale = matchMedia("(orientation: portrait)").matches;
-    const h = Math.max(innerHeight, verticale ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height));
-    document.documentElement.style.setProperty("--alto", h + "px");
-    document.documentElement.classList.add("ios-app");
-    mappa.invalidateSize();
+    const schermo = verticale ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+    document.documentElement.classList.toggle("ios-striscia", schermo - innerHeight > 20);
   };
-  tutto();
-  addEventListener("resize", tutto); addEventListener("orientationchange", () => setTimeout(tutto, 300));
+  controlla();
+  addEventListener("resize", controlla); addEventListener("orientationchange", () => setTimeout(controlla, 300));
 }
 const ANDROID = /Android/.test(UA);
 const NAVIGATORI = {
