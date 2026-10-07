@@ -261,13 +261,60 @@ def main():
         json.dump({"aggiornato": oggi, "nazionale": andamento, "province": province,
                    "tendenze": tendenze, "affidabilita": affidabilita,
                    "giorni_serie": ultimi, "serie_zone": serie_zone,
-                   "dopo_tendenza": dopo_tendenza, "giorni_dati": len(cronologia)},
+                   "dopo_tendenza": dopo_tendenza, "giorni_dati": len(cronologia),
+                   "pompe": verifica_pompe(per_giorno, prov_di)},
                   f, ensure_ascii=False, separators=(",", ":"))
 
     scrivi_storico(impianti, per_giorno)
 
     cambiati = sum(1 for d, _ in variazioni.values() if d)
     print(f"Scritti {len(impianti)} distributori, {cambiati} prezzi con variazione registrata.")
+
+
+def verifica_pompe(per_giorno, prov_di):
+    """Quando la media della provincia scende, la singola pompa segue? Lo misuriamo sui giorni passati,
+    così la frase mostrata nella scheda ("può ancora scendere" / "ha già abbassato") resta onesta.
+    - non_ancora: pompe sopra la media che negli ultimi 3 giorni non avevano abbassato → % scese nei 3 giorni dopo
+    - gia: pompe che avevano già abbassato e non erano sopra la media → % scese ancora nei 3 giorni dopo"""
+    giorni = sorted(per_giorno)
+    n, L, H = len(giorni), GIORNI_TENDENZA, GIORNI_TENDENZA
+    if n < L + H + 1:
+        return None
+    # prezzo di ogni pompa per giorno, raggruppato per (provincia, carburante)
+    gruppi = defaultdict(lambda: defaultdict(lambda: [None] * n))
+    for k, g in enumerate(giorni):
+        for (pid, carb), (prezzo, _) in per_giorno[g].items():
+            prov = prov_di.get(pid)
+            if prov:
+                gruppi[(prov, carb)][pid][k] = prezzo
+    conta = {"non_ancora": [0, 0, 0.0], "gia": [0, 0, 0.0]}
+    for staz in gruppi.values():
+        if len(staz) < MIN_IMPIANTI_MEDIANA:
+            continue
+        medie = []
+        for k in range(n):
+            v = [s[k] for s in staz.values() if s[k] is not None]
+            medie.append(sum(v) / len(v) if len(v) >= MIN_IMPIANTI_MEDIANA else None)
+        for t in range(L, n - H):
+            if medie[t] is None or medie[t - L] is None or medie[t] - medie[t - L] > -SOGLIA_TENDENZA:
+                continue
+            for s in staz.values():
+                p0, pt = s[t - L], s[t]
+                futuro = [x for x in s[t + 1:t + H + 1] if x is not None]
+                if p0 is None or pt is None or not futuro:
+                    continue
+                gia, sopra = pt < p0 - 0.002, pt > medie[t] + 0.003
+                chiave = "non_ancora" if (not gia and sopra) else "gia" if (gia and not sopra) else None
+                if chiave:
+                    calo = max(0.0, pt - min(futuro))
+                    c = conta[chiave]
+                    c[0] += 1; c[1] += calo > 0.0005; c[2] += calo
+    if min(c[0] for c in conta.values()) < 200:
+        return None
+    esito = {k: {"percentuale": round(100 * c[1] / c[0]), "calo_medio": round(c[2] / c[0], 4), "casi": c[0]}
+             for k, c in conta.items()}
+    print(f"Pompe dopo un calo di zona: {esito}")
+    return esito
 
 
 PASSO_CELLA = 0.5   # gradi: celle di circa 55 x 40 km

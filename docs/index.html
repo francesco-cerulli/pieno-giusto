@@ -1410,6 +1410,19 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
   .v2 .v-titolo { font-size: 1.9rem; margin-top: 4px; } .v2 .v-sotto { margin-bottom: 8px; font-size: 1.08rem; } .vm b { font-size: 1.4rem; }
   .vm { padding: 7px 10px 8px; } .c-prezzo { font-size: 1.6rem; } .c-vai { width: 76px; } .v-soldi { margin-top: 8px; font-size: .95rem; } .v-come { min-height: 36px; }
 }
+
+/* cosa farà questa pompa */
+.pp { display: grid; grid-template-columns: 36px 1fr; gap: 12px; align-items: start; margin: 10px 0 4px; padding: 12px 14px; border-radius: 18px; background: var(--surface-2); }
+.pp.scendera { background: var(--mint); } .pp.sale { background: color-mix(in srgb, var(--up) 11%, var(--surface)); }
+.pp-icona { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: var(--fg); }
+.pp.scendera .pp-icona { background: var(--down); } .pp.fatto .pp-icona { background: var(--accent); } .pp.sale .pp-icona { background: var(--up); }
+.pp-icona svg { width: 20px; height: 20px; stroke: #fff; }
+.pp p { margin: 0; font-size: .95rem; line-height: 1.35; }
+.pp b { display: block; font: 800 1.15rem/1.2 var(--f-display); margin-bottom: 2px; }
+.pp.scendera b { color: var(--down); } .pp.sale b { color: var(--up); }
+.pp small { display: block; margin-top: 4px; font-size: .8rem; color: var(--muted); }
+.t-dir.scendera { color: var(--down); font-weight: 700; } .t-dir.fatto { color: var(--accent); font-weight: 700; }
+.t-dir.sale { color: var(--up); font-weight: 700; } .t-dir.fermo { font-weight: 600; }
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1844,7 +1857,9 @@ function disegnaConsigliato(i, media, vicinoATe) {
   if (!i) { box.hidden = true; return; }
   const c = stato.carb, p = i.prezzi[c][0], risparmio = (media - p) * PIENO_LITRI;
   const dir = (stato.medie?.tendenze?.[zonaCorrente()]?.[c] || stato.medie?.tendenze?.IT?.[c] || [])[3];
-  const etichetta = dir === "giu" ? "Se ti serve adesso" : vicinoATe ? "Il più economico vicino a te" : "Il più economico in questa zona";
+  const att = attesaZona();
+  const giaMeno = dir === "giu" && att && p < att.dopo - .0005;
+  const etichetta = giaMeno ? `Costa già meno di ${att.giorno}` : dir === "giu" ? "Se ti serve adesso" : vicinoATe ? "Il più economico vicino a te" : "Il più economico in questa zona";
   box.hidden = false;
   box.innerHTML = `<button type="button" class="c-scheda" id="cApri">
       <span class="c-etichetta">${etichetta}</span>
@@ -1941,9 +1956,10 @@ function disegnaTue() {
     const i = stato.perId.get(f.id), v = i?.prezzi[c];
     const dir = stato.medie?.tendenze?.[f.prov]?.[c]?.[3];
     const freccia = dir === "giu" ? "↓" : dir === "su" ? "↑" : "→";
+    const pp = i && previsionePompa(i, c);
     return `<li><button type="button" class="t-riga" data-id="${f.id}">
         <span class="t-stella" aria-hidden="true">${ICONA_STELLA}</span>
-        <span class="t-nome">${esc(f.nome)}<small>${i ? esc(i.comune) : "caricamento…"}${dir ? ` · <span class="t-dir ${dir}">${freccia} ${TITOLI[dir]}</span>` : ""}</small></span>
+        <span class="t-nome">${esc(f.nome)}<small>${i ? esc(i.comune) : "caricamento…"}${pp ? ` · <span class="t-dir ${pp.tipo}">${pp.titolo}</span>` : dir ? ` · <span class="t-dir ${dir}">${freccia} ${TITOLI[dir]}</span>` : ""}</small></span>
         <span class="t-prezzo">${v ? euro(v[0]) : "–"}${v && v[1] && giorniDa(v[2]) <= GIORNI_FRECCIA ? `<small class="${v[1] > 0 ? "var-su" : "var-giu"}">${v[1] > 0 ? "+" : "−"}${cent(v[1])}</small>` : ""}</span>
       </button>${i ? `<a class="nav-veloce" ${attrNav(i)} aria-label="Portami a ${esc(f.nome)}">${ICONA_NAV}</a>` : ""}</li>`;
   }).join("");
@@ -2028,6 +2044,33 @@ function caricaStorico(prov) {
 const giornoDa = (inizio, k, lungo) => { const g = new Date(inizio); g.setDate(g.getDate() + k);
   return g.toLocaleDateString("it-IT", lungo ? { weekday: "short", day: "numeric", month: "long" } : { day: "numeric", month: "short" }); };
 
+// --- Cosa farà QUESTA pompa: la confrontiamo con la sua zona, non indoviniamo un prezzo ---
+// Verificato ogni giorno sullo storico (medie.json → "pompe"): quando la zona scende, chi non ha ancora
+// abbassato scende nei 3 giorni dopo in circa 6 casi su 10; chi ha già abbassato, solo in 1 su 10.
+// Se un giorno i numeri non reggono più, le frasi spariscono da sole.
+function previsionePompa(i, c = stato.carb) {
+  const v = i?.prezzi?.[c];
+  if (!v || !affidabile(i, c)) return null;
+  const [p, d, dal] = v;
+  const dir = stato.medie?.tendenze?.[i.provincia]?.[c]?.[3];
+  const media = stato.medie?.province?.[i.provincia]?.[c];
+  const ve = stato.medie?.pompe;
+  const appena = d && dal && giorniDa(dal) <= 3;
+  if (dir === "giu" && media && ve) {
+    const gia = appena && d <= -0.002, sopra = p > media + 0.003;
+    if (!gia && sopra && ve.non_ancora.percentuale >= 55)
+      return { tipo: "scendera", titolo: "Può ancora scendere", testo: "Qui intorno i prezzi calano e questa pompa non ha ancora abbassato.",
+        quanto: `Succede ${ve.non_ancora.percentuale} volte su 100, di circa ${cent(ve.non_ancora.calo_medio)} cent al litro.` };
+    if (gia && !sopra && ve.gia.percentuale <= 20)
+      return { tipo: "fatto", titolo: "Ha già abbassato", testo: "Difficile che scenda ancora: se ti serve, va bene oggi.",
+        quanto: `Scende ancora solo ${ve.gia.percentuale} volte su 100.` };
+  }
+  if (dir === "su") return { tipo: "sale", titolo: "Qui intorno i prezzi salgono", testo: "Meglio non aspettare troppo." };
+  if (d && dal && giorniDa(dal) >= 7) return { tipo: "fermo", titolo: `Prezzo fermo da ${giorniDa(dal)} giorni`, testo: "Questa pompa cambia poco: aspettare serve a poco." };
+  return null;
+}
+const ICONE_POMPA = { scendera: '<path d="M12 5v14M6 13l6 6 6-6"/>', fatto: '<path d="M5 12l5 5L20 7"/>', sale: '<path d="M12 19V5M6 11l6-6 6 6"/>', fermo: '<path d="M5 12h14M13 6l6 6-6 6"/>' };
+
 function seleziona(i, carb) {
   stato.sel = i; stato.detCarb = carb || (i.prezzi[stato.carb] ? stato.carb : Object.keys(NOMI).find((k) => i.prezzi[k]));
   chiudiMenu();
@@ -2072,13 +2115,16 @@ async function disegnaDettaglio() {
   const altri = Object.keys(NOMI).filter((k) => i.prezzi[k])
     .map((k) => `<button type="button" data-c="${k}" aria-pressed="${k === c}">${NOMI[k]} <b>${euro(i.prezzi[k][0])}</b></button>`).join("");
   const dist = stato.pos ? ` · ${testoKm(km(stato.pos, i))} da te` : "";
+  const pp = previsionePompa(i, c);
   $("dettaglio").innerHTML = `<div class="det-testa">
       <button type="button" class="indietro" id="chiudiDettaglio" aria-label="Torna alla lista"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
       <div class="det-nome"><h3>${esc(i.bandiera || i.nome)}</h3><p class="dove">${esc(i.indirizzo)}, ${esc(i.comune)}${dist}</p></div>
       <button type="button" class="stella-btn" id="stellaBtn" aria-pressed="${preferita(i)}" aria-label="${preferita(i) ? "Togli dalle tue pompe" : "Aggiungi alle tue pompe"}">${ICONA_STELLA}</button></div>
     <div class="altri" role="group" aria-label="Carburante">${altri}</div>
-    <div class="grande"><span class="cifra${dubbio ? " dubbio" : ""}">${euro(p)}<small>€/l</small></span>${chip}</div>
+    <div class="grande"><span class="cifra${dubbio ? " dubbio" : ""}">${euro(p)}<small>€/l</small></span>${pp ? "" : chip}</div>
     ${dubbio ? `<div class="attenzione">Da verificare. ${dubbio}</div>` : ""}
+    ${pp ? `<div class="pp ${pp.tipo}"><span class="pp-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">${ICONE_POMPA[pp.tipo]}</svg></span>
+      <p><b>${pp.titolo}</b>${pp.testo}${pp.quanto ? `<small>${pp.quanto}</small>` : ""}</p></div>` : ""}
     <div class="nav-riga"><a class="vai" ${attrNav(i)}>${ICONA_NAV}<span>Portami qui<small>con ${NAVIGATORI[navPreferito()].nome}</small></span></a>
       <button type="button" class="cambia-nav" id="cambiaNav">Cambia app</button></div>
     <figure class="storico" id="storico" aria-label="Storico del prezzo"><div class="attesa"></div></figure>
@@ -2269,6 +2315,16 @@ function fraseVerdetto(dir, prev) {
   return "Il prezzo è fermo";
 }
 function ultimoValore(v) { for (let k = (v || []).length - 1; k >= 0; k--) if (v[k] != null) return v[k]; return null; }
+// Il prezzo medio atteso nella zona inquadrata nel "giorno buono" della previsione (solo quando scende o sale)
+function attesaZona() {
+  const c = stato.carb, z = zonaCorrente();
+  const zona = stato.medie?.tendenze?.[z]?.[c] ? z : "IT";
+  const t = stato.medie?.tendenze?.[zona]?.[c]; if (!t) return null;
+  const prev = previsione(t[3], t[2]); if (!prev) return null;
+  const oggi = ultimoValore(stato.medie?.serie_zone?.[zona]?.[c]) ?? t[0];
+  const g = nomeGiorno(prev.giorni);
+  return { oggi, dopo: oggi + (t[3] === "giu" ? -prev.litro : prev.litro), giorno: g.startsWith("Tra") ? "dei prossimi giorni" : g.toLowerCase() };
+}
 function aggiornaTendenza() {
   const box = $("verdetto"), c = stato.carb, z = zonaCorrente();
   const t = stato.medie?.tendenze?.[z]?.[c] || stato.medie?.tendenze?.IT?.[c];
