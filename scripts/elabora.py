@@ -60,6 +60,27 @@ def prezzi_del_giorno(giorno: str):
     return {k: (v[2], v[1]) for k, v in scelti.items()}
 
 
+def serviti_del_giorno(giorno: str):
+    """{(id, carburante): (prezzo, data)} solo col servito, per benzina e gasolio: per chi vuole il benzinaio.
+    (GPL e metano sono già serviti.)"""
+    scelti = {}
+    for r in leggi_csv(leggi_gz(percorso_prezzi(giorno))):
+        carb = CARBURANTI.get(r.get("descCarburante", ""))
+        if carb not in ("benzina", "gasolio") or r.get("isSelf") == "1":
+            continue
+        try:
+            prezzo = float(r["prezzo"])
+            dt = datetime.strptime(r["dtComu"], "%d/%m/%Y %H:%M:%S")
+        except (KeyError, ValueError):
+            continue
+        if not PREZZO_MIN <= prezzo <= PREZZO_MAX:
+            continue
+        chiave = (r["idImpianto"], carb)
+        if chiave not in scelti or dt > scelti[chiave][1]:
+            scelti[chiave] = (prezzo, dt)
+    return scelti
+
+
 def pulisci(prezzi):
     """Scarta i valori lontanissimi dalla mediana del carburante (errori di battitura)."""
     per_carb = defaultdict(list)
@@ -80,6 +101,7 @@ def main():
 
     storico = [pulisci(prezzi_del_giorno(g)) for g in giorni[:GIORNI_STORICO]]
     attuali = storico[0]
+    serviti = serviti_del_giorno(oggi)
 
     # --- variazioni: risalgo i giorni finché il prezzo era diverso ---
     variazioni = {}
@@ -122,6 +144,11 @@ def main():
             prezzi[carb] = [prezzo, delta, dal, dt.strftime("%Y-%m-%d")]
             if eta <= MAX_GIORNI_MEDIA and r["Tipo Impianto"] != "Autostradale":
                 per_provincia[r["Provincia"]][carb].append(prezzo)
+        # servito di benzina e gasolio, solo il prezzo di oggi: "benzina_s", "gasolio_s"
+        for carb in ("benzina", "gasolio"):
+            v = serviti.get((pid, carb))
+            if v and (oggi_d - v[1].date()).days <= MAX_GIORNI_MAPPA and carb in prezzi:
+                prezzi[carb + "_s"] = [v[0], 0, None, v[1].strftime("%Y-%m-%d")]
         if not prezzi:
             continue
         nome = " ".join(r["Nome Impianto"].split()) or r["Bandiera"]

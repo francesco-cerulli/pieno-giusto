@@ -84,6 +84,17 @@ jobs:
           if [ -z "$URL" ]; then echo "::error title=Pubblicazione::$(printf '%s' "$OUT" | tr '\n' ' ' | tail -c 900)"; exit 1; fi
           echo "URL=$URL" >> "$GITHUB_ENV"
 
+      - name: Token per sollecitare i prezzi se tardano (facoltativo)
+        working-directory: avvisi
+        env:
+          GH_DISPATCH_TOKEN: ${{ secrets.GH_DISPATCH_TOKEN }}
+        run: |
+          if [ -n "$GH_DISPATCH_TOKEN" ]; then
+            printf '%s' "$GH_DISPATCH_TOKEN" | npx wrangler secret put GH_TOKEN
+          else
+            echo "::notice title=Sollecito::Nessun GH_DISPATCH_TOKEN: l'aggiornamento anticipato dei prezzi resta spento"
+          fi
+
       - name: Salva l'indirizzo per l'app
         run: |
           printf '{"url":"%s"}\n' "$URL" > docs/avvisi.json

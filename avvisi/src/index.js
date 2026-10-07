@@ -3,7 +3,10 @@
 // - Ogni ora controlla se sul sito sono arrivati i prezzi nuovi; quando arrivano, per ogni iscritto
 //   guarda le sue pompe e manda al massimo UN avviso al giorno, solo se c'è qualcosa che conta:
 //   il verdetto della zona cambia (es. il calo è finito) oppure una sua pompa cala di almeno 3 cent.
-// Conserva solo: l'abbonamento push (anonimo), le pompe seguite, l'ultimo verdetto visto per zona.
+// - Avvisa anche chi non ha stelle: basta la zona (provincia + punto arrotondato a ~1 km).
+// - Per le pompe seguite usa le stesse frasi dell'app: "non ha ancora abbassato" / "ha abbassato".
+// - Se i prezzi del giorno tardano, fa partire l'aggiornamento su GitHub (serve il segreto GH_TOKEN).
+// Conserva solo: l'abbonamento push (anonimo), le pompe seguite, la zona, l'ultimo verdetto visto.
 import { inviaPush, nuoveChiaviVapid } from "./webpush.js";
 
 const PROVINCE = {"AG": "Agrigento", "AL": "Alessandria", "AN": "Ancona", "AO": "Aosta", "AP": "Ascoli Piceno", "AQ": "L'Aquila", "AR": "Arezzo", "AT": "Asti", "AV": "Avellino", "BA": "Bari", "BG": "Bergamo", "BI": "Biella", "BL": "Belluno", "BN": "Benevento", "BO": "Bologna", "BR": "Brindisi", "BS": "Brescia", "BT": "Barletta-Andria-Trani", "BZ": "Bolzano", "CA": "Cagliari", "CB": "Campobasso", "CE": "Caserta", "CH": "Chieti", "CL": "Caltanissetta", "CN": "Cuneo", "CO": "Como", "CR": "Cremona", "CS": "Cosenza", "CT": "Catania", "CZ": "Catanzaro", "EN": "Enna", "FC": "Forlì-Cesena", "FE": "Ferrara", "FG": "Foggia", "FI": "Firenze", "FM": "Fermo", "FR": "Frosinone", "GE": "Genova", "GO": "Gorizia", "GR": "Grosseto", "IM": "Imperia", "IS": "Isernia", "KR": "Crotone", "LC": "Lecco", "LE": "Lecce", "LI": "Livorno", "LO": "Lodi", "LT": "Latina", "LU": "Lucca", "MB": "Monza e Brianza", "MC": "Macerata", "ME": "Messina", "MI": "Milano", "MN": "Mantova", "MO": "Modena", "MS": "Massa-Carrara", "MT": "Matera", "NA": "Napoli", "NO": "Novara", "NU": "Nuoro", "OR": "Oristano", "PA": "Palermo", "PC": "Piacenza", "PD": "Padova", "PE": "Pescara", "PG": "Perugia", "PI": "Pisa", "PN": "Pordenone", "PO": "Prato", "PR": "Parma", "PT": "Pistoia", "PU": "Pesaro e Urbino", "PV": "Pavia", "PZ": "Potenza", "RA": "Ravenna", "RC": "Reggio Calabria", "RE": "Reggio Emilia", "RG": "Ragusa", "RI": "Rieti", "RM": "Roma", "RN": "Rimini", "RO": "Rovigo", "SA": "Salerno", "SI": "Siena", "SO": "Sondrio", "SP": "La Spezia", "SR": "Siracusa", "SS": "Sassari", "SU": "Sud Sardegna", "SV": "Savona", "TA": "Taranto", "TE": "Teramo", "TN": "Trento", "TO": "Torino", "TP": "Trapani", "TR": "Terni", "TS": "Trieste", "TV": "Treviso", "UD": "Udine", "VA": "Varese", "VB": "Verbano-Cusio-Ossola", "VC": "Vercelli", "VE": "Venezia", "VI": "Vicenza", "VR": "Verona", "VT": "Viterbo", "VV": "Vibo Valentia"};
@@ -35,6 +38,35 @@ async function idAbbonamento(endpoint) {
 }
 function abbonamentoValido(a) {
   try { return a && new URL(a.endpoint).protocol === "https:" && a.keys?.p256dh && a.keys?.auth; } catch { return false; }
+}
+function pulisciZona(z) {
+  if (!z || !PROVINCE[z.prov]) return null;
+  const lat = Math.round(Number(z.lat) * 100) / 100, lon = Math.round(Number(z.lon) * 100) / 100;
+  return Number.isFinite(lat) && Number.isFinite(lon) ? { prov: z.prov, lat, lon } : null;
+}
+function km(a, b) {
+  const R = 6371, r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLon = (b.lon - a.lon) * r;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+// Stessa regola dell'app (verificata ogni giorno in medie.json → "pompe")
+function frasePompa(v, prov, carb, medie) {
+  const dir = medie.tendenze?.[prov]?.[carb]?.[3], media = medie.province?.[prov]?.[carb], ve = medie.pompe;
+  if (!v || dir !== "giu" || !media || !ve) return null;
+  const [p, d, dal] = v, gg = dal ? (Date.parse(medie.aggiornato) - Date.parse(dal)) / 864e5 : 99;
+  const gia = d <= -0.002 && gg <= 3, sopra = p > media + 0.003;
+  if (!gia && sopra && ve.non_ancora.percentuale >= 55) return "scendera";
+  if (gia && !sopra && ve.gia.percentuale <= 20) return "fatto";
+  return null;
+}
+// "venerdì", "domani": il giorno in cui di solito il calo (o l'aumento) si è quasi compiuto
+function giornoAtteso(medie, prov, carb) {
+  const t = medie.tendenze?.[prov]?.[carb], dt = t && medie.dopo_tendenza?.[t[3]];
+  if (!dt) return null;
+  const n = Math.max(1, Math.round(dt.giorno * Math.min(1, Math.abs(t[2]) / dt.d3_medio)));
+  if (n === 1) return "domani";
+  const g = new Date(); g.setUTCDate(g.getUTCDate() + n);
+  return n > 6 ? `tra ${n} giorni` : g.toLocaleDateString("it-IT", { weekday: "long", timeZone: "Europe/Rome" });
 }
 function pulisciPreferiti(lista) {
   if (!Array.isArray(lista)) return [];
@@ -71,7 +103,8 @@ export async function controlla(env) {
       iscritti++;
       const carb = NOMI[rec.carb] ? rec.carb : "benzina";
       rec.verdetti ||= {};
-      let svolta = null, calo = null;
+      let svolta = null, calo = null, abbassata = null, attende = null;
+      rec.statiPompe ||= {};
       for (const f of rec.preferiti || []) {
         const r = (await cella(chiaveCella(f.lat, f.lon))).get(f.id);
         const v = r?.[9]?.[carb];
@@ -83,16 +116,39 @@ export async function controlla(env) {
         if (dir && prima && dir !== prima && (!svolta || prezzo < svolta.prezzo)) svolta = { prov: f.prov, da: prima, a: dir, nome, prezzo, id: f.id };
         if (dir) rec.verdetti[f.prov] = dir;
         if (delta <= -CALO_FORTE && dal === giorno && (!calo || delta < calo.delta)) calo = { nome, prezzo, delta, id: f.id };
+        // la pompa che aspettavi ha abbassato: è il momento
+        const ora = frasePompa(v, f.prov, carb, medie), era = rec.statiPompe[f.id];
+        if (era === "scendera" && delta < 0 && dal === giorno && (!abbassata || prezzo < abbassata.prezzo)) abbassata = { nome, prezzo, id: f.id };
+        if (ora === "scendera" && !attende) attende = { nome, prezzo, id: f.id };
+        rec.statiPompe[f.id] = ora;
+      }
+      // solo la zona (nessuna stella in quella provincia): verdetto della zona + il più economico vicino
+      const z = rec.zona;
+      if (z && !(rec.preferiti || []).some((f) => f.prov === z.prov)) {
+        const dir = medie.tendenze?.[z.prov]?.[carb]?.[3], prima = rec.verdetti[z.prov];
+        if (dir && prima && dir !== prima && !svolta) {
+          let top = null;
+          for (const r of (await cella(chiaveCella(z.lat, z.lon))).values()) {
+            const v = r[9]?.[carb];
+            if (v && !v[4] && km(z, { lat: r[6], lon: r[7] }) <= 5 && (!top || v[0] < top.prezzo)) top = { nome: r[2] || r[1], prezzo: v[0], id: r[0] };
+          }
+          svolta = { prov: z.prov, da: prima, a: dir, nome: top?.nome, prezzo: top?.prezzo, id: top?.id, zona: true };
+        }
+        if (dir) rec.verdetti[z.prov] = dir;
       }
       let dati = null;
       const zona = (p) => PROVINCE[p] || p;
-      if (svolta) {
-        const n = NOMI[carb], z = zona(svolta.prov), p = `${svolta.nome}: ${euro(svolta.prezzo)} €`;
-        dati = svolta.a === "giu" ? { title: `${n} in calo a ${z}`, body: `Se puoi, aspetta qualche giorno. ${p}.` }
-          : svolta.a === "su" ? { title: `${n} in aumento a ${z}`, body: `Meglio fare il pieno oggi. ${p}.` }
-          : svolta.da === "giu" ? { title: "Il calo è finito: è il momento", body: `${p}. Fai il pieno quando vuoi.` }
-          : { title: `Prezzi fermi a ${z}`, body: `Nessuna fretta. ${p}.` };
-        dati.url = `./?pompa=${svolta.id}`;
+      if (abbassata) {
+        dati = { title: `${abbassata.nome} ha abbassato`, body: `Ora costa ${euro(abbassata.prezzo)} € al litro: difficile che scenda ancora. È un buon momento.`, url: `./?pompa=${abbassata.id}` };
+      } else if (svolta) {
+        const n = NOMI[carb] === "GPL" ? "GPL" : NOMI[carb].toLowerCase(), z2 = zona(svolta.prov), quando = giornoAtteso(medie, svolta.prov, carb);
+        const p = svolta.nome ? ` ${svolta.zona ? "Il più economico vicino a te" : svolta.nome}: ${svolta.zona ? svolta.nome + " " : ""}${euro(svolta.prezzo)} €.` : "";
+        dati = svolta.a === "giu"
+            ? { title: `Aspetta a fare ${n}`, body: attende ? `A ${z2} i prezzi calano e la tua ${attende.nome} non ha ancora abbassato (${euro(attende.prezzo)} €).` : `A ${z2} i prezzi calano${quando ? `: ${quando} dovrebbe costare meno` : ""}.${p}` }
+          : svolta.a === "su" ? { title: `Fai ${n} oggi`, body: `A ${z2} i prezzi salgono${quando ? `: da ${quando} costerà di più` : ""}.${p}` }
+          : svolta.da === "giu" ? { title: "Il calo è finito: è il momento", body: `A ${z2} i prezzi si sono fermati.${p}` }
+          : { title: `Prezzi fermi a ${z2}`, body: `Nessuna fretta.${p}` };
+        dati.url = svolta.id ? `./?pompa=${svolta.id}` : "./";
       } else if (calo) {
         dati = { title: `${calo.nome}: −${cent(calo.delta)} cent`, body: `La tua pompa ora costa ${euro(calo.prezzo)} € al litro.`, url: `./?pompa=${calo.id}` };
       }
@@ -110,6 +166,24 @@ export async function controlla(env) {
   return { giorno, iscritti, inviati };
 }
 
+// --- prezzi in ritardo? fa partire subito l'aggiornamento su GitHub (al massimo una volta all'ora) ---
+export async function sollecita(env) {
+  if (!env.GH_TOKEN || !env.REPO) return { sollecito: "non configurato" };
+  const roma = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Rome" }));
+  const oggi = `${roma.getFullYear()}-${String(roma.getMonth() + 1).padStart(2, "0")}-${String(roma.getDate()).padStart(2, "0")}`;
+  if (roma.getHours() < 8 || roma.getHours() > 20) return { sollecito: "fuori orario" };
+  const medie = await (await fetch(env.ORIGINE + env.PERCORSO + "data/medie.json", { cf: { cacheTtl: 0 } })).json();
+  if (medie.aggiornato >= oggi) return { sollecito: "già aggiornato" };
+  const chiave = `sollecito:${oggi}:${roma.getHours()}`;
+  if (await env.ISCRITTI.get(chiave)) return { sollecito: "già fatto quest'ora" };
+  const r = await fetch(`https://api.github.com/repos/${env.REPO}/actions/workflows/aggiorna.yml/dispatches`, {
+    method: "POST", body: JSON.stringify({ ref: "main" }),
+    headers: { Authorization: `Bearer ${env.GH_TOKEN}`, Accept: "application/vnd.github+json", "User-Agent": "pumpy-avvisi", "Content-Type": "application/json" },
+  });
+  await env.ISCRITTI.put(chiave, "1", { expirationTtl: 7200 });
+  return { sollecito: r.status };
+}
+
 export default {
   async fetch(req, env) {
     const h = cors(req, env);
@@ -122,10 +196,10 @@ export default {
         if (!abbonamentoValido(b.abbonamento)) return json({ errore: "abbonamento non valido" }, h, 400);
         const id = await idAbbonamento(b.abbonamento.endpoint);
         const prima = (await env.ISCRITTI.get(id, "json")) || {};
-        const rec = { ...prima, abbonamento: b.abbonamento, preferiti: pulisciPreferiti(b.preferiti),
+        const rec = { ...prima, abbonamento: b.abbonamento, preferiti: pulisciPreferiti(b.preferiti), zona: pulisciZona(b.zona),
           carb: NOMI[b.carb] ? b.carb : "benzina", creato: prima.creato || new Date().toISOString().slice(0, 10) };
         await env.ISCRITTI.put(id, JSON.stringify(rec));
-        return json({ ok: true, preferiti: rec.preferiti.length }, h);
+        return json({ ok: true, preferiti: rec.preferiti.length, zona: !!rec.zona }, h);
       }
       if (req.method === "POST" && url.pathname === "/disiscrivi") {
         const b = await req.json();
@@ -145,6 +219,7 @@ export default {
     }
   },
   async scheduled(_evento, env, ctx) {
+    ctx.waitUntil(sollecita(env).catch((e) => ({ sollecito: String(e) })).then((r) => console.log(JSON.stringify(r))));
     ctx.waitUntil(controlla(env).then((r) => console.log(JSON.stringify(r))));
   },
 };

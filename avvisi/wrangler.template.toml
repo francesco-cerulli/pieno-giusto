@@ -7,11 +7,12 @@ workers_dev = true
 [vars]
 ORIGINE = "https://francesco-cerulli.github.io"
 PERCORSO = "/pieno-giusto/"
+REPO = "francesco-cerulli/pieno-giusto"
 
 [[kv_namespaces]]
 binding = "ISCRITTI"
 id = "__KV_ID__"
 
-# ogni ora al minuto 17: appena il sito ha i prezzi nuovi, parte il controllo (una volta al giorno)
+# ogni ora al minuto 17 (e in più la mattina al 47): sollecita i prezzi se tardano, poi avvisa chi deve (una volta al giorno)
 [triggers]
-crons = ["17 * * * *"]
+crons = ["17 * * * *", "47 6-9 * * *"]

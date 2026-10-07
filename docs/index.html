@@ -1423,6 +1423,42 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 .pp small { display: block; margin-top: 4px; font-size: .8rem; color: var(--muted); }
 .t-dir.scendera { color: var(--down); font-weight: 700; } .t-dir.fatto { color: var(--accent); font-weight: 700; }
 .t-dir.sale { color: var(--up); font-weight: 700; } .t-dir.fermo { font-weight: 600; }
+
+/* età del prezzo */
+.eta { margin: 2px 0 0; font-size: .85rem; color: var(--muted); }
+.eta.vecchio, .vecchio { color: var(--up); font-weight: 600; }
+/* verdetto: azioni */
+.v-azioni { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 8px; }
+.v-avvisa { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 0; border-radius: 999px;
+  background: var(--fg); color: var(--surface); font: 700 .95rem var(--f-body); cursor: pointer; }
+.v-avvisa svg { width: 18px; height: 18px; stroke: currentColor; }
+.v-avvisa[aria-pressed="true"] { background: var(--surface); color: var(--fg); }
+.v-azioni .v-come { margin: 0; white-space: nowrap; }
+/* menu: servizio e voci con riassunto */
+.menu-t small { font-weight: 500; }
+.servizio[hidden], #servizioT[hidden] { display: none; }
+.servizio { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 16px; background: var(--surface-2); }
+.servizio button { min-height: 40px; border: 0; border-radius: 12px; background: transparent; font: 600 .95rem var(--f-body); color: var(--fg); cursor: pointer; }
+.servizio button[aria-pressed="true"] { background: var(--fg); color: var(--surface); }
+.voce small { display: block; font-weight: 500; font-size: .8rem; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* finestre: auto e marchi */
+.finestra .riga-num { display: grid; gap: 6px; margin: 0 0 12px; }
+.rn-et { font-weight: 700; }
+.rn-ctrl { display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 16px; background: var(--surface-2); }
+.rn-ctrl output { flex: 1; text-align: right; font: 800 1.6rem var(--f-display); font-variant-numeric: tabular-nums; }
+.rn-u { flex: 1; color: var(--muted); font-weight: 600; }
+.finestra .rn-b { width: 48px; height: 48px; padding: 0; border-radius: 12px; background: var(--surface); color: var(--fg); font-size: 1.5rem; font-weight: 600; }
+.scelte-rapide { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: -4px 0 14px; }
+.finestra .scelte-rapide button { padding: 8px 4px; border-radius: 12px; background: var(--surface-2); color: var(--fg); font-size: .85rem; font-weight: 600; }
+.marchi { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 0 0 14px; max-height: 46vh; overflow: auto; }
+.marchio-sc { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 10px; border-radius: 12px; background: var(--surface-2); font-weight: 600; font-size: .92rem; cursor: pointer; }
+.marchio-sc input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+.marchio-sc span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.finestra .tutti { margin-top: 8px; background: transparent; color: var(--muted); }
+@media (max-width: 1023px) and (max-height: 700px) {
+  .va-lungo { display: none; }
+  .v-azioni { flex-wrap: nowrap; margin-top: 6px; } .v-avvisa { min-height: 40px; padding: 0 14px; }
+}
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1487,6 +1523,11 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
           <button type="button" data-c="gpl" aria-pressed="false">GPL<small>–</small></button>
           <button type="button" data-c="metano" aria-pressed="false">Metano<small>–</small></button>
         </div>
+        <p class="menu-t" id="servizioT">Servizio <small>(benzina e gasolio)</small></p>
+        <div class="servizio" id="servizio" role="group" aria-label="Servizio">
+          <button type="button" data-s="self" aria-pressed="true">Self</button>
+          <button type="button" data-s="servito" aria-pressed="false">Servito</button>
+        </div>
         <p class="menu-t">Mappa</p>
         <div class="basi" id="basi" role="group" aria-label="Tipo di mappa">
           <button type="button" data-b="strade" aria-pressed="false"><i class="anteprima strade"></i>Strade</button>
@@ -1494,6 +1535,8 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
           <button type="button" data-b="satellite" aria-pressed="false"><i class="anteprima satellite"></i>Satellite</button>
         </div>
         <div class="voci">
+          <button type="button" class="voce" id="autoVoce">La tua auto<small id="autoRiass"></small></button>
+          <button type="button" class="voce" id="marchiVoce">Marchi<small id="marchiRiass"></small></button>
           <button type="button" class="voce" id="installaVoce" hidden>Installa Pumpy sul telefono</button>
           <button type="button" class="voce" id="comeFunziona">Come lo sappiamo</button>
         </div>
@@ -1548,7 +1591,9 @@ const NOMI = { benzina: "Benzina", gasolio: "Gasolio", gpl: "GPL", metano: "Meta
 const ZOOM_PREZZI = 11;     // da questo zoom in su i prezzi dei singoli distributori, sotto le medie di provincia
 const MAX_SEGNAPOSTI = 400; // oltre, solo i più vicini al centro: la mappa resta istantanea
 const RAGGIO_KM = 5;        // la lista "vicino a te" guarda prima entro 5 km
-const PIENO_LITRI = 50;     // per il calcolo "risparmi X € sul pieno"
+// La tua auto (solo sul telefono): litri del pieno e km con un litro, per i risparmi veri, strada inclusa
+const AUTO_BASE = { litri: 50, kml: 15 };
+const litri = () => stato.auto.litri;
 // Layout attivo: "lato" = barra laterale fissa (PC, tablet/telefono in orizzontale); "largo" = 21:9
 const MQ_LATO = matchMedia("(min-width: 1024px), (orientation: landscape) and (max-height: 520px)");
 const MQ_LARGO = matchMedia("(min-width: 1800px) and (min-aspect-ratio: 2/1)");
@@ -1556,6 +1601,10 @@ const stato = { carb: "benzina", impianti: [], perId: new Map(), medie: null, st
   centri: new Map(), pos: null, sel: null, detCarb: null, promesseCelle: new Map(), completo: false, avviata: false,
   ordine: (() => { try { return localStorage.getItem("ordine") === "distanza" ? "distanza" : "prezzo"; } catch { return "prezzo"; } })(),
   posNegata: false };
+stato.auto = { ...AUTO_BASE, ...(leggiJSONsubito("auto") || {}) };
+stato.servizio = (() => { try { return localStorage.getItem("servizio") === "servito" ? "servito" : "self"; } catch { return "self"; } })();
+stato.marchi = leggiJSONsubito("marchi") || [];   // vuoto = tutti
+function leggiJSONsubito(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }
 
 const $ = (id) => document.getElementById(id);
 const euro = (p) => p.toFixed(3).replace(".", ",");
@@ -1754,7 +1803,7 @@ function disegna() {
   }
   const centro = mappa.getCenter(), cc = { lat: centro.lat, lon: centro.lng };
   const b = mappa.getBounds().pad(0.2);
-  let qui = stato.impianti.filter((i) => i.prezzi[c] && b.contains([i.lat, i.lon]));
+  let qui = stato.impianti.filter((i) => i.prezzi[c] && passaMarchio(i) && b.contains([i.lat, i.lon]));
   if (qui.length > MAX_SEGNAPOSTI) qui = qui.map((i) => [km(cc, i), i]).sort((x, y) => x[0] - y[0]).slice(0, MAX_SEGNAPOSTI).map((x) => x[1]);
   if (stato.sel && stato.sel.prezzi[c] && !qui.includes(stato.sel)) qui.push(stato.sel);
   for (const f of stato.preferiti) { const i = stato.perId.get(f.id); if (i && i.prezzi[c] && !qui.includes(i) && b.contains([i.lat, i.lon])) qui.push(i); }
@@ -1801,14 +1850,14 @@ function aggiornaLista() {
   if (vicinoATe) {
     let raggio = RAGGIO_KM, vicini = [];
     while (raggio <= RAGGIO_KM * 4) {
-      vicini = stato.impianti.filter((i) => i.prezzi[c] && affidabile(i) && km(stato.pos, i) <= raggio);
+      vicini = stato.impianti.filter((i) => i.prezzi[c] && affidabile(i) && passaMarchio(i) && km(stato.pos, i) <= raggio);
       if (vicini.length >= 5) break;
       raggio *= 2;
     }
     righe = vicini; titolo = "Vicino a te"; stato.raggio = raggio;
   } else if (mappa.getZoom() >= ZOOM_PREZZI) {
     const b = mappa.getBounds();
-    righe = stato.impianti.filter((i) => i.prezzi[c] && affidabile(i) && b.contains([i.lat, i.lon])); titolo = "In questa zona";
+    righe = stato.impianti.filter((i) => i.prezzi[c] && affidabile(i) && passaMarchio(i) && b.contains([i.lat, i.lon])); titolo = "In questa zona";
   } else {
     $("consigliato").hidden = true; $("vediTesto").textContent = "Elenco dei distributori";
     $("titoloLista").textContent = stato.pos ? "Sei lontano dalla tua zona" : "Avvicinati";
@@ -1828,8 +1877,18 @@ function aggiornaLista() {
   const piuBasso = righe.length ? Math.min(...righe.map((i) => i.prezzi[c][0])) : 0;
   $("conteggio").textContent = righe.length ? `${vicinoATe ? `${righe.length} entro ${stato.raggio} km` : `${righe.length} distributori`} · da ${euro(piuBasso)}` : "";
   if (!righe.length) { $("consigliato").hidden = true; lista.innerHTML = '<li class="vuoto">Nessun distributore con questo carburante qui. Prova ad allontanare la mappa.</li>'; return; }
-  // un solo "Il più conveniente": a parità di prezzo vince il più vicino
-  const migliore = righe.reduce((m, i) => (!m || i.prezzi[c][0] < m.prezzi[c][0] || (i.prezzi[c][0] === m.prezzi[c][0] && i._km < m._km) ? i : m), null);
+  // risparmio vero sul TUO pieno: differenza dalla media, meno il carburante per la strada in più
+  // (andata e ritorno rispetto alla pompa più vicina). Fuori dalla tua zona conta solo il prezzo.
+  const kmMin = Math.min(...righe.map((i) => i._km));
+  for (const i of righe) {
+    const p = i.prezzi[c][0];
+    i._strada = vicinoATe ? 2 * Math.max(0, i._km - kmMin) / stato.auto.kml * p : 0;
+    i._netto = (media - p) * litri() - i._strada;
+  }
+  // un solo "Il più conveniente": vicino a te vince il risparmio netto, altrimenti il prezzo
+  const migliore = righe.reduce((m, i) => !m ? i : vicinoATe
+    ? (i._netto > m._netto + .005 || (Math.abs(i._netto - m._netto) <= .005 && i._km < m._km) ? i : m)
+    : (i.prezzi[c][0] < m.prezzi[c][0] || (i.prezzi[c][0] === m.prezzi[c][0] && i._km < m._km) ? i : m), null);
   const cambiato = stato.migliore !== migliore;
   stato.migliore = migliore;
   migliore.vicino = vicinoATe;
@@ -1839,13 +1898,14 @@ function aggiornaLista() {
   const mostra = righe.slice(0, MQ_LATO.matches ? 50 : 25);
   lista.innerHTML = mostra.map((i, n) => {
     const [p, d, dal] = i.prezzi[c];
-    const risparmio = (media - p) * PIENO_LITRI;
-    const etichetta = i === migliore ? '<span class="bollino">Il più economico</span>' : (n === 0 && stato.ordine === "distanza" ? '<span class="bollino neutro">Il più vicino</span>' : "");
-    const extra = risparmio >= .5 ? `<span class="risparmio" title="Rispetto alla media dei distributori in elenco, su ${PIENO_LITRI} litri">${risparmio.toFixed(2).replace(".", ",")} € in meno sul pieno</span>` : variazione(d, dal, false);
+    const risparmio = i._netto;
+    const eta = etaPrezzo(i.prezzi[c]);
+    const etichetta = i === migliore ? '<span class="bollino">Il più conveniente</span>' : (n === 0 && stato.ordine === "distanza" ? '<span class="bollino neutro">Il più vicino</span>' : "");
+    const extra = risparmio >= .5 ? `<span class="risparmio" title="Rispetto alla media dei distributori in elenco, su ${litri()} litri${i._strada > .05 ? ", strada inclusa" : ""}">${risparmio.toFixed(2).replace(".", ",")} € in meno sul pieno</span>` : variazione(d, dal, false);
     return `<li class="${i === migliore ? "migliore" : ""}"><button type="button" data-n="${n}">
       <span class="nome">${etichetta}${esc(i.bandiera || i.nome)}</span>
       <span class="prezzo">${euro(p)}</span>
-      <span class="dove">${vicinoATe ? `<b>${testoKm(i._km)}</b> · ` : `<b>${esc(i.comune)}</b> · `}${esc(i.indirizzo)}</span>
+      <span class="dove">${vicinoATe ? `<b>${testoKm(i._km)}</b> · ` : `<b>${esc(i.comune)}</b> · `}${eta >= 3 ? `<span class="${eta >= 5 ? "vecchio" : ""}">${testoEta(eta)}</span> · ` : ""}${esc(i.indirizzo)}</span>
       <span class="extra">${extra}</span></button>
       <a class="nav-veloce" ${attrNav(i)} aria-label="Portami a ${esc(i.bandiera || i.nome)}" title="Portami qui">${ICONA_NAV}</a></li>`;
   }).join("");
@@ -1855,17 +1915,18 @@ function aggiornaLista() {
 function disegnaConsigliato(i, media, vicinoATe) {
   const box = $("consigliato");
   if (!i) { box.hidden = true; return; }
-  const c = stato.carb, p = i.prezzi[c][0], risparmio = (media - p) * PIENO_LITRI;
+  const c = stato.carb, p = i.prezzi[c][0], risparmio = i._netto ?? (media - p) * litri();
+  const eta = etaPrezzo(i.prezzi[c]);
   const dir = (stato.medie?.tendenze?.[zonaCorrente()]?.[c] || stato.medie?.tendenze?.IT?.[c] || [])[3];
   const att = attesaZona();
-  const giaMeno = dir === "giu" && att && p < att.dopo - .0005;
-  const etichetta = giaMeno ? `Costa già meno di ${att.giorno}` : dir === "giu" ? "Se ti serve adesso" : vicinoATe ? "Il più economico vicino a te" : "Il più economico in questa zona";
+  const giaMeno = stato.servizio !== "servito" && dir === "giu" && att && p < att.dopo - .0005;
+  const etichetta = giaMeno ? `Costa già meno di ${att.giorno}` : dir === "giu" ? "Se ti serve adesso" : vicinoATe ? "Il più conveniente vicino a te" : "Il più economico in questa zona";
   box.hidden = false;
   box.innerHTML = `<button type="button" class="c-scheda" id="cApri">
       <span class="c-etichetta">${etichetta}</span>
       <span class="c-nome">${esc(i.bandiera || i.nome)}</span>
-      <span class="c-dove">${vicinoATe ? testoKm(i._km) : esc(i.comune)}</span>
-      ${risparmio >= .5 ? `<span class="c-risp">Risparmi ${risparmio.toFixed(2).replace(".", ",")} €</span>` : ""}
+      <span class="c-dove">${vicinoATe ? testoKm(i._km) : esc(i.comune)}${eta >= 3 ? ` · <span class="${eta >= 5 ? "vecchio" : ""}">prezzo di ${testoEta(eta)}</span>` : ""}</span>
+      ${risparmio >= .5 ? `<span class="c-risp">Risparmi ${risparmio.toFixed(2).replace(".", ",")} €${i._strada > .05 ? ", strada inclusa" : ""}</span>` : ""}
       <span class="c-prezzo">${euro(p)}<small>€/l</small></span>
     </button>
     <a class="c-vai" ${attrNav(i)} aria-label="Portami a ${esc(i.bandiera || i.nome)}">${ICONA_NAV}<span>Portami</span></a>`;
@@ -1911,6 +1972,7 @@ function linkNav(i, app = navPreferito()) {
   if (app === "waze") return `https://waze.com/ul?ll=${ll}&navigate=yes`;
   return `https://www.google.com/maps/dir/?api=1&destination=${ll}&travelmode=driving`;
 }
+const ICONA_CAMPANA = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
 const ICONA_NAV = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>';
 function sceltaNavigatore(i) {
   const el = document.createElement("div");
@@ -1974,7 +2036,13 @@ function disegnaTue() {
 
 // --- Avvisi sul telefono (Web Push tramite il servizio su Cloudflare) ---
 const AVVISI = { url: null };
-fetch("avvisi.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : null)).then((c) => { if (c?.url) { AVVISI.url = c.url.replace(/\/$/, ""); disegnaTue(); } }).catch(() => {});
+fetch("avvisi.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : null)).then((c) => { if (c?.url) { AVVISI.url = c.url.replace(/\/$/, ""); disegnaTue(); if (stato.medie) aggiornaTendenza(); } }).catch(() => {});
+// la tua zona per gli avvisi: dove sei (o dove guardi), arrotondata a ~1 km
+function zonaAvvisi() {
+  const r = stato.pos || ultimaPos || { lat: mappa.getCenter().lat, lon: mappa.getCenter().lng };
+  const z = zonaCorrente();
+  return z === "IT" ? null : { prov: z, lat: Math.round(r.lat * 100) / 100, lon: Math.round(r.lon * 100) / 100 };
+}
 function avvisiAttivi() { try { return localStorage.getItem("avvisi") === "1"; } catch { return false; } }
 function b64uInByte(s) {
   const b = atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4));
@@ -1998,11 +2066,18 @@ async function accendiAvvisi() {
   try {
     const sub = await abbonamento(true);
     await fetch(`${AVVISI.url}/iscrivi`, { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ abbonamento: sub.toJSON(), preferiti: stato.preferiti, carb: stato.carb }) });
+      body: JSON.stringify({ abbonamento: sub.toJSON(), preferiti: stato.preferiti, carb: stato.carb, zona: zonaAvvisi() }) });
     try { localStorage.setItem("avvisi", "1"); } catch {}
-    disegnaTue();
+    disegnaTue(); aggiornaTendenza();
     fetch(`${AVVISI.url}/prova`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ endpoint: sub.endpoint }) });
   } catch (e) { console.error(e); avvisoBreve("Non riesco ad attivare gli avvisi, riprova"); }
+}
+function chiediSpegnere() {
+  finestra("Avvisi attivi", `<p class="nota" style="color:var(--fg)">Ti scriviamo al massimo una volta al giorno, solo quando conviene.</p>
+    <button type="button" class="salva">Va bene così</button><button type="button" class="tutti">Spegni gli avvisi</button>`, (el, chiudi) => {
+    el.querySelector(".salva").addEventListener("click", chiudi);
+    el.querySelector(".tutti").addEventListener("click", () => { chiudi(); spegniAvvisi(); });
+  });
 }
 async function spegniAvvisi() {
   try {
@@ -2013,14 +2088,14 @@ async function spegniAvvisi() {
     }
   } catch {}
   try { localStorage.removeItem("avvisi"); } catch {}
-  disegnaTue(); avvisoBreve("Avvisi spenti");
+  disegnaTue(); aggiornaTendenza(); avvisoBreve("Avvisi spenti");
 }
 async function aggiornaIscrizione() {
   if (!avvisiAttivi() || !AVVISI.url) return;
   try {
     const sub = await abbonamento(false); if (!sub) return;
     await fetch(`${AVVISI.url}/iscrivi`, { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ abbonamento: sub.toJSON(), preferiti: stato.preferiti, carb: stato.carb }) });
+      body: JSON.stringify({ abbonamento: sub.toJSON(), preferiti: stato.preferiti, carb: stato.carb, zona: zonaAvvisi() }) });
   } catch {}
 }
 function guidaAvvisiIphone() {
@@ -2054,7 +2129,7 @@ function previsionePompa(i, c = stato.carb) {
   const [p, d, dal] = v;
   const dir = stato.medie?.tendenze?.[i.provincia]?.[c]?.[3];
   const media = stato.medie?.province?.[i.provincia]?.[c];
-  const ve = stato.medie?.pompe;
+  const ve = stato.servizio === "servito" && /benzina|gasolio/.test(c) ? null : stato.medie?.pompe;
   const appena = d && dal && giorniDa(dal) <= 3;
   if (dir === "giu" && media && ve) {
     const gia = appena && d <= -0.002, sopra = p > media + 0.003;
@@ -2066,7 +2141,7 @@ function previsionePompa(i, c = stato.carb) {
         quanto: `Scende ancora solo ${ve.gia.percentuale} volte su 100.` };
   }
   if (dir === "su") return { tipo: "sale", titolo: "Qui intorno i prezzi salgono", testo: "Meglio non aspettare troppo." };
-  if (d && dal && giorniDa(dal) >= 7) return { tipo: "fermo", titolo: `Prezzo fermo da ${giorniDa(dal)} giorni`, testo: "Questa pompa cambia poco: aspettare serve a poco." };
+  if (ve && d && dal && giorniDa(dal) >= 7) return { tipo: "fermo", titolo: `Prezzo fermo da ${giorniDa(dal)} giorni`, testo: "Questa pompa cambia poco: aspettare serve a poco." };
   return null;
 }
 const ICONE_POMPA = { scendera: '<path d="M12 5v14M6 13l6 6 6-6"/>', fatto: '<path d="M5 12l5 5L20 7"/>', sale: '<path d="M12 19V5M6 11l6-6 6 6"/>', fermo: '<path d="M5 12h14M13 6l6 6-6 6"/>' };
@@ -2122,6 +2197,7 @@ async function disegnaDettaglio() {
       <button type="button" class="stella-btn" id="stellaBtn" aria-pressed="${preferita(i)}" aria-label="${preferita(i) ? "Togli dalle tue pompe" : "Aggiungi alle tue pompe"}">${ICONA_STELLA}</button></div>
     <div class="altri" role="group" aria-label="Carburante">${altri}</div>
     <div class="grande"><span class="cifra${dubbio ? " dubbio" : ""}">${euro(p)}<small>€/l</small></span>${pp ? "" : chip}</div>
+    ${etaPrezzo(i.prezzi[c]) != null ? `<p class="eta${etaPrezzo(i.prezzi[c]) >= 5 ? " vecchio" : ""}">${stato.servizio === "servito" && /benzina|gasolio/.test(c) ? "Servito · " : ""}Prezzo comunicato ${testoEta(etaPrezzo(i.prezzi[c]))}</p>` : ""}
     ${dubbio ? `<div class="attenzione">Da verificare. ${dubbio}</div>` : ""}
     ${pp ? `<div class="pp ${pp.tipo}"><span class="pp-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">${ICONE_POMPA[pp.tipo]}</svg></span>
       <p><b>${pp.titolo}</b>${pp.testo}${pp.quanto ? `<small>${pp.quanto}</small>` : ""}</p></div>` : ""}
@@ -2140,6 +2216,8 @@ async function disegnaDettaglio() {
   $("dettaglio").querySelectorAll(".altri button").forEach((b) => b.addEventListener("click", () => { stato.detCarb = b.dataset.c; disegnaDettaglio(); }));
   const dati = await caricaStorico(i.provincia);
   if (stato.sel !== i || stato.detCarb !== c) return;
+  // lo storico è del self: col servito non lo mostriamo, per non confondere i due prezzi
+  if (stato.servizio === "servito" && /benzina|gasolio/.test(c)) { $("storico").hidden = true; return; }
   graficoStorico($("storico"), dati, String(i.id), c);
 }
 
@@ -2295,7 +2373,7 @@ function previsione(dir, d3) {
   const r = Math.min(1.2, Math.abs(d3) / dt.d3_medio);
   const giorni = Math.max(1, Math.round(dt.giorno * Math.min(1, r)));
   const litro = dt.attesa * r;
-  return { giorni, litro, pieno: litro * PIENO_LITRI, casi: dt.casi };
+  return { giorni, litro, pieno: litro * litri(), casi: dt.casi };
 }
 const soldi = (e) => e.toFixed(2).replace(".", ",");
 const giornoTra = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" }); };
@@ -2336,7 +2414,8 @@ function aggiornaTendenza() {
   const tondo = (e) => (Math.round(e * 10) / 10).toFixed(2).replace(".", ",");
   // i due numeri, come "oggi 18° → domani 15°"
   const dopo = prev && oggi ? oggi + (dir === "giu" ? -prev.litro : prev.litro) : null;
-  const meteo = oggi ? `<div class="v-meteo" role="img" aria-label="Oggi ${euro(oggi)} euro al litro di media${dopo ? `, ${nomeGiorno(prev.giorni).toLowerCase()} circa ${euro(dopo)}` : ""}">
+  const servito = stato.servizio === "servito" && /benzina|gasolio/.test(c);
+  const meteo = oggi && !servito ? `<div class="v-meteo" role="img" aria-label="Oggi ${euro(oggi)} euro al litro di media${dopo ? `, ${nomeGiorno(prev.giorni).toLowerCase()} circa ${euro(dopo)}` : ""}">
       <div class="vm"><span>Oggi</span><b>${euro(oggi)}</b></div>
       <svg class="vm-freccia" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
       <div class="vm poi"><span>${dopo ? nomeGiorno(prev.giorni) : "Domani"}</span><b>${dopo ? "≈ " + euro(dopo) : "uguale"}</b></div>
@@ -2345,13 +2424,17 @@ function aggiornaTendenza() {
     : dir === "su" && prev && prev.pieno >= .2 ? `Aspettando, circa <b>${tondo(prev.pieno)} €</b> in più sul pieno`
     : dir === "stabile" ? "Conta solo scegliere il distributore giusto" : "";
   box.className = `verdetto v2 ${dir}`; box.hidden = false;
-  box.innerHTML = `<p class="v-occhiello"><span class="v-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">${ICONE_VERDETTO[dir]}</svg></span>${NOMI[c]} · ${zona === "IT" ? "Italia" : esc(PROVINCE[zona] || zona)}</p>
+  box.innerHTML = `<p class="v-occhiello"><span class="v-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">${ICONE_VERDETTO[dir]}</svg></span>${NOMI[c]}${servito ? " servito" : ""} · ${zona === "IT" ? "Italia" : esc(PROVINCE[zona] || zona)}</p>
     <h2 class="v-titolo${v.titolo.length > 10 ? " lungo" : ""}">${v.titolo}</h2>
     <p class="v-sotto">${fraseVerdetto(dir, prev)}</p>
     ${meteo}
     ${quanto ? `<p class="v-soldi">${quanto}</p>` : ""}
-    <button type="button" class="v-come" id="vCome">Come lo sappiamo?</button>`;
+    <div class="v-azioni">
+      ${AVVISI.url ? `<button type="button" class="v-avvisa" id="vAvvisa" aria-pressed="${avvisiAttivi()}">${ICONA_CAMPANA}${avvisiAttivi() ? "Avvisi attivi" : 'Avvisami<span class="va-lungo"> quando conviene</span>'}</button>` : ""}
+      <button type="button" class="v-come" id="vCome">Come lo sappiamo?</button>
+    </div>`;
   $("vCome").addEventListener("click", (e) => { e.stopPropagation(); spiegaTendenza(); });
+  $("vAvvisa")?.addEventListener("click", (e) => { e.stopPropagation(); avvisiAttivi() ? chiediSpegnere() : accendiAvvisi(); });
   disegnaAndamentoZona(zona, dir);
   aggiornaMini();
 }
@@ -2452,7 +2535,10 @@ function scegliCarburante(c) {
 
 // --- menu ☰ ---
 function chiudiMenu() { $("menu").hidden = true; $("menuBtn").setAttribute("aria-expanded", false); }
-$("menuBtn").addEventListener("click", (e) => { e.stopPropagation(); const m = $("menu"); m.hidden = !m.hidden; $("menuBtn").setAttribute("aria-expanded", !m.hidden); });
+$("menuBtn").addEventListener("click", (e) => { e.stopPropagation(); const m = $("menu"); m.hidden = !m.hidden;
+  // il servito compare solo se i dati lo contengono
+  const conServito = stato.impianti.some((i) => i.grezzi?.benzina_s || i.grezzi?.gasolio_s);
+  $("servizio").hidden = $("servizioT").hidden = !conServito; riassunti(); $("menuBtn").setAttribute("aria-expanded", !m.hidden); });
 document.addEventListener("click", (e) => { if (!e.target.closest(".menu-ancora")) chiudiMenu(); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { chiudiMenu(); if (stato.sel) chiudiDettaglio(); } });
 $("carburanti").addEventListener("click", (e) => {
@@ -2462,6 +2548,70 @@ $("carburanti").addEventListener("click", (e) => {
 });
 $("basi").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { scegliBase(b.dataset.b); chiudiMenu(); } });
 $("comeFunziona").addEventListener("click", () => { chiudiMenu(); spiegaTendenza(); });
+$("servizio").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { scegliServizio(b.dataset.s); chiudiMenu(); } });
+document.querySelectorAll("#servizio button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.s === stato.servizio));
+$("autoVoce").addEventListener("click", () => { chiudiMenu(); finestraAuto(); });
+$("marchiVoce").addEventListener("click", () => { chiudiMenu(); finestraMarchi(); });
+function riassunti() {
+  $("autoRiass").textContent = `${stato.auto.litri} litri · ${stato.auto.kml} km con un litro`;
+  $("marchiRiass").textContent = stato.marchi.length ? stato.marchi.join(", ") : "Tutti";
+}
+riassunti();
+// Finestra a schermo: stessa forma della "guida", si chiude toccando fuori
+function finestra(titolo, corpo, dopo) {
+  const el = document.createElement("div");
+  el.className = "guida finestra"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", titolo);
+  el.innerHTML = `<div><h2>${titolo}</h2>${corpo}</div>`;
+  el.addEventListener("click", (e) => { if (e.target === el) el.remove(); });
+  document.body.appendChild(el);
+  dopo(el, () => el.remove());
+  el.querySelector("button")?.focus();
+}
+function contatore(id, etichetta, valore, min, max, passo, unita) {
+  return `<div class="riga-num"><span class="rn-et" id="${id}Et">${etichetta}</span>
+    <div class="rn-ctrl"><button type="button" class="rn-b" data-d="-${passo}" data-per="${id}" aria-label="Meno">−</button>
+    <output id="${id}" data-min="${min}" data-max="${max}" aria-labelledby="${id}Et">${valore}</output><span class="rn-u">${unita}</span>
+    <button type="button" class="rn-b" data-d="${passo}" data-per="${id}" aria-label="Più">+</button></div></div>`;
+}
+function finestraAuto() {
+  const a = stato.auto;
+  finestra("La tua auto", `<p class="nota">Così il risparmio è quello del tuo pieno, strada inclusa. Resta solo sul tuo telefono.</p>
+    ${contatore("fLitri", "Litri che metti di solito", a.litri, 10, 100, 5, "litri")}
+    <div class="scelte-rapide"><button type="button" data-l="35">Piccola · 35</button><button type="button" data-l="50">Media · 50</button><button type="button" data-l="65">Grande · 65</button></div>
+    ${contatore("fKml", "Km che fai con un litro", a.kml, 4, 40, 1, "km")}
+    <p class="nota">Non lo sai? Lascia 15.</p>
+    <button type="button" class="salva">Salva</button>`, (el, chiudi) => {
+    el.addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      if (b.dataset.per) { const o = el.querySelector("#" + b.dataset.per); o.value = o.textContent = Math.min(+o.dataset.max, Math.max(+o.dataset.min, +o.textContent + +b.dataset.d)); }
+      if (b.dataset.l) { const o = el.querySelector("#fLitri"); o.value = o.textContent = b.dataset.l; }
+      if (b.classList.contains("salva")) {
+        stato.auto = { litri: +el.querySelector("#fLitri").textContent, kml: +el.querySelector("#fKml").textContent };
+        try { localStorage.setItem("auto", JSON.stringify(stato.auto)); } catch {}
+        riassunti(); stato.migliore = null; aggiornaLista(); aggiornaTendenza(); chiudi(); avvisoBreve("Salvato");
+      }
+    });
+  });
+}
+function finestraMarchi() {
+  // i marchi che ci sono davvero qui intorno, dal più diffuso
+  const rif = stato.pos || { lat: mappa.getCenter().lat, lon: mappa.getCenter().lng };
+  const conta = new Map();
+  for (const i of stato.impianti) if (i.bandiera && km(rif, i) <= 25) conta.set(i.bandiera, (conta.get(i.bandiera) || 0) + 1);
+  const lista = [...conta].sort((a, b) => b[1] - a[1]).slice(0, 14).map((x) => x[0]);
+  for (const m of stato.marchi) if (!lista.includes(m)) lista.push(m);
+  finestra("Marchi", `<p class="nota">Scegli quelli che vuoi vedere, per esempio se hai una carta carburante. Le tue pompe restano sempre.</p>
+    <div class="marchi">${lista.map((m) => `<label class="marchio-sc"><input type="checkbox" value="${esc(m)}" ${stato.marchi.includes(m) ? "checked" : ""}><span>${esc(m)}</span></label>`).join("")}</div>
+    <button type="button" class="salva">Mostra</button>
+    <button type="button" class="tutti">Tutti i marchi</button>`, (el, chiudi) => {
+    const applica = (scelti) => {
+      stato.marchi = scelti; try { localStorage.setItem("marchi", JSON.stringify(scelti)); } catch {}
+      riassunti(); stato.migliore = null; aggiornaLista(); disegna(); chiudi();
+    };
+    el.querySelector(".salva").addEventListener("click", () => applica([...el.querySelectorAll("input:checked")].map((x) => x.value)));
+    el.querySelector(".tutti").addEventListener("click", () => applica([]));
+  });
+}
 // --- pannello in basso (telefono): chiuso (verdetto + consigliato) o aperto (andamento + lista); si trascina col dito ---
 function aperto() { return !$("pannello").classList.contains("chiuso"); }
 function mettiPannello(apri) {
@@ -2665,10 +2815,35 @@ if (ultimaPos) { stato.pos = { ...ultimaPos, vecchia: true }; aggiornaAvatar(); 
 function aggiungi(righe) {
   for (const r of righe) {
     if (stato.perId.has(r[0])) continue;
-    const i = { id: r[0], nome: r[1], bandiera: r[2], indirizzo: r[3], comune: r[4], provincia: r[5], lat: r[6], lon: r[7], autostrada: r[8], prezzi: r[9] };
+    const i = { id: r[0], nome: r[1], bandiera: r[2], indirizzo: r[3], comune: r[4], provincia: r[5], lat: r[6], lon: r[7], autostrada: r[8], grezzi: r[9] };
+    i.prezzi = prezziVista(i.grezzi);
     stato.perId.set(i.id, i); stato.impianti.push(i);
   }
 }
+// Con "servito" benzina e gasolio usano il prezzo del servito; chi non ha il servito sparisce per quel carburante
+function prezziVista(g) {
+  if (stato.servizio !== "servito") { const v = { ...g }; delete v.benzina_s; delete v.gasolio_s; return v; }
+  const v = { gpl: g.gpl, metano: g.metano, benzina: g.benzina_s, gasolio: g.gasolio_s };
+  for (const k of Object.keys(v)) if (!v[k]) delete v[k];
+  return v;
+}
+function scegliServizio(x) {
+  if (x === stato.servizio) return;
+  stato.servizio = x; try { localStorage.setItem("servizio", x); } catch {}
+  for (const i of stato.impianti) i.prezzi = prezziVista(i.grezzi);
+  document.querySelectorAll("#servizio button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.s === x));
+  calcolaSoglie(); stato.migliore = null; aggiornaLista(); disegna(); aggiornaTendenza(); disegnaTue();
+  if (stato.sel) { if (stato.sel.prezzi[stato.detCarb]) disegnaDettaglio(); else chiudiDettaglioOra(); }
+}
+// Marchi: se ne scegli alcuni, si vedono solo quelli (le tue pompe restano sempre)
+function passaMarchio(i) { return !stato.marchi.length || stato.marchi.includes(i.bandiera) || preferita(i); }
+// Da quanto il gestore non aggiorna il prezzo: "oggi", "ieri", "3 giorni fa"
+function etaPrezzo(v) {
+  if (!v?.[3]) return null;
+  const oggi = new Date(); oggi.setHours(12, 0, 0, 0);
+  return Math.max(0, Math.round((oggi - new Date(v[3] + "T12:00:00")) / 864e5));
+}
+const testoEta = (n) => n == null ? "" : n === 0 ? "oggi" : n === 1 ? "ieri" : `${n} giorni fa`;
 function segnaData(aggiornato) {
   if (!aggiornato || stato.aggiornato) return;
   stato.aggiornato = aggiornato;
