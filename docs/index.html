@@ -1459,6 +1459,11 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
   .va-lungo { display: none; }
   .v-azioni { flex-wrap: nowrap; margin-top: 6px; } .v-avvisa { min-height: 40px; padding: 0 14px; }
 }
+/* iPhone: l'app copre tutto lo schermo; sotto al pannello si vede il suo stesso colore, mai una striscia vuota */
+.ios-app .app { bottom: auto; height: var(--alto, 100%); }
+@media (max-width: 1023px) { html, body { background: var(--surface); } }
+/* pannello chiuso: meno spazio vuoto sotto la barra (la fascia del tasto Home resta libera solo quanto serve) */
+@media (max-width: 1023px) { .pannello.chiuso { padding-bottom: calc(env(safe-area-inset-bottom, 0px) * .6 + 4px); } }
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1814,7 +1819,7 @@ function disegna() {
   qui.sort((a, b2) => peso(a) - peso(b2));
   for (const i of qui) {
     const m = L.marker([i.lat, i.lon], { icon: iconaPrezzo(i), title: i.bandiera || i.nome, zIndexOffset: stato.sel === i ? 900 : 0 });
-    m.on("click", () => seleziona(i));
+    m.on("click", () => seleziona(i, null, true));
     m.largo = stato.migliore === i || preferita(i) ? 84 : 66; m.sempre = stato.sel === i || stato.migliore === i || preferita(i);
     candidati.push(m);
   }
@@ -1930,7 +1935,7 @@ function disegnaConsigliato(i, media, vicinoATe) {
       <span class="c-prezzo">${euro(p)}<small>€/l</small></span>
     </button>
     <a class="c-vai" ${attrNav(i)} aria-label="Portami a ${esc(i.bandiera || i.nome)}">${ICONA_NAV}<span>Portami</span></a>`;
-  $("cApri").addEventListener("click", () => seleziona(i));
+  $("cApri").addEventListener("click", () => seleziona(i, null, true));   // chiusa la scheda si torna alla mappa
   aggiornaTendenza();
   if (!stato.reinquadrato && vicinoATe && stato.pos && !mossaDaTe && !stato.sel) {
     stato.reinquadrato = true;
@@ -1958,6 +1963,19 @@ document.querySelectorAll("#ordina button").forEach((x) => x.setAttribute("aria-
 // iPhone/iPad: Mappe di Apple. PC: Google Maps nel browser. Si può fissare un'altra app dal pulsante "Cambia".
 const UA = navigator.userAgent;
 const IOS = /iPhone|iPad|iPod/.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+// iPhone con Pumpy sulla schermata Home: alcune versioni di iOS calcolano l'altezza senza la fascia in basso
+// e lasciano una striscia vuota. L'app prende sempre tutta l'altezza dello schermo.
+if (IOS && (navigator.standalone || matchMedia("(display-mode: standalone)").matches)) {
+  const tutto = () => {
+    const verticale = matchMedia("(orientation: portrait)").matches;
+    const h = Math.max(innerHeight, verticale ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height));
+    document.documentElement.style.setProperty("--alto", h + "px");
+    document.documentElement.classList.add("ios-app");
+    mappa.invalidateSize();
+  };
+  tutto();
+  addEventListener("resize", tutto); addEventListener("orientationchange", () => setTimeout(tutto, 300));
+}
 const ANDROID = /Android/.test(UA);
 const NAVIGATORI = {
   auto: { nome: IOS ? "Mappe" : ANDROID ? "la tua app di mappe" : "Google Maps" },
@@ -2146,7 +2164,10 @@ function previsionePompa(i, c = stato.carb) {
 }
 const ICONE_POMPA = { scendera: '<path d="M12 5v14M6 13l6 6 6-6"/>', fatto: '<path d="M5 12l5 5L20 7"/>', sale: '<path d="M12 19V5M6 11l6-6 6 6"/>', fermo: '<path d="M5 12h14M13 6l6 6-6 6"/>' };
 
-function seleziona(i, carb) {
+function seleziona(i, carb, daMappa) {
+  // ricordo com'era il pannello, per tornarci quando chiudi la scheda
+  if (!stato.sel) stato.prima = { aperto: aperto(), scroll: $("pannello").scrollTop, daMappa: !!daMappa };
+  else if (daMappa && stato.prima) stato.prima.daMappa = true;
   stato.sel = i; stato.detCarb = carb || (i.prezzi[stato.carb] ? stato.carb : Object.keys(NOMI).find((k) => i.prezzi[k]));
   chiudiMenu();
   const p = $("pannello");
@@ -2177,6 +2198,14 @@ function chiudiDettaglioOra() {
   stato.sel = null;
   const p = $("pannello"); p.classList.remove("con-dettaglio");
   $("dettaglio").hidden = true; $("dettaglio").innerHTML = "";
+  // telefono: se la scheda era partita da un prezzo sulla mappa (o col pannello chiuso) si torna alla mappa
+  // con la sola barra in basso; se era partita dalla lista, si torna alla lista dov'eri
+  if (!MQ_LATO.matches) {
+    const pr = stato.prima || {};
+    if (pr.daMappa || !pr.aperto) mettiPannello(false);
+    else { mettiPannello(true); requestAnimationFrame(() => { p.scrollTop = pr.scroll || 0; }); }
+  }
+  stato.prima = null;
   disegna(); aggiornaLista();
 }
 addEventListener("popstate", () => { chiudiMenu(); chiudiDettaglioOra(); });
