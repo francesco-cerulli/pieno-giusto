@@ -1343,6 +1343,73 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 @media (orientation: landscape) and (max-height: 520px) { .app { --lato-w: 340px; } .v-titolo { font-size: 1.2rem; } }
 .dettaglio .nav-riga { margin-top: -2px; }
 @media (max-width: 1023px) and (max-height: 760px) { .pannello.con-dettaglio { max-height: 64%; } }
+
+/* =================== Redesign 2: la risposta come le previsioni del tempo =================== */
+/* Prima la parola che dice cosa fare, poi il giorno, poi due numeri (oggi → dopo). Niente da aprire. */
+.verdetto.v2 { display: block; padding: 16px 18px 6px; border-radius: 24px; }
+.v2 .v-occhiello { display: flex; align-items: center; gap: 8px; font-size: .84rem; font-weight: 700; color: var(--muted); margin: 0; }
+.v2 .v-icona { width: 26px; height: 26px; border-radius: 8px; flex: none; }
+.v2 .v-icona svg { width: 16px; height: 16px; }
+.v2 .v-titolo { margin: 8px 0 2px; font: 800 2.35rem/1.02 var(--f-display); letter-spacing: -.035em; text-wrap: balance; }
+.v2 .v-sotto { margin: 0 0 14px; font: 700 1.22rem/1.25 var(--f-display); color: var(--fg); letter-spacing: -.01em; }
+.v-meteo { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 6px; }
+.vm { background: var(--surface); border-radius: 16px; padding: 10px 12px 11px; display: grid; gap: 1px; min-width: 0; }
+.vm span { font-size: .88rem; font-weight: 600; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vm b { font: 800 1.65rem/1.05 var(--f-display); letter-spacing: -.03em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.v-meteo .vm b { color: var(--fg); }
+.giu .v-meteo .vm.poi b { color: var(--down); } .su .v-meteo .vm.poi b { color: var(--up); }
+.vm-freccia { width: 22px; height: 22px; fill: none; stroke: var(--muted); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.v-soldi { margin: 12px 0 0; font-size: 1.02rem; line-height: 1.35; color: var(--fg); }
+.v2 .v-titolo.lungo { font-size: 1.95rem; text-wrap: pretty; }
+.v-soldi b { font-weight: 800; }
+.v-come { display: inline-flex; align-items: center; min-height: 44px; margin: 2px 0 0; border: 0; background: none; padding: 0;
+  color: var(--muted); font: 600 .9rem var(--f-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+/* il più economico: più grande e con la parola sul pulsante */
+.c-etichetta { font-size: .8rem; }
+.c-nome { font-size: 1.12rem; }
+.c-dove { font-size: .86rem; }
+.c-prezzo { font-size: 1.7rem; }
+.c-vai { width: 80px; gap: 4px; }
+.c-vai span { font-size: .92rem; font-weight: 800; }
+.c-vai svg { width: 24px; height: 24px; }
+/* barra chiusa: la risposta e il giorno, il prezzo migliore a destra */
+@media (max-width: 1023px) {
+  .mini { min-height: 56px; gap: 12px; }
+  .m-icona { width: 36px; height: 36px; border-radius: 12px; }
+  .m-icona svg { width: 20px; height: 20px; }
+  .m-testo { flex: 1; min-width: 0; display: grid; line-height: 1.2; }
+  .m-testo b { font: 800 1.08rem/1.15 var(--f-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini.giu .m-testo b { color: var(--down); } .mini.su .m-testo b { color: var(--up); }
+  .m-testo small { font-size: .84rem; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m-top { flex: none; display: grid; text-align: right; line-height: 1.15; max-width: 34%; }
+  .m-top b { font: 800 1.15rem var(--f-display); }
+  .m-top small { font-size: .74rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+/* benvenuto: una schermata, un esempio da guardare, un pulsante */
+.b-scheda { gap: 16px; }
+.b-scheda h2 { font-size: 2.05rem; }
+.b-esempio { position: relative; width: 100%; box-sizing: border-box; background: var(--mint); border-radius: 24px; padding: 16px 16px 16px; text-align: left; }
+.be-tag { position: absolute; top: 12px; right: 14px; font-size: .72rem; font-weight: 700; color: var(--muted); background: var(--surface); padding: 3px 8px; border-radius: 999px; }
+.be-titolo { display: flex; align-items: center; gap: 10px; margin: 0; font: 800 2rem/1.05 var(--f-display); letter-spacing: -.03em; color: var(--down); }
+.be-titolo .v-icona { width: 34px; height: 34px; border-radius: 11px; background: var(--down); display: grid; place-items: center; }
+.be-titolo .v-icona svg { width: 20px; height: 20px; stroke: #fff; }
+.be-sotto { margin: 4px 0 12px !important; color: var(--fg) !important; font: 700 1.12rem/1.25 var(--f-display) !important; }
+.b-esempio .v-meteo { margin: 0; }
+.b-scheda > p { font-size: 1.1rem; color: var(--fg); }
+.b-scheda .be-titolo { display: flex; align-items: center; gap: 10px; margin: 0; font: 800 2rem/1.05 var(--f-display); letter-spacing: -.03em; color: var(--down); max-width: none; }
+.b-scheda h2 { font-size: 1.85rem; text-wrap: balance; }
+.c-dove { -webkit-line-clamp: 1; }
+.c-risp { grid-column: 1 / -1; margin-top: 2px; font-size: .86rem; font-weight: 700; color: var(--down); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c-prezzo { grid-row: 2 / span 2; }
+.b-avanti { font-size: 1.15rem; padding: 18px; }
+/* spiegazione */
+.affid-riga { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin: 0; }
+@media (max-width: 1023px) and (max-height: 700px) {
+  .v2 .v-titolo.lungo { font-size: 1.65rem; }
+  .verdetto.v2 { padding: 12px 14px 2px; }
+  .v2 .v-titolo { font-size: 1.9rem; margin-top: 4px; } .v2 .v-sotto { margin-bottom: 8px; font-size: 1.08rem; } .vm b { font-size: 1.4rem; }
+  .vm { padding: 7px 10px 8px; } .c-prezzo { font-size: 1.6rem; } .c-vai { width: 76px; } .v-soldi { margin-top: 8px; font-size: .95rem; } .v-come { min-height: 36px; }
+}
 </style>
 
 <div id="avvio" aria-hidden="true"><div class="scena">
@@ -1415,7 +1482,7 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
         </div>
         <div class="voci">
           <button type="button" class="voce" id="installaVoce" hidden>Installa Pumpy sul telefono</button>
-          <button type="button" class="voce" id="comeFunziona">Come funziona</button>
+          <button type="button" class="voce" id="comeFunziona">Come lo sappiamo</button>
         </div>
         <p class="fonte-menu">Dati <abbr title="Ministero delle Imprese e del Made in Italy, Osservatorio Prezzi Carburanti (IODL 2.0)">MIMIT</abbr> · prezzi del <span id="data">–</span></p>
       </div>
@@ -1651,7 +1718,8 @@ function iconaPrezzo(i) {
   const dal = i.prezzi[stato.carb][2];
   const recente = d && dal && giorniDa(dal) <= GIORNI_FRECCIA;
   const stella = preferita(i) ? '<svg class="stella" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>' : "";
-  return L.divIcon({ className: "", iconSize: null, html: `<div class="pin ${fascia(p)}${sel}">${stella}${euro(p)}${recente ? freccia(d) : ""}</div>` });
+  // solo il numero: le frecce su ogni prezzo facevano rumore e confondevano con la previsione
+  return L.divIcon({ className: "", iconSize: null, html: `<div class="pin ${fascia(p)}${sel}" ${recente ? `title="${d > 0 ? "Salito" : "Sceso"} di recente"` : ""}>${stella}${euro(p)}</div>` });
 }
 
 function disegna() {
@@ -1759,7 +1827,7 @@ function aggiornaLista() {
   lista.innerHTML = mostra.map((i, n) => {
     const [p, d, dal] = i.prezzi[c];
     const risparmio = (media - p) * PIENO_LITRI;
-    const etichetta = i === migliore ? '<span class="bollino">Il più conveniente</span>' : (n === 0 && stato.ordine === "distanza" ? '<span class="bollino neutro">Il più vicino</span>' : "");
+    const etichetta = i === migliore ? '<span class="bollino">Il più economico</span>' : (n === 0 && stato.ordine === "distanza" ? '<span class="bollino neutro">Il più vicino</span>' : "");
     const extra = risparmio >= .5 ? `<span class="risparmio" title="Rispetto alla media dei distributori in elenco, su ${PIENO_LITRI} litri">${risparmio.toFixed(2).replace(".", ",")} € in meno sul pieno</span>` : variazione(d, dal, false);
     return `<li class="${i === migliore ? "migliore" : ""}"><button type="button" data-n="${n}">
       <span class="nome">${etichetta}${esc(i.bandiera || i.nome)}</span>
@@ -1776,15 +1844,16 @@ function disegnaConsigliato(i, media, vicinoATe) {
   if (!i) { box.hidden = true; return; }
   const c = stato.carb, p = i.prezzi[c][0], risparmio = (media - p) * PIENO_LITRI;
   const dir = (stato.medie?.tendenze?.[zonaCorrente()]?.[c] || stato.medie?.tendenze?.IT?.[c] || [])[3];
-  const etichetta = dir === "giu" ? "Se devi fare il pieno adesso" : vicinoATe ? "Il più conveniente vicino a te" : "Il più conveniente in questa zona";
+  const etichetta = dir === "giu" ? "Se ti serve adesso" : vicinoATe ? "Il più economico vicino a te" : "Il più economico in questa zona";
   box.hidden = false;
   box.innerHTML = `<button type="button" class="c-scheda" id="cApri">
       <span class="c-etichetta">${etichetta}</span>
       <span class="c-nome">${esc(i.bandiera || i.nome)}</span>
-      <span class="c-dove">${vicinoATe ? testoKm(i._km) : esc(i.comune)}${risparmio >= .5 ? ` · <b>−${risparmio.toFixed(2).replace(".", ",")} €</b> sul pieno` : ""}</span>
+      <span class="c-dove">${vicinoATe ? testoKm(i._km) : esc(i.comune)}</span>
+      ${risparmio >= .5 ? `<span class="c-risp">Risparmi ${risparmio.toFixed(2).replace(".", ",")} €</span>` : ""}
       <span class="c-prezzo">${euro(p)}<small>€/l</small></span>
     </button>
-    <a class="c-vai" ${attrNav(i)} aria-label="Portami a ${esc(i.bandiera || i.nome)}">${ICONA_NAV}<span>Vai</span></a>`;
+    <a class="c-vai" ${attrNav(i)} aria-label="Portami a ${esc(i.bandiera || i.nome)}">${ICONA_NAV}<span>Portami</span></a>`;
   $("cApri").addEventListener("click", () => seleziona(i));
   aggiornaTendenza();
   if (!stato.reinquadrato && vicinoATe && stato.pos && !mossaDaTe && !stato.sel) {
@@ -2162,11 +2231,12 @@ function nomeZona(z) { return z === "IT" ? "in Italia" : `in provincia di ${PROV
 const CONSIGLI = { su: "Meglio fare il pieno adesso", giu: "Se puoi, aspetta qualche giorno", stabile: "Nessuna fretta: i prezzi sono fermi" };
 const TITOLI = { su: "in aumento", giu: "in calo", stabile: "stabile" };
 
-// Il cuore di Pumpy: una risposta sola, in parole semplici, per la zona dove sei
+// Il cuore di Pumpy: una risposta sola, letta come le previsioni del tempo.
+// Una parola grande (cosa fare), il giorno, e due numeri: il prezzo di oggi e quello atteso.
 const VERDETTI = {
-  giu: { titolo: "Se puoi, aspetta", perche: (d) => `Qui i prezzi stanno scendendo: −${cent(d)} cent negli ultimi 3 giorni.` },
-  su: { titolo: "Fai il pieno oggi", perche: (d) => `Qui i prezzi stanno salendo: +${cent(d)} cent negli ultimi 3 giorni.` },
-  stabile: { titolo: "Fai il pieno quando vuoi", perche: () => "Qui i prezzi sono fermi da qualche giorno: nessuna fretta." },
+  giu: { titolo: "Aspetta" },
+  su: { titolo: "Fai il pieno oggi" },
+  stabile: { titolo: "Fai il pieno quando vuoi" },
 };
 const ICONE_VERDETTO = {
   giu: '<path d="M12 5v14M6 13l6 6 6-6"/>', su: '<path d="M12 19V5M6 11l6-6 6 6"/>', stabile: '<path d="M5 12h14M13 6l6 6-6 6"/>',
@@ -2183,52 +2253,49 @@ function previsione(dir, d3) {
 }
 const soldi = (e) => e.toFixed(2).replace(".", ",");
 const giornoTra = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" }); };
-const ICONE_RIGA = {
-  perche: '<path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/>',
-  quando: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
-  quanto: '<circle cx="12" cy="12" r="8"/><path d="M15 9.5a3.5 3.5 0 1 0 0 5M7.5 11h5M7.5 13h5"/>',
-  adesso: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
-};
+// "Domani", "Venerdì", oppure "Tra 9 giorni": la parola che si legge nelle previsioni del tempo
+function nomeGiorno(n) {
+  if (n === 1) return "Domani";
+  if (n > 6) return `Tra ${n} giorni`;
+  const d = new Date(); d.setDate(d.getDate() + n);
+  const g = d.toLocaleDateString("it-IT", { weekday: "long" });
+  return g[0].toUpperCase() + g.slice(1);
+}
+// Frase breve del verdetto, usata sia nel riquadro sia nella barra chiusa
+function fraseVerdetto(dir, prev) {
+  const g = prev ? nomeGiorno(prev.giorni) : null;
+  if (dir === "giu") return g ? `${g} costerà meno` : "Nei prossimi giorni costerà meno";
+  if (dir === "su") return g ? `${g === "Domani" ? "Da domani" : g.startsWith("Tra") ? g : "Da " + g.toLowerCase()} costerà di più` : "Nei prossimi giorni costerà di più";
+  return "Il prezzo è fermo";
+}
+function ultimoValore(v) { for (let k = (v || []).length - 1; k >= 0; k--) if (v[k] != null) return v[k]; return null; }
 function aggiornaTendenza() {
   const box = $("verdetto"), c = stato.carb, z = zonaCorrente();
   const t = stato.medie?.tendenze?.[z]?.[c] || stato.medie?.tendenze?.IT?.[c];
   const zona = stato.medie?.tendenze?.[z]?.[c] ? z : "IT";
   if (!t) { box.hidden = true; $("andamento").hidden = true; return; }
-  const [, , d3, dir] = t, v = VERDETTI[dir], a = stato.medie?.affidabilita;
-  const nomeZona = zona === "IT" ? "In Italia" : `In provincia di ${PROVINCE[zona] || zona}`;
-  const prev = previsione(dir, d3), i = stato.migliore, media = stato.mediaLista;
-  const risparmioDove = i && media ? (media - i.prezzi[c][0]) * PIENO_LITRI : 0;
-  // la riga "quando", sempre visibile sotto il titolo
-  // una frase sola che lega il giorno ai soldi; importi arrotondati ai 10 centesimi (è una stima)
+  const [, , d3, dir] = t, v = VERDETTI[dir];
+  const prev = previsione(dir, d3);
+  const oggi = ultimoValore(stato.medie?.serie_zone?.[zona]?.[c]) ?? t[0];
   const tondo = (e) => (Math.round(e * 10) / 10).toFixed(2).replace(".", ",");
-  const quando = dir === "giu"
-    ? (prev ? `Fino a ${prev.giorni === 1 ? "domani" : giornoTra(prev.giorni)}${prev.pieno >= .2 ? `: circa <b>${tondo(prev.pieno)} € in meno</b> sul pieno` : ""}` : "Tra qualche giorno dovrebbe costare meno")
-    : dir === "su"
-      ? (prev && prev.pieno >= .2 ? `Aspettando spenderesti circa <b>${tondo(prev.pieno)} € in più</b> sul pieno` : "Nei prossimi giorni di solito sale ancora")
-      : "Nessun giorno migliore in vista: conta solo dove";
-  // i dettagli: tre numeri da leggere al volo, più una riga sul perché
-  const tessere = [["Ultimi 3 giorni", dir === "stabile" ? "fermi" : `${dir === "giu" ? "−" : "+"}${cent(d3)} cent`, dir === "stabile" ? "nessuna fretta" : "al litro", dir === "stabile" ? "" : dir]];
-  // stesso formato dei 3 giorni passati, così il confronto passato/futuro è immediato
-  if (prev && prev.litro >= .001) tessere.push([prev.giorni === 1 ? "Domani" : `Prossimi ${prev.giorni} giorni`, `${dir === "giu" ? "−" : "+"}${cent(prev.litro)} cent`, "al litro, stimati", dir]);
-  // (il risparmio scegliendo il distributore è già nella carta del consigliato, subito sotto: non si ripete)
-  box.className = `verdetto ${dir}`; box.hidden = false;
-  box.innerHTML = `<div class="v-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">${ICONE_VERDETTO[dir]}</svg></div>
-    <div class="v-testo">
-      <p class="v-occhiello">${NOMI[c]} · ${zona === "IT" ? "Italia" : esc(PROVINCE[zona] || zona)}</p>
-      <h2 class="v-titolo">${v.titolo}</h2>
-      <p class="v-quando">${quando}</p>
-      <button type="button" class="v-espandi" id="vEspandi" aria-expanded="${!!stato.vAperto}" aria-controls="vDettagli">Perché
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
-    </div>
-    <div class="v-dettagli" id="vDettagli" ${stato.vAperto ? "" : "hidden"}>
-      <div class="v-tessere">${tessere.map(([et, val, sotto, tono]) => `<div class="v-tessera"><span class="vt-e">${et}</span><b class="vt-v ${tono || ""}">${val}</b><span class="vt-s">${sotto}</span></div>`).join("")}</div>
-      <p class="v-fiducia">Stima${prev ? ` basata su ${prev.casi.toLocaleString("it-IT")} casi reali` : ""}${a?.percentuale ? `, confermata ${a.percentuale} volte su 100` : ""}. Può sbagliare · <button type="button" id="vComeFunziona">come funziona</button></p>
-    </div>`;
-  $("vEspandi").addEventListener("click", (e) => {
-    e.stopPropagation(); stato.vAperto = !stato.vAperto;
-    $("vDettagli").hidden = !stato.vAperto; $("vEspandi").setAttribute("aria-expanded", stato.vAperto);
-  });
-  $("vComeFunziona").addEventListener("click", (e) => { e.stopPropagation(); spiegaTendenza(); });
+  // i due numeri, come "oggi 18° → domani 15°"
+  const dopo = prev && oggi ? oggi + (dir === "giu" ? -prev.litro : prev.litro) : null;
+  const meteo = oggi ? `<div class="v-meteo" role="img" aria-label="Oggi ${euro(oggi)} euro al litro di media${dopo ? `, ${nomeGiorno(prev.giorni).toLowerCase()} circa ${euro(dopo)}` : ""}">
+      <div class="vm"><span>Oggi</span><b>${euro(oggi)}</b></div>
+      <svg class="vm-freccia" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+      <div class="vm poi"><span>${dopo ? nomeGiorno(prev.giorni) : "Domani"}</span><b>${dopo ? "≈ " + euro(dopo) : "uguale"}</b></div>
+    </div>` : "";
+  const quanto = dir === "giu" && prev && prev.pieno >= .2 ? `Circa <b>${tondo(prev.pieno)} €</b> in meno sul pieno`
+    : dir === "su" && prev && prev.pieno >= .2 ? `Aspettando, circa <b>${tondo(prev.pieno)} €</b> in più sul pieno`
+    : dir === "stabile" ? "Conta solo scegliere il distributore giusto" : "";
+  box.className = `verdetto v2 ${dir}`; box.hidden = false;
+  box.innerHTML = `<p class="v-occhiello"><span class="v-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">${ICONE_VERDETTO[dir]}</svg></span>${NOMI[c]} · ${zona === "IT" ? "Italia" : esc(PROVINCE[zona] || zona)}</p>
+    <h2 class="v-titolo${v.titolo.length > 10 ? " lungo" : ""}">${v.titolo}</h2>
+    <p class="v-sotto">${fraseVerdetto(dir, prev)}</p>
+    ${meteo}
+    ${quanto ? `<p class="v-soldi">${quanto}</p>` : ""}
+    <button type="button" class="v-come" id="vCome">Come lo sappiamo?</button>`;
+  $("vCome").addEventListener("click", (e) => { e.stopPropagation(); spiegaTendenza(); });
   disegnaAndamentoZona(zona, dir);
   aggiornaMini();
 }
@@ -2287,23 +2354,21 @@ function spiegaTendenza() {
         <rect x="${x(k3)}" y="0" width="${W - x(k3)}" height="${H}" fill="var(--accent)" opacity=".1" rx="6"/>
         <path d="${linea}" fill="none" stroke="var(--fg)" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
         <circle cx="${W}" cy="${y(v[v.length - 1]).toFixed(1)}" r="4" fill="var(--accent)"/></svg>
-      <figcaption><span>${dataIt(serie[0].giorno)}</span><span>ultimi 3 giorni = la tendenza</span><span>${dataIt(serie[serie.length - 1].giorno)}</span></figcaption></figure>`;
+      <figcaption><span>${dataIt(serie[0].giorno)}</span><span>la direzione degli ultimi giorni</span><span>${dataIt(serie[serie.length - 1].giorno)}</span></figcaption></figure>`;
   }
   const icona = (path) => `<span class="icona"><svg viewBox="0 0 24 24">${path}</svg></span>`;
   const el = document.createElement("div");
-  el.className = "guida"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Come funziona");
-  el.innerHTML = `<div><h2>Come funziona</h2>
+  el.className = "guida"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Come lo sappiamo");
+  el.innerHTML = `<div><h2>Come lo sappiamo</h2>
     <div class="flusso">
       <div class="passo">${icona('<path d="M4 20h16M6 20V10M10 20V10M14 20V10M18 20V10M3 10l9-6 9 6z"/>')}Prezzi ufficiali del Ministero</div><span class="freccia-f">›</span>
-      <div class="passo">${icona('<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>')}Ogni giorno</div><span class="freccia-f">›</span>
-      <div class="passo">${icona('<path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/>')}Media e tendenza</div>
+      <div class="passo">${icona('<path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/>')}Guardiamo dove vanno</div><span class="freccia-f">›</span>
+      <div class="passo">${icona('<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>')}Ti diciamo quando conviene</div>
     </div>
     ${figura}
-    ${a.percentuale != null ? `<p style="margin:0"><span class="affid">${a.percentuale}%</span> tendenze confermate nei ${a.orizzonte} giorni dopo</p>
-      <div class="barra-aff" aria-hidden="true"><i style="width:${a.percentuale}%"></i></div>
-      <p class="nota">${a.casi.toLocaleString("it-IT")} casi verificati in ${a.giorni} giorni.</p>` : ""}
-    ${stato.medie?.dopo_tendenza?.giu ? `<p class="nota"><b>Quando e quanto:</b> guardiamo cosa è successo nei 5 giorni successivi tutte le volte che i prezzi di una zona si sono mossi così (${(stato.medie.dopo_tendenza.giu.casi + (stato.medie.dopo_tendenza.su?.casi || 0)).toLocaleString("it-IT")} casi), e lo riportiamo alla forza del movimento di oggi. Più giorni di dati raccogliamo, più la stima diventa precisa.</p>` : ""}
-    <p class="nota">Pumpy può sbagliare, soprattutto quando i prezzi cambiano direzione. Controlla sempre il prezzo alla pompa.</p>
+    ${a.percentuale != null ? `<p class="affid-riga"><span class="affid">${a.percentuale} su 100</span>le volte che ci abbiamo preso</p>
+      <div class="barra-aff" aria-hidden="true"><i style="width:${a.percentuale}%"></i></div>` : ""}
+    <p class="nota">È una previsione: può sbagliare. Il prezzo vero è quello alla pompa.</p>
     <button type="button">Ho capito</button></div>`;
   el.addEventListener("click", (e) => { if (e.target === el || e.target.tagName === "BUTTON") el.remove(); });
   document.body.appendChild(el);
@@ -2356,8 +2421,9 @@ function aggiornaMini() {
   const t = stato.medie?.tendenze?.[zonaCorrente()]?.[c] || stato.medie?.tendenze?.IT?.[c];
   const dir = t?.[3], i = stato.migliore;
   m.className = `mini ${dir || ""}`;
-  m.innerHTML = `${dir ? `<span class="m-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">${ICONE_VERDETTO[dir]}</svg></span><b>${VERDETTI[dir].titolo}</b>` : "<b>Distributori vicini</b>"}
-    ${i ? `<span class="m-top">${esc(i.bandiera || i.nome)} <b>${euro(i.prezzi[c][0])}</b></span>` : ""}
+  m.innerHTML = `${dir ? `<span class="m-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">${ICONE_VERDETTO[dir]}</svg></span>
+      <span class="m-testo"><b>${VERDETTI[dir].titolo}</b><small>${fraseVerdetto(dir, previsione(dir, t[2]))}</small></span>` : "<b>Distributori vicini</b>"}
+    ${i ? `<span class="m-top"><b>${euro(i.prezzi[c][0])}</b><small>${esc(i.bandiera || i.nome)}</small></span>` : ""}
     <svg class="m-su" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>`;
 }
 $("mini").addEventListener("click", () => apriPannello());
@@ -2649,18 +2715,9 @@ fetch("data/medie.json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : nu
   // si scarica solo se serve: ricerca, vista Italia, mappa spostata lontano, o GPS che non arriva
   if (!ultimaPos) setTimeout(() => { if (!stato.pos) caricaTutto(); }, 6000);
 })();
-// --- Benvenuto: tre schermate al primo avvio, poi la richiesta della posizione (spiegata, non a sorpresa) ---
+// --- Benvenuto: una sola schermata al primo avvio, con un esempio di previsione; poi la posizione ---
 function primaVolta() { try { return !localStorage.getItem("benvenuto"); } catch { return false; } }
 function benvenuto(negata) {
-  const passi = [
-    { icona: '<path d="M12 4v16M6 14l6 6 6-6"/>', titolo: "Fare il pieno oggi<br>o aspettare?",
-      testo: "Pumpy guarda come si stanno muovendo i prezzi nella tua zona e ti dà una risposta semplice: fai il pieno adesso, oppure aspetta qualche giorno." },
-    { icona: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', titolo: "Il distributore giusto,<br>vicino a te",
-      testo: "Ti indichiamo il più conveniente nei dintorni, quanto risparmi sul pieno, e ti portiamo lì con un tocco." },
-    { icona: '<path d="M4 20h16M6 20V10M10 20V10M14 20V10M18 20V10M3 10l9-6 9 6z"/>', titolo: "Prezzi ufficiali,<br>ogni giorno",
-      testo: () => { const a = stato.medie?.affidabilita?.percentuale; return `Usiamo i prezzi che i distributori comunicano al Ministero. La tendenza ci prende ${a ? a + " volte su 100" : "nella maggior parte dei casi"}: Pumpy può sbagliare, controlla sempre alla pompa.`; } },
-  ];
-  let k = 0;
   const el = document.createElement("div");
   el.className = "benvenuto"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Benvenuto in Pumpy");
   const fine = (chiedi) => {
@@ -2670,21 +2727,26 @@ function benvenuto(negata) {
     else if (chiedi) localizza(false);
     else { stato.posNegata = true; aggiornaLista(); aggiornaStatoPos(); }
   };
-  const mostra = () => {
-    const p = passi[k], ultimo = k === passi.length - 1;
-    el.innerHTML = `<div class="b-scheda">
-      <div class="b-icona" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p.icona}</svg></div>
-      <h2>${p.titolo}</h2><p>${typeof p.testo === "function" ? p.testo() : p.testo}</p>
-      <div class="b-punti" aria-hidden="true">${passi.map((_, j) => `<i class="${j === k ? "on" : ""}"></i>`).join("")}</div>
-      <button type="button" class="b-avanti">${ultimo ? "Mostrami i distributori vicini" : "Continua"}</button>
-      ${ultimo ? '<button type="button" class="b-dopo">Non ora, cerco un comune</button><p class="b-nota">Ti chiederemo la posizione: resta sul tuo telefono e serve solo a trovare i distributori intorno a te.</p>' : '<button type="button" class="b-dopo b-salta">Salta</button>'}
+  // l'esempio è un'immagine di come apparirà la risposta: si capisce prima di leggere
+  const g = nomeGiorno(2);
+  el.innerHTML = `<div class="b-scheda">
+      <h2>Ti diciamo<br>quando fare il pieno</h2>
+      <div class="b-esempio" aria-hidden="true"><span class="be-tag">Esempio</span>
+        <p class="be-titolo"><span class="v-icona"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">${ICONE_VERDETTO.giu}</svg></span>Aspetta</p>
+        <p class="be-sotto">${g} costerà meno</p>
+        <div class="v-meteo"><div class="vm"><span>Oggi</span><b>1,850</b></div>
+          <svg class="vm-freccia" viewBox="0 0 24 24"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+          <div class="vm poi"><span>${g}</span><b>≈ 1,830</b></div></div>
+      </div>
+      <p>…e dove costa meno, vicino a te.</p>
+      <button type="button" class="b-avanti">Inizia</button>
+      <button type="button" class="b-dopo">Non ora, cerco un comune</button>
+      <p class="b-nota">Ti chiederemo dove sei, solo per trovare i distributori vicini.</p>
     </div>`;
-    el.querySelector(".b-avanti").addEventListener("click", () => { if (ultimo) fine(true); else { k++; mostra(); } });
-    el.querySelector(".b-dopo").addEventListener("click", () => fine(!ultimo ? true : false));
-    el.querySelector(".b-avanti").focus();
-  };
-  mostra();
+  el.querySelector(".b-avanti").addEventListener("click", () => fine(true));
+  el.querySelector(".b-dopo").addEventListener("click", () => fine(false));
   document.body.appendChild(el);
+  el.querySelector(".b-avanti").focus();
 }
 
 // cercare un comune prima che sia arrivato tutto: si aspetta il caricamento completo
