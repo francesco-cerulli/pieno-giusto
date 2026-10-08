@@ -173,7 +173,9 @@ export async function sollecita(env) {
   const oggi = `${roma.getFullYear()}-${String(roma.getMonth() + 1).padStart(2, "0")}-${String(roma.getDate()).padStart(2, "0")}`;
   if (roma.getHours() < 8 || roma.getHours() > 20) return { sollecito: "fuori orario" };
   const medie = await (await fetch(env.ORIGINE + env.PERCORSO + "data/medie.json", { cf: { cacheTtl: 0 } })).json();
-  if (medie.aggiornato >= oggi) return { sollecito: "già aggiornato" };
+  // il Ministero pubblica la mattina i prezzi del giorno prima: se ci sono quelli di ieri, siamo aggiornati
+  const ieri = new Date(Date.UTC(roma.getFullYear(), roma.getMonth(), roma.getDate() - 1)).toISOString().slice(0, 10);
+  if (medie.aggiornato >= ieri) return { sollecito: "già aggiornato" };
   const chiave = `sollecito:${oggi}:${roma.getHours()}`;
   if (await env.ISCRITTI.get(chiave)) return { sollecito: "già fatto quest'ora" };
   const r = await fetch(`https://api.github.com/repos/${env.REPO}/actions/workflows/aggiorna.yml/dispatches`, {
