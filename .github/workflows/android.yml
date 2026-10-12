@@ -4,7 +4,7 @@ name: App Android
 # Risultato: il file .aab da caricare su Play Console e un .apk da installare a mano per prova,
 # scaricabili in fondo alla pagina dell'esecuzione (sezione "Artifacts").
 #
-# Serve un solo segreto del repository: ANDROID_KEYSTORE_PASSWORD (solo lettere e numeri, almeno 20 caratteri).
+# Serve un solo segreto del repository: ANDROID_KEYSTORE_PASSWORD (almeno 12 caratteri; niente spazi, " $ ` \\).
 # Alla prima esecuzione crea la chiave di caricamento (android/pumpy-upload.keystore), protetta da quella password,
 # e la salva nel repository. Non cambiare mai la password dopo: la chiave non si aprirebbe più.
 on:
@@ -28,21 +28,27 @@ concurrency:
 jobs:
   costruisci:
     runs-on: ubuntu-latest
-    env:
-      PW: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Controlla la password della chiave
+        env:
+          GREZZA: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
+          PW="$(printf '%s' "$GREZZA" | tr -d '\r\n')"
           if [ -z "$PW" ]; then
             echo "::error::Manca il segreto ANDROID_KEYSTORE_PASSWORD (Settings → Secrets and variables → Actions)."
             exit 1
           fi
-          if ! printf '%s' "$PW" | grep -Eq '^[A-Za-z0-9]{20,}$'; then
-            echo "::error::La password deve avere solo lettere e numeri, almeno 20 caratteri."
-            exit 1
+          echo "::add-mask::$PW"
+          if [ ${#PW} -lt 12 ]; then
+            echo "::error::La password è troppo corta (${#PW} caratteri): ne servono almeno 12."; exit 1
           fi
+          case "$PW" in
+            *'"'*|*'$'*|*'`'*|*'\'*|*' '*)
+              echo "::error::La password contiene un carattere non ammesso: virgolette doppie, dollaro, accento grave, barra rovesciata o spazio."; exit 1;;
+          esac
+          { echo "PW=$PW"; echo "BUBBLEWRAP_KEYSTORE_PASSWORD=$PW"; echo "BUBBLEWRAP_KEY_PASSWORD=$PW"; } >> "$GITHUB_ENV"
 
       - uses: actions/setup-java@v4
         with:
@@ -77,9 +83,6 @@ jobs:
           echo "Impronta SHA-256 della chiave di caricamento: $(cat /tmp/impronta.txt)"
 
       - name: Costruisci
-        env:
-          BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
           CODICE=$(( ${{ github.run_number }} + 0 ))
           NOME="${{ github.event.inputs.versione }}"
