@@ -4,3 +4,4 @@ __pycache__/
 avvisi/node_modules/
 avvisi/wrangler.toml
 avvisi/.wrangler/
+build-android/

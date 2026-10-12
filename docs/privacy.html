@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy · Pumpy</title>
+<meta name="description" content="Informativa sulla privacy di Pumpy, l'app dei prezzi dei carburanti.">
+<meta name="theme-color" content="#0E9F6E">
+<link rel="icon" href="icone/favicon-32.png">
+<style>
+  :root { --bg: #f6f8f7; --surface: #ffffff; --fg: #14201b; --muted: #5b6b64; --accent: #0E9F6E; --line: #e2e8e5; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0b1310; --surface: #121c18; --fg: #eaf2ee; --muted: #93a69d; --accent: #34c792; --line: #22302a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 32px 16px 64px; }
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  header img { width: 40px; height: 40px; border-radius: 10px; }
+  h1 { font-size: 1.6rem; margin: 0; }
+  .data { color: var(--muted); font-size: .9rem; margin: 0 0 24px; }
+  section { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 4px 20px 12px; margin-bottom: 14px; }
+  h2 { font-size: 1.1rem; margin: 16px 0 6px; }
+  ul { padding-left: 20px; margin: 6px 0; }
+  li { margin: 4px 0; }
+  a { color: var(--accent); }
+  .breve { font-size: 1.05rem; }
+</style>
+</head>
+<body>
+<main>
+  <header><img src="icone/icona-192.png" alt=""><h1>Privacy</h1></header>
+  <p class="data">Ultimo aggiornamento: 12 ottobre 2026</p>
+
+  <section>
+    <h2>In breve</h2>
+    <p class="breve">Pumpy non ha account, non chiede nome né email, non usa pubblicità e non traccia cosa fai.
+      Quasi tutto resta sul tuo telefono. Solo se attivi gli avvisi salviamo il minimo indispensabile per mandarteli.</p>
+  </section>
+
+  <section>
+    <h2>Chi siamo</h2>
+    <p>Pumpy è sviluppata da Pumpy Labs (Francesco Luigi Cerulli, Modena). Per qualsiasi domanda sulla privacy scrivi a
+      <a href="mailto:info@pumpy.it">info@pumpy.it</a>.</p>
+  </section>
+
+  <section>
+    <h2>Cosa resta solo sul tuo telefono</h2>
+    <ul>
+      <li><b>Posizione</b>: serve a mostrarti i distributori vicini. Viene usata dal telefono e non la inviamo a noi
+        (salvo quanto scritto sotto per gli avvisi). Puoi negarla: l'app funziona lo stesso cercando sulla mappa.</li>
+      <li><b>Preferiti, carburante scelto, profilo dell'auto, filtri</b>: salvati nella memoria del browser o dell'app.
+        Si cancellano disinstallando l'app o cancellando i dati del sito.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Cosa salviamo se attivi gli avvisi</h2>
+    <p>Gli avvisi sono facoltativi. Se li attivi, il nostro servizio (ospitato su Cloudflare) conserva:</p>
+    <ul>
+      <li>l'indirizzo tecnico per le notifiche che il tuo telefono genera (non contiene il tuo nome né il numero);</li>
+      <li>i distributori preferiti e il carburante scelto;</li>
+      <li>la provincia e una posizione <b>approssimata a circa 1 km</b>, per avvisarti quando conviene fare il pieno in zona.</li>
+    </ul>
+    <p>Usiamo questi dati solo per mandarti gli avvisi. Li cancelliamo quando disattivi gli avvisi dall'app, oppure
+      automaticamente quando il telefono smette di accettarli (per esempio se disinstalli l'app).</p>
+  </section>
+
+  <section>
+    <h2>Servizi esterni</h2>
+    <p>Per funzionare l'app scarica dati da alcuni servizi, che come qualsiasi sito ricevono l'indirizzo IP del
+      dispositivo per poter rispondere:</p>
+    <ul>
+      <li><b>GitHub Pages</b>: ospita l'app e i prezzi aggiornati;</li>
+      <li><b>Cloudflare</b>: mappa e servizio avvisi;</li>
+      <li><b>Esri</b>: vista satellitare e mappa di riserva;</li>
+      <li><b>Google Fonts</b> e <b>cdnjs</b>: caratteri e componenti della mappa.</li>
+    </ul>
+    <p>Se apri le indicazioni stradali, passi a Google Maps, Apple Mappe o Waze, ciascuno con la propria privacy.</p>
+  </section>
+
+  <section>
+    <h2>Da dove vengono i prezzi</h2>
+    <p>I prezzi sono quelli comunicati dai gestori all'Osservatorio prezzi carburanti del Ministero delle Imprese e del
+      Made in Italy (MIMIT), pubblicati come dati aperti (licenza IODL 2.0). Le previsioni sono stime statistiche, non garanzie.
+      La mappa usa dati © OpenStreetMap.</p>
+  </section>
+
+  <section>
+    <h2>I tuoi diritti</h2>
+    <p>Puoi chiedere in qualsiasi momento di vedere o cancellare i dati degli avvisi scrivendo a
+      <a href="mailto:info@pumpy.it">info@pumpy.it</a>, oppure disattivarli direttamente dall'app.
+      Hai anche diritto di rivolgerti al Garante per la protezione dei dati personali.</p>
+    <p>Pumpy non è pensata per i minori di 14 anni e non raccoglie consapevolmente i loro dati.</p>
+  </section>
+
+  <p><a href="./">← Torna a Pumpy</a></p>
+</main>
+</body>
+</html>
