@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.pumpylabs.pumpy",
+      "sha256_cert_fingerprints": [
+        "77:8B:F1:40:C7:93:5B:2E:7C:6D:7C:B3:57:1F:9C:1D:53:E2:9C:BD:FD:C9:DD:AD:31:EE:F9:43:38:41:09:11"
+      ]
+    }
+  }
+]
