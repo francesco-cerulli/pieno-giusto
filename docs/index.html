@@ -13,6 +13,17 @@
 <link rel="icon" type="image/svg+xml" href="icone/goccia.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="icone/favicon-32.png">
 <meta name="description" content="Pumpy: prezzi di benzina, gasolio, GPL e metano in tutti i distributori d'Italia, e se conviene fare il pieno oggi o aspettare.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Pumpy">
+<meta property="og:locale" content="it_IT">
+<meta property="og:url" content="https://pumpy.it/">
+<meta property="og:title" content="Pumpy · prezzi carburanti">
+<meta property="og:description" content="Dove costa meno fare il pieno vicino a te, e se conviene farlo oggi o aspettare. Gratis, senza pubblicità.">
+<meta property="og:image" content="https://pumpy.it/icone/anteprima.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Pumpy: fai il pieno al momento giusto">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap">
 <style>
@@ -1079,6 +1090,9 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 .voce-nav { display: block; padding: 14px 16px; border-radius: 16px; background: var(--surface-2); color: var(--fg); font-weight: 600; text-decoration: none; }
 .voce-nav:hover { background: var(--mint); }
 .guida .annulla { background: var(--surface-2); color: var(--fg); }
+.guida .azioni-col { display: grid; gap: 8px; }
+.guida .mail-contatto { font: 700 1.1rem/1.2 var(--f-display); margin: 0 0 14px; user-select: all; }
+.puo-sbagliare .segnala { display: block; margin: 6px auto 0; border: 0; background: none; color: var(--fg); font: inherit; font-size: .85rem; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 6px; min-height: 36px; }
 .base-notte { filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.9) saturate(.6); }
 
 /* ===== pannello: i migliori vicini già visibili ===== */
@@ -1545,6 +1559,7 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
           <button type="button" class="voce" id="marchiVoce">Marchi<small id="marchiRiass"></small></button>
           <button type="button" class="voce" id="installaVoce" hidden>Installa Pumpy sul telefono</button>
           <button type="button" class="voce" id="comeFunziona">Come lo sappiamo</button>
+          <button type="button" class="voce" id="consigliaVoce">Consiglia Pumpy a un amico</button>
           <button type="button" class="voce" id="scriviciVoce">Scrivici<small>Un problema, un prezzo sbagliato, un'idea</small></button>
         </div>
         <p class="fonte-menu">Dati <abbr title="Ministero delle Imprese e del Made in Italy, Osservatorio Prezzi Carburanti (IODL 2.0)">MIMIT</abbr> · prezzi del <span id="data">–</span> · <a href="privacy.html">Privacy</a></p>
@@ -2013,7 +2028,9 @@ function sceltaNavigatore(i) {
 const attrNav = (i) => { const h = linkNav(i); return h.startsWith("geo:") ? `href="${h}"` : `href="${h}" target="_blank" rel="noopener"`; };
 
 // --- Le tue pompe: preferite salvate sul telefono (nessun account) ---
-const ICONA_CONDIVIDI = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></svg>';
+const ICONA_CONDIVIDI = IOS
+  ? '<svg viewBox="0 0 24 24" aria-hidden="true" style="stroke-linecap:round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M8 10H6.5A1.5 1.5 0 0 0 5 11.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5H16"/></svg>'
+  : '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></svg>';
 const ICONA_STELLA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';
 stato.preferiti = (() => { try { return JSON.parse(localStorage.getItem("preferiti")) || []; } catch { return []; } })();
 function preferita(i) { return !!i && stato.preferiti.some((f) => f.id === i.id); }
@@ -2209,11 +2226,16 @@ function chiudiDettaglioOra() {
   }
   stato.prima = null;
   disegna(); aggiornaLista();
+  if (stato.benvenutoDopo) { const n = stato.benvenutoDopo.negata; stato.benvenutoDopo = null; setTimeout(() => benvenuto(n), 350); }
 }
 addEventListener("popstate", () => { chiudiMenu(); chiudiDettaglioOra(); });
 
 // Condividi: messaggio pronto per WhatsApp & co., con un link che riapre proprio questo distributore
-function nomeBello(t) { return String(t || "").toLowerCase().replace(/(^|[\s'(.-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase()); }
+const PAROLE_PICCOLE = new Set(["di", "del", "dello", "della", "dei", "degli", "delle", "da", "dal", "dalla", "dai", "in", "nel", "nella", "sul", "sulla", "al", "alla", "ai", "e", "ed", "per", "con"]);
+function nomeBello(t) {
+  return String(t || "").toLowerCase().replace(/(^|[\s'(.-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase())
+    .replace(/(\s)(\p{L}+)(?=[\s']|$)/gu, (m, sp, w) => PAROLE_PICCOLE.has(w.toLowerCase()) || /^(dell|nell|all|sull|dall)$/i.test(w) ? sp + w.toLowerCase() : m);
+}
 // indirizzo pulito: senza CAP, sigla provincia e comune ripetuto (i dati del Ministero sono scritti in modi diversi)
 function indirizzoBreve(i) {
   const com = nomeBello(i.comune);
@@ -2223,7 +2245,14 @@ function indirizzoBreve(i) {
 }
 async function condividi(i, c) {
   const url = `${location.origin}${location.pathname}?pompa=${i.id}&c=${c}&ll=${i.lat.toFixed(4)},${i.lon.toFixed(4)}`;
-  const testo = `${NOMI[c]} a ${euro(i.prezzi[c][0])} €/l da ${i.bandiera || nomeBello(i.nome)}, ${indirizzoBreve(i)}. L'ho trovato con Pumpy:`;
+  // il Ministero aggiorna la data solo quando il prezzo cambia: la citiamo solo se è vecchia (stessa soglia della scheda),
+  // così chi riceve il messaggio non trova sorprese alla pompa
+  const eta = etaPrezzo(i.prezzi[c]);
+  const quando = eta != null && eta >= 5 ? ` (ultimo prezzo comunicato ${eta} giorni fa)` : "";
+  const testo = `${NOMI[c]} a ${euro(i.prezzi[c][0])} €/l${quando} da ${i.bandiera || nomeBello(i.nome)}, ${indirizzoBreve(i)}. L'ho trovato con Pumpy:`;
+  condividiTesto(testo, url);
+}
+async function condividiTesto(testo, url) {
   if (navigator.share) {
     try { await navigator.share({ title: "Pumpy", text: testo, url }); } catch {}
     return;
@@ -2244,7 +2273,7 @@ async function disegnaDettaglio() {
   const pp = previsionePompa(i, c);
   $("dettaglio").innerHTML = `<div class="det-testa">
       <button type="button" class="indietro" id="chiudiDettaglio" aria-label="Torna alla lista"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
-      <div class="det-nome"><h3>${esc(i.bandiera || i.nome)}</h3><p class="dove">${esc(i.indirizzo)}, ${esc(i.comune)}${dist}</p></div>
+      <div class="det-nome"><h3>${esc(i.bandiera || i.nome)}</h3><p class="dove">${esc(indirizzoBreve(i))}${dist}</p></div>
       <button type="button" class="stella-btn" id="condividiBtn" aria-label="Condividi questo distributore">${ICONA_CONDIVIDI}</button>
       <button type="button" class="stella-btn" id="stellaBtn" aria-pressed="${preferita(i)}" aria-label="${preferita(i) ? "Togli dalle tue pompe" : "Aggiungi alle tue pompe"}">${ICONA_STELLA}</button></div>
     <div class="altri" role="group" aria-label="Carburante">${altri}</div>
@@ -2256,7 +2285,7 @@ async function disegnaDettaglio() {
     <div class="nav-riga"><a class="vai" ${attrNav(i)}>${ICONA_NAV}<span>Portami qui<small>con ${NAVIGATORI[navPreferito()].nome}</small></span></a>
       <button type="button" class="cambia-nav" id="cambiaNav">Cambia app</button></div>
     <figure class="storico" id="storico" aria-label="Storico del prezzo"><div class="attesa"></div></figure>
-    <p class="puo-sbagliare">Pumpy può sbagliare: controlla sempre il prezzo alla pompa.</p>`;
+    <p class="puo-sbagliare">Pumpy può sbagliare: controlla sempre il prezzo alla pompa.<button type="button" class="segnala" id="segnalaBtn">Alla pompa era diverso? Segnalacelo</button></p>`;
   $("chiudiDettaglio").addEventListener("click", chiudiDettaglio);
   $("stellaBtn").addEventListener("click", () => {
     const ora = cambiaPreferita(i);
@@ -2266,6 +2295,7 @@ async function disegnaDettaglio() {
   });
   $("cambiaNav").addEventListener("click", () => sceltaNavigatore(i));
   $("condividiBtn").addEventListener("click", () => condividi(i, c));
+  $("segnalaBtn").addEventListener("click", () => segnalaPrezzo(i, c));
   $("dettaglio").querySelectorAll(".altri button").forEach((b) => b.addEventListener("click", () => { stato.detCarb = b.dataset.c; disegnaDettaglio(); }));
   const dati = await caricaStorico(i.provincia);
   if (stato.sel !== i || stato.detCarb !== c) return;
@@ -2611,10 +2641,35 @@ function infoDispositivo() {
   const agg = new Date(document.lastModified);
   return `${so} · ${modo} · versione del ${isNaN(agg) ? "?" : agg.toLocaleDateString("it-IT")}`;
 }
+// Non tutti hanno un'app di posta configurata: oltre all'email offriamo sempre di copiare l'indirizzo
+function scrivici(titolo, oggetto, testo, nota) {
+  const corpo = `${testo || ""}\n\n\n---\nNon cancellare queste righe, ci aiutano a capire il problema:\n${infoDispositivo()}`;
+  const mail = `mailto:${CONTATTO}?subject=${encodeURIComponent(oggetto)}&body=${encodeURIComponent(corpo)}`;
+  finestra(titolo, `<p class="nota" style="color:var(--fg)">${nota}</p>
+    <p class="mail-contatto">${CONTATTO}</p>
+    <div class="azioni-col"><button type="button" class="salva">Scrivi un'email</button><button type="button" class="annulla copia">Copia l'indirizzo</button></div>`, (el, chiudi) => {
+    el.querySelector(".salva").addEventListener("click", () => { location.href = mail; chiudi(); });
+    el.querySelector(".copia").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(CONTATTO); avvisoBreve("Indirizzo copiato"); } catch { avvisoBreve(CONTATTO); }
+      chiudi();
+    });
+  });
+}
 $("scriviciVoce").addEventListener("click", () => {
   chiudiMenu();
-  const corpo = `\n\n\n---\nNon cancellare queste righe, ci aiutano a capire il problema:\n${infoDispositivo()}`;
-  location.href = `mailto:${CONTATTO}?subject=${encodeURIComponent("Pumpy")}&body=${encodeURIComponent(corpo)}`;
+  scrivici("Scrivici", "Pumpy", "", "Leggiamo tutto: problemi, prezzi sbagliati, idee. Rispondiamo appena possibile.");
+});
+function segnalaPrezzo(i, c) {
+  const v = i.prezzi[c], eta = etaPrezzo(v);
+  const testo = `Prezzo da correggere\nDistributore: ${i.bandiera || nomeBello(i.nome)}, ${indirizzoBreve(i)} (codice ${i.id})\n`
+    + `Su Pumpy: ${NOMI[c]} ${euro(v[0])} €/l${eta != null ? `, comunicato ${testoEta(eta)}` : ""}\nAlla pompa invece: `;
+  scrivici("Prezzo diverso?", `Pumpy · prezzo da correggere (${i.id})`, testo,
+    "L'email è già pronta con il distributore: aggiungi solo il prezzo che hai visto alla pompa.");
+}
+$("consigliaVoce").addEventListener("click", () => {
+  chiudiMenu();
+  condividiTesto("Pumpy ti dice dove costa meno fare il pieno vicino a te, e se conviene farlo oggi o aspettare. Gratis e senza pubblicità:",
+    `${location.origin}${location.pathname}`);
 });
 $("servizio").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { scegliServizio(b.dataset.s); chiudiMenu(); } });
 document.querySelectorAll("#servizio button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.s === stato.servizio));
@@ -2999,11 +3054,12 @@ fetch("data/medie.json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : nu
   let negata = false;
   try { const p = await navigator.permissions?.query({ name: "geolocation" }); negata = p?.state === "denied"; } catch {}
   if (negata) { stato.posNegata = !ultimaPos; stato.posErrore = 1; caricaTutto(); aggiornaLista(); aggiornaStatoPos(); }
-  if (primaVolta()) { caricaTutto(); benvenuto(negata); }   // prima spieghiamo, poi chiediamo la posizione
-  else if (!negata) localizza(false);
-  setTimeout(caricaPreferite, 800);
   const qs = new URLSearchParams(location.search);
   const daAprire = +qs.get("pompa");
+  // chi arriva da un link condiviso vuole vedere quel distributore: il benvenuto arriva quando chiude la scheda
+  if (primaVolta()) { caricaTutto(); if (daAprire) stato.benvenutoDopo = { negata }; else benvenuto(negata); }   // prima spieghiamo, poi chiediamo la posizione
+  else if (!negata) localizza(false);
+  setTimeout(caricaPreferite, 800);
   if (daAprire) {
     history.replaceState(null, "", location.pathname);
     const carbLink = NOMI[qs.get("c")] ? qs.get("c") : undefined;
