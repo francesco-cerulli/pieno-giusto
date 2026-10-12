@@ -1545,6 +1545,7 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
           <button type="button" class="voce" id="marchiVoce">Marchi<small id="marchiRiass"></small></button>
           <button type="button" class="voce" id="installaVoce" hidden>Installa Pumpy sul telefono</button>
           <button type="button" class="voce" id="comeFunziona">Come lo sappiamo</button>
+          <button type="button" class="voce" id="scriviciVoce">Scrivici<small>Un problema, un prezzo sbagliato, un'idea</small></button>
         </div>
         <p class="fonte-menu">Dati <abbr title="Ministero delle Imprese e del Made in Italy, Osservatorio Prezzi Carburanti (IODL 2.0)">MIMIT</abbr> · prezzi del <span id="data">–</span> · <a href="privacy.html">Privacy</a></p>
       </div>
@@ -2012,6 +2013,7 @@ function sceltaNavigatore(i) {
 const attrNav = (i) => { const h = linkNav(i); return h.startsWith("geo:") ? `href="${h}"` : `href="${h}" target="_blank" rel="noopener"`; };
 
 // --- Le tue pompe: preferite salvate sul telefono (nessun account) ---
+const ICONA_CONDIVIDI = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></svg>';
 const ICONA_STELLA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>';
 stato.preferiti = (() => { try { return JSON.parse(localStorage.getItem("preferiti")) || []; } catch { return []; } })();
 function preferita(i) { return !!i && stato.preferiti.some((f) => f.id === i.id); }
@@ -2210,6 +2212,19 @@ function chiudiDettaglioOra() {
 }
 addEventListener("popstate", () => { chiudiMenu(); chiudiDettaglioOra(); });
 
+// Condividi: messaggio pronto per WhatsApp & co., con un link che riapre proprio questo distributore
+function nomeBello(t) { return String(t || "").toLowerCase().replace(/(^|[\s'(.-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase()); }
+async function condividi(i, c) {
+  const url = `${location.origin}${location.pathname}?pompa=${i.id}&c=${c}&ll=${i.lat.toFixed(4)},${i.lon.toFixed(4)}`;
+  const testo = `${NOMI[c]} a ${euro(i.prezzi[c][0])} €/l da ${i.bandiera || nomeBello(i.nome)}, ${nomeBello(i.indirizzo).replace(/\s+\d{5}\b/, "").trim()}, ${nomeBello(i.comune)}. L'ho trovato con Pumpy:`;
+  if (navigator.share) {
+    try { await navigator.share({ title: "Pumpy", text: testo, url }); } catch {}
+    return;
+  }
+  try { await navigator.clipboard.writeText(`${testo} ${url}`); avvisoBreve("Link copiato: incollalo dove vuoi"); }
+  catch { avvisoBreve("Non riesco a copiare il link"); }
+}
+
 async function disegnaDettaglio() {
   const i = stato.sel, c = stato.detCarb; if (!i) return;
   const [p, d, dal] = i.prezzi[c];
@@ -2223,6 +2238,7 @@ async function disegnaDettaglio() {
   $("dettaglio").innerHTML = `<div class="det-testa">
       <button type="button" class="indietro" id="chiudiDettaglio" aria-label="Torna alla lista"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
       <div class="det-nome"><h3>${esc(i.bandiera || i.nome)}</h3><p class="dove">${esc(i.indirizzo)}, ${esc(i.comune)}${dist}</p></div>
+      <button type="button" class="stella-btn" id="condividiBtn" aria-label="Condividi questo distributore">${ICONA_CONDIVIDI}</button>
       <button type="button" class="stella-btn" id="stellaBtn" aria-pressed="${preferita(i)}" aria-label="${preferita(i) ? "Togli dalle tue pompe" : "Aggiungi alle tue pompe"}">${ICONA_STELLA}</button></div>
     <div class="altri" role="group" aria-label="Carburante">${altri}</div>
     <div class="grande"><span class="cifra${dubbio ? " dubbio" : ""}">${euro(p)}<small>€/l</small></span>${pp ? "" : chip}</div>
@@ -2242,6 +2258,7 @@ async function disegnaDettaglio() {
     avvisoBreve(ora ? "Aggiunta alle tue pompe" : "Tolta dalle tue pompe");
   });
   $("cambiaNav").addEventListener("click", () => sceltaNavigatore(i));
+  $("condividiBtn").addEventListener("click", () => condividi(i, c));
   $("dettaglio").querySelectorAll(".altri button").forEach((b) => b.addEventListener("click", () => { stato.detCarb = b.dataset.c; disegnaDettaglio(); }));
   const dati = await caricaStorico(i.provincia);
   if (stato.sel !== i || stato.detCarb !== c) return;
@@ -2577,6 +2594,21 @@ $("carburanti").addEventListener("click", (e) => {
 });
 $("basi").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { scegliBase(b.dataset.b); chiudiMenu(); } });
 $("comeFunziona").addEventListener("click", () => { chiudiMenu(); spiegaTendenza(); });
+// Scrivici: apre la mail già pronta, con in fondo i dati che servono a capire il problema
+const CONTATTO = "info@pumpy.it";
+function infoDispositivo() {
+  const ua = navigator.userAgent;
+  const so = (ua.match(/Android [\d.]+(?:; [^;)]+)?/) || ua.match(/iPhone OS [\d_]+|iPad; CPU OS [\d_]+/) || ua.match(/Windows NT [\d.]+|Mac OS X [\d_]+|Linux/) || ["?"])[0].replace(/_/g, ".");
+  const modo = document.referrer.startsWith("android-app://") ? "app Android"
+    : (navigator.standalone || matchMedia("(display-mode: standalone)").matches) ? "app installata" : "browser";
+  const agg = new Date(document.lastModified);
+  return `${so} · ${modo} · versione del ${isNaN(agg) ? "?" : agg.toLocaleDateString("it-IT")}`;
+}
+$("scriviciVoce").addEventListener("click", () => {
+  chiudiMenu();
+  const corpo = `\n\n\n---\nNon cancellare queste righe, ci aiutano a capire il problema:\n${infoDispositivo()}`;
+  location.href = `mailto:${CONTATTO}?subject=${encodeURIComponent("Pumpy")}&body=${encodeURIComponent(corpo)}`;
+});
 $("servizio").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { scegliServizio(b.dataset.s); chiudiMenu(); } });
 document.querySelectorAll("#servizio button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.s === stato.servizio));
 $("autoVoce").addEventListener("click", () => { chiudiMenu(); finestraAuto(); });
@@ -2963,11 +2995,15 @@ fetch("data/medie.json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : nu
   if (primaVolta()) { caricaTutto(); benvenuto(negata); }   // prima spieghiamo, poi chiediamo la posizione
   else if (!negata) localizza(false);
   setTimeout(caricaPreferite, 800);
-  const daAprire = +new URLSearchParams(location.search).get("pompa");
+  const qs = new URLSearchParams(location.search);
+  const daAprire = +qs.get("pompa");
   if (daAprire) {
     history.replaceState(null, "", location.pathname);
-    const f = stato.preferiti.find((x) => x.id === daAprire);
-    const apri = () => { const i = stato.perId.get(daAprire); if (i) { chiudiPannello(); seleziona(i); return true; } return false; };
+    const carbLink = NOMI[qs.get("c")] ? qs.get("c") : undefined;
+    const ll = (qs.get("ll") || "").split(",").map(Number);
+    const f = stato.preferiti.find((x) => x.id === daAprire)
+      || (ll.length === 2 && ll.every(Number.isFinite) ? { lat: ll[0], lon: ll[1] } : null);
+    const apri = () => { const i = stato.perId.get(daAprire); if (i) { chiudiPannello(); seleziona(i, i.prezzi[carbLink] ? carbLink : undefined); return true; } return false; };
     if (f) caricaVicino({ lat: f.lat, lon: f.lon }).then(() => { if (!apri()) caricaTutto().then(apri); });
     else caricaTutto().then(apri);
   }
@@ -3023,7 +3059,7 @@ if ("serviceWorker" in navigator) {
   const ua = navigator.userAgent;
   const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const android = /Android/.test(ua);
-  const installata = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  const installata = matchMedia("(display-mode: standalone)").matches || navigator.standalone || document.referrer.startsWith("android-app://");
   if (installata || !(ios || android)) return;
   let richiesta = null;
   window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); richiesta = e; });
