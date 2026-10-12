@@ -2214,9 +2214,16 @@ addEventListener("popstate", () => { chiudiMenu(); chiudiDettaglioOra(); });
 
 // Condividi: messaggio pronto per WhatsApp & co., con un link che riapre proprio questo distributore
 function nomeBello(t) { return String(t || "").toLowerCase().replace(/(^|[\s'(.-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase()); }
+// indirizzo pulito: senza CAP, sigla provincia e comune ripetuto (i dati del Ministero sono scritti in modi diversi)
+function indirizzoBreve(i) {
+  const com = nomeBello(i.comune);
+  let v = nomeBello(i.indirizzo).replace(/\(\s*\p{L}{2}\s*\)/gu, " ").replace(/\b\d{5}\b/g, " ");
+  v = v.split(com).join(" ").replace(/\s*[-,]\s*$/, "").replace(/\s+/g, " ").replace(/\s+,/g, ",").replace(/[\s,-]+$/, "").trim();
+  return v ? `${v}, ${com}` : com;
+}
 async function condividi(i, c) {
   const url = `${location.origin}${location.pathname}?pompa=${i.id}&c=${c}&ll=${i.lat.toFixed(4)},${i.lon.toFixed(4)}`;
-  const testo = `${NOMI[c]} a ${euro(i.prezzi[c][0])} €/l da ${i.bandiera || nomeBello(i.nome)}, ${nomeBello(i.indirizzo).replace(/\s+\d{5}\b/, "").trim()}, ${nomeBello(i.comune)}. L'ho trovato con Pumpy:`;
+  const testo = `${NOMI[c]} a ${euro(i.prezzi[c][0])} €/l da ${i.bandiera || nomeBello(i.nome)}, ${indirizzoBreve(i)}. L'ho trovato con Pumpy:`;
   if (navigator.share) {
     try { await navigator.share({ title: "Pumpy", text: testo, url }); } catch {}
     return;
