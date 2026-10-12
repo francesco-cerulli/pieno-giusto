@@ -21,7 +21,9 @@ const chiaveCella = (lat, lon) => `${(Math.floor(lat / PASSO_CELLA) * PASSO_CELL
 
 function cors(req, env) {
   const o = req.headers.get("Origin") || "";
-  const ok = o === env.ORIGINE || o.startsWith("http://localhost");
+  // l'app vive su pumpy.it; il vecchio indirizzo GitHub resta ammesso per chi non ha ancora aggiornato
+  const ok = o === env.ORIGINE || o === "https://pumpy.it" || o === "https://www.pumpy.it"
+    || o === "https://francesco-cerulli.github.io" || o.startsWith("http://localhost");
   return { "Access-Control-Allow-Origin": ok ? o : env.ORIGINE, "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type", "Vary": "Origin" };
 }
