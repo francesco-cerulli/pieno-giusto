@@ -5,8 +5,8 @@ compatibility_date = "2026-09-01"
 workers_dev = true
 
 [vars]
-ORIGINE = "https://francesco-cerulli.github.io"
-PERCORSO = "/pieno-giusto/"
+ORIGINE = "https://pumpy.it"
+PERCORSO = "/"
 REPO = "francesco-cerulli/pieno-giusto"
 
 [[kv_namespaces]]
