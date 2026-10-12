@@ -21,7 +21,7 @@ for (const tema of ["light", "dark"]) {
   await p.evaluate(() => { const i = stato.migliore || stato.impianti.find((x) => x.prezzi[stato.carb]); seleziona(i); });
   await foto("3-distributore");
   await p.evaluate(() => chiudiDettaglioOra()); await p.waitForTimeout(800);
-  await p.click("#menuBtn"); await foto("4-menu");
+  await p.click("#menuBtn"); await p.evaluate(() => { const v = document.getElementById("installaVoce"); if (v) v.hidden = true; }); await foto("4-menu");
   console.log(tema, "errori:", err);
   await ctx.close();
 }
