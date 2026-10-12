@@ -6,6 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: |
+          set +e
           pieni=0; tot=0; servizi=0; es=""
           while read id; do
             r=$(curl -sS -m 20 -A "Mozilla/5.0" -H "Accept: application/json" "https://carburanti.mise.gov.it/ospzApi/registry/servicearea/$id") || continue
