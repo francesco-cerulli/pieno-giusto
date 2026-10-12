@@ -7,7 +7,8 @@
       "namespace": "android_app",
       "package_name": "com.pumpylabs.pumpy",
       "sha256_cert_fingerprints": [
-        "77:8B:F1:40:C7:93:5B:2E:7C:6D:7C:B3:57:1F:9C:1D:53:E2:9C:BD:FD:C9:DD:AD:31:EE:F9:43:38:41:09:11"
+        "77:8B:F1:40:C7:93:5B:2E:7C:6D:7C:B3:57:1F:9C:1D:53:E2:9C:BD:FD:C9:DD:AD:31:EE:F9:43:38:41:09:11",
+        "BF:09:88:42:CE:45:3E:F9:4C:F7:A2:86:EE:C4:21:7F:CC:06:D4:FF:70:6B:7B:35:68:72:1A:06:88:31:B5:A7"
       ]
     }
   }

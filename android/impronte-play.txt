@@ -1,2 +1,3 @@
 # Impronte SHA-256 della chiave di firma di Google Play
 # (Play Console → Test e rilascio → Integrità app → Firma dell'app). Una per riga.
+BF:09:88:42:CE:45:3E:F9:4C:F7:A2:86:EE:C4:21:7F:CC:06:D4:FF:70:6B:7B:35:68:72:1A:06:88:31:B5:A7
