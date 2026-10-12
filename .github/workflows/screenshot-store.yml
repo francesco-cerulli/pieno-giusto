@@ -1,7 +1,12 @@
 name: Screenshot per lo store
 
 # Fotografa https://pumpy.it come su un telefono (1080x2160) e salva le immagini in store/screenshot
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      dispositivi:
+        description: "telefono,tablet7,tablet10"
+        default: "telefono,tablet7,tablet10"
 
 permissions:
   contents: write
@@ -19,6 +24,8 @@ jobs:
           npm install --no-save playwright@1.48.2
           npx playwright install --with-deps chromium
       - name: Scatta
+        env:
+          DISPOSITIVI: ${{ github.event.inputs.dispositivi }}
         run: node .github/scripts/screenshot-store.mjs
       - name: Salva
         run: |
