@@ -1,0 +1,31 @@
+name: Screenshot per lo store
+
+# Fotografa https://pumpy.it come su un telefono (1080x2160) e salva le immagini in store/screenshot
+on: workflow_dispatch
+
+permissions:
+  contents: write
+
+jobs:
+  foto:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      - name: Playwright
+        run: |
+          npm install --no-save playwright@1.48.2
+          npx playwright install --with-deps chromium
+      - name: Scatta
+        run: node .github/scripts/screenshot-store.mjs
+      - name: Salva
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add store/screenshot
+          git diff --cached --quiet && exit 0
+          git commit -m "Screenshot per lo store"
+          for i in 1 2 3 4 5; do git pull --rebase -q && git push -q && exit 0; sleep 10; done
+          exit 1
