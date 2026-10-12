@@ -4,8 +4,17 @@ jobs:
   prova:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
       - run: |
-          for id in 59183 3464; do
-            r=$(curl -sS -m 30 -A "Mozilla/5.0" -H "Accept: application/json" "https://carburanti.mise.gov.it/ospzApi/registry/servicearea/$id" | head -c 3500 | tr '\n' ' ' | sed 's/%/%25/g')
-            echo "::warning title=sonda $id::$r"
-          done
+          pieni=0; tot=0; servizi=0; es=""
+          while read id; do
+            r=$(curl -sS -m 20 -A "Mozilla/5.0" -H "Accept: application/json" "https://carburanti.mise.gov.it/ospzApi/registry/servicearea/$id") || continue
+            tot=$((tot+1))
+            o=$(printf '%s' "$r" | jq -c '.orariapertura // []' 2>/dev/null)
+            s=$(printf '%s' "$r" | jq -c '.services // []' 2>/dev/null)
+            [ "$s" != "[]" ] && servizi=$((servizi+1))
+            if [ -n "$o" ] && [ "$o" != "[]" ]; then pieni=$((pieni+1)); [ ${#es} -lt 2500 ] && es="$es | $id: $o"; fi
+            sleep 0.3
+          done < .github/sonda-ids.txt
+          echo "::warning title=sonda totale::interrogati $tot, con orari $pieni, con servizi $servizi"
+          echo "::warning title=sonda esempi::$(printf '%s' "$es" | head -c 3000 | sed 's/%/%25/g')"
