@@ -9,6 +9,8 @@ const TUTTI = {
   telefono: { prefisso: "", viewport: { width: 360, height: 720 }, scala: 3, ua: UA_TEL },        // 1080x2160
   tablet7: { prefisso: "tablet7-", viewport: { width: 540, height: 960 }, scala: 2, ua: UA_TAB },  // 1080x1920
   tablet10: { prefisso: "tablet10-", viewport: { width: 1280, height: 720 }, scala: 2, ua: UA_TAB }, // 2560x1440
+  desktop: { prefisso: "desktop-", viewport: { width: 1440, height: 810 }, scala: 2, desktop: true,      // 2880x1620
+    ua: "Mozilla/5.0 (X11; CrOS x86_64 15917.71.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Safari/537.36" },
 };
 const scelti = (process.env.DISPOSITIVI || Object.keys(TUTTI).join(",")).split(",").map((s) => s.trim()).filter((s) => TUTTI[s]);
 const b = await chromium.launch();
@@ -16,7 +18,7 @@ for (const nomeDisp of scelti) {
   const d = TUTTI[nomeDisp];
   for (const tema of ["light", "dark"]) {
     const ctx = await b.newContext({
-      viewport: d.viewport, deviceScaleFactor: d.scala, isMobile: true, hasTouch: true, userAgent: d.ua,
+      viewport: d.viewport, deviceScaleFactor: d.scala, isMobile: !d.desktop, hasTouch: !d.desktop, userAgent: d.ua,
       colorScheme: tema, locale: "it-IT", timezoneId: "Europe/Rome",
       geolocation: { latitude: 44.6458, longitude: 10.9255, accuracy: 20 }, permissions: ["geolocation"],
     });

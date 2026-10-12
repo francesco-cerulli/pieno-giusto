@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       dispositivi:
-        description: "telefono,tablet7,tablet10"
+        description: "telefono,tablet7,tablet10,desktop"
         default: "telefono,tablet7,tablet10"
 
 permissions:
