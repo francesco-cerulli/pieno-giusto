@@ -14,7 +14,8 @@ jobs:
             o=$(printf '%s' "$r" | jq -c '.orariapertura // []' 2>/dev/null)
             s=$(printf '%s' "$r" | jq -c '.services // []' 2>/dev/null)
             [ "$s" != "[]" ] && servizi=$((servizi+1))
-            if [ -n "$o" ] && [ "$o" != "[]" ]; then pieni=$((pieni+1)); [ ${#es} -lt 2500 ] && es="$es | $id: $o"; fi
+            u=$(printf '%s' "$o" | jq '[.[] | select(.flagH24 or .flagChiusura or .oraAperturaMattina != null or .oraAperturaOrarioContinuato != null or .oraAperturaPomeriggio != null)] | length' 2>/dev/null)
+            if [ -n "$u" ] && [ "$u" -gt 0 ]; then pieni=$((pieni+1)); [ ${#es} -lt 2600 ] && es="$es | $id: $(printf '%s' "$o" | jq -c '[.[] | [.giornoSettimanaId, .oraAperturaMattina, .oraChiusuraMattina, .oraAperturaPomeriggio, .oraChiusuraPomeriggio, .oraAperturaOrarioContinuato, .oraChiusuraOrarioContinuato, .flagH24, .flagChiusura, .flagSelf, .flagServito]]')"; fi
             sleep 0.3
           done < .github/sonda-ids.txt
           echo "::warning title=sonda totale::interrogati $tot, con orari $pieni, con servizi $servizi"
