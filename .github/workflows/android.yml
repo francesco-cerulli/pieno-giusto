@@ -102,7 +102,7 @@ jobs:
         if: failure()
         run: |
           [ -f registro.txt ] || exit 0
-          grep -v '^\s*$' registro.txt | grep -vi 'progress\|downloading\|%]' | tail -60 \
+          grep -v '^\s*$' registro.txt | grep -v '^\s*at ' | grep -E -A4 'What went wrong|Caused by|Execution failed|FAILURE|ERROR|error:|Exception' | head -80 \
             | sed 's/\x1b\[[0-9;]*m//g' | awk 'BEGIN{ORS="%0A"}{print}' | sed 's/^/::error title=Bubblewrap::/' ; echo
 
       - name: Collegamento sito ↔ app (assetlinks.json)
