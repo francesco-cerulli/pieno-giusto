@@ -1,0 +1,11 @@
+name: Sonda orari (temporanea)
+on: workflow_dispatch
+jobs:
+  prova:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          for id in 59183 3464; do
+            r=$(curl -sS -m 30 -A "Mozilla/5.0" -H "Accept: application/json" "https://carburanti.mise.gov.it/ospzApi/registry/servicearea/$id" | head -c 3500 | tr '\n' ' ' | sed 's/%/%25/g')
+            echo "::warning title=sonda $id::$r"
+          done
