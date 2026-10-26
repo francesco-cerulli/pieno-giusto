@@ -8,13 +8,13 @@ jobs:
           set +e
           B=https://carburanti.mise.gov.it/ospzApi
           H='-H Content-Type:application/json -H Accept:application/json -A Mozilla/5.0'
-          s() { echo "::warning title=$1::$(echo "$2" | head -c 900 | tr '\n\r' '  ')"; }
-          s regioni "$(curl -sS -m 30 $H $B/registry/region)"
-          s province "$(curl -sS -m 30 $H "$B/registry/province?regionId=8")"
-          s area "$(curl -sS -m 60 $H -X POST $B/search/area -d '{"region":8,"province":"MO","town":null,"priceOrder":"asc","fuelType":"1-x"}')"
-          A=$(curl -sS -m 60 $H -X POST $B/search/area -d '{"region":8,"province":"MO","town":null,"priceOrder":"asc","fuelType":"1-x"}')
-          s area-n "$(echo "$A" | jq -c '{success, n:(.results|length), uno:.results[0]}' 2>&1)"
-          Z=$(curl -sS -m 60 $H -X POST $B/search/zone -d '{"points":[{"lat":44.6458,"lng":10.9255}],"radius":10}')
-          s zone-n "$(echo "$Z" | jq -c '{success, n:(.results|length), uno:.results[0]}' 2>&1)"
-          Z2=$(curl -sS -m 60 $H -X POST $B/search/zone -d '{"points":[{"lat":44.6458,"lng":10.9255}],"radius":50}')
-          s zone50-n "$(echo "$Z2" | jq -c '{success, n:(.results|length), carb:([.results[].fuels[].name]|unique)}' 2>&1)"
+          s() { echo "::warning title=$1::$(echo "$2" | head -c 700 | tr '\n\r' '  ')"; }
+          for body in \
+            '{"region":14,"province":"MO","town":null,"priceOrder":"asc","fuelType":"1-x"}' \
+            '{"region":14,"province":"MO","town":null,"priceOrder":"asc"}' \
+            '{"region":14,"province":"MO","town":null,"priceOrder":"asc","fuelType":"0"}' \
+            '{"region":14,"province":"MO"}' \
+            '{"region":14}' ; do
+            A=$(curl -sS -m 90 $H -X POST $B/search/area -d "$body")
+            s "$body" "$(echo "$A" | jq -c '{success, n:(.results|length), nf:([.results[].fuels|length]|add), carb:([.results[].fuels[].name]|unique|length), uno:.results[0].fuels}' 2>&1)"
+          done
