@@ -4,17 +4,17 @@ jobs:
   sonda:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
       - run: |
           set +e
-          for u in \
-            https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv \
-            https://www.mimit.gov.it/ \
-            https://carburanti.mise.gov.it/ospzApi/registry/servicearea/1 \
-            https://carburanti.mise.gov.it/ \
-            "$(jq -r .url docs/avvisi.json | sed 's#/$##')/mimit/prezzi" ; do
-            r=$(curl -sS -o /tmp/o -w '%{http_code} %{time_total}s %{size_download}B' -m 40 -r 0-200 -A 'Mozilla/5.0' "$u" 2>&1 | tail -1)
-            echo "::warning title=sonda::$u -> $r | $(head -c 120 /tmp/o 2>/dev/null | tr '\n\r' '  ')"
-            rm -f /tmp/o
-          done
-          echo "::warning title=ip::$(curl -s -m 10 https://api.ipify.org)"
+          B=https://carburanti.mise.gov.it/ospzApi
+          H='-H Content-Type:application/json -H Accept:application/json -A Mozilla/5.0'
+          s() { echo "::warning title=$1::$(echo "$2" | head -c 900 | tr '\n\r' '  ')"; }
+          s regioni "$(curl -sS -m 30 $H $B/registry/region)"
+          s province "$(curl -sS -m 30 $H "$B/registry/province?regionId=8")"
+          s area "$(curl -sS -m 60 $H -X POST $B/search/area -d '{"region":8,"province":"MO","town":null,"priceOrder":"asc","fuelType":"1-x"}')"
+          A=$(curl -sS -m 60 $H -X POST $B/search/area -d '{"region":8,"province":"MO","town":null,"priceOrder":"asc","fuelType":"1-x"}')
+          s area-n "$(echo "$A" | jq -c '{success, n:(.results|length), uno:.results[0]}' 2>&1)"
+          Z=$(curl -sS -m 60 $H -X POST $B/search/zone -d '{"points":[{"lat":44.6458,"lng":10.9255}],"radius":10}')
+          s zone-n "$(echo "$Z" | jq -c '{success, n:(.results|length), uno:.results[0]}' 2>&1)"
+          Z2=$(curl -sS -m 60 $H -X POST $B/search/zone -d '{"points":[{"lat":44.6458,"lng":10.9255}],"radius":50}')
+          s zone50-n "$(echo "$Z2" | jq -c '{success, n:(.results|length), carb:([.results[].fuels[].name]|unique)}' 2>&1)"
