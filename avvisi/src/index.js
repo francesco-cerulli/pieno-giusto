@@ -195,13 +195,6 @@ export default {
     const url = new URL(req.url);
     try {
       if (url.pathname === "/chiave") return json({ chiave: (await chiaviVapid(env)).pubblica }, h);
-      // Ponte verso i due file aperti del MIMIT: il sito non risponde ai server di GitHub, a Cloudflare sì.
-      const fileMimit = { "/mimit/prezzi": "prezzo_alle_8.csv", "/mimit/anagrafica": "anagrafica_impianti_attivi.csv" }[url.pathname];
-      if (fileMimit) {
-        const r = await fetch("https://www.mimit.gov.it/images/exportCSV/" + fileMimit,
-          { headers: { "User-Agent": "Mozilla/5.0 (pumpy.it)" }, cf: { cacheTtl: 600 } });
-        return new Response(r.body, { status: r.status, headers: { "Content-Type": "text/csv; charset=utf-8", "Cache-Control": "no-store" } });
-      }
       if (req.method === "POST" && url.pathname === "/iscrivi") {
         const b = await req.json();
         if (!abbonamentoValido(b.abbonamento)) return json({ errore: "abbonamento non valido" }, h, 400);
