@@ -4,13 +4,15 @@ jobs:
   sonda:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
       - run: |
           set +e
           for u in \
             https://www.mimit.gov.it/images/exportCSV/prezzo_alle_8.csv \
             https://www.mimit.gov.it/ \
             https://carburanti.mise.gov.it/ospzApi/registry/servicearea/1 \
-            https://carburanti.mise.gov.it/ ; do
+            https://carburanti.mise.gov.it/ \
+            "$(jq -r .url docs/avvisi.json | sed 's#/$##')/mimit/prezzi" ; do
             r=$(curl -sS -o /tmp/o -w '%{http_code} %{time_total}s %{size_download}B' -m 40 -r 0-200 -A 'Mozilla/5.0' "$u" 2>&1 | tail -1)
             echo "::warning title=sonda::$u -> $r | $(head -c 120 /tmp/o 2>/dev/null | tr '\n\r' '  ')"
             rm -f /tmp/o
