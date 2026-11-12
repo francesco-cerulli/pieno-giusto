@@ -1470,6 +1470,28 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 .marchio-sc input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
 .marchio-sc span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .finestra .tutti { margin-top: 8px; background: transparent; color: var(--muted); }
+/* tragitto: partenza, arrivo e distributori lungo la strada */
+.tr-campo { display: grid; gap: 4px; margin: 0 0 10px; font-weight: 700; }
+.tr-campo input { min-height: 46px; padding: 0 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); color: var(--fg); font: 500 1rem var(--f-body); }
+.tr-campo input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tr-qui { margin: -4px 0 10px; }
+.finestra .tr-qui button { width: auto; padding: 6px 12px; border-radius: 999px; background: var(--surface-2); color: var(--fg); font-size: .85rem; }
+.tr-err { color: var(--up); font-weight: 600; font-size: .9rem; margin: 0 0 10px; }
+.tr-ris { display: grid; gap: 6px; margin: 0 0 12px; max-height: 50vh; overflow: auto; }
+.finestra .tr-ris button { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; text-align: left; padding: 10px 12px;
+  border-radius: 12px; background: var(--surface-2); color: var(--fg); font-weight: 500; }
+.tr-n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-fg); font: 700 .85rem var(--f-body); }
+.tr-nome { font-weight: 700; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr-dove { display: block; color: var(--muted); font-size: .8rem; }
+.tr-prezzo { font: 800 1.15rem var(--f-display); font-variant-numeric: tabular-nums; }
+.finestra .tr-ris button > span:nth-child(2) { min-width: 0; }
+.tr-chip { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 12px; border-radius: 999px; background: var(--surface); box-shadow: var(--shadow); font-size: .85rem; font-weight: 600; }
+.tr-chip[hidden] { display: none; }
+.tr-chip span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr-chip button { flex: none; min-height: 36px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--surface-2); color: var(--fg); font: 600 .85rem var(--f-body); cursor: pointer; }
+.tr-pin { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-fg);
+  font: 700 .85rem var(--f-body); border: 2px solid #fff; box-shadow: 0 2px 6px rgb(0 0 0 / .35); }
+
 @media (max-width: 1023px) and (max-height: 700px) {
   .va-lungo { display: none; }
   .v-azioni { flex-wrap: nowrap; margin-top: 6px; } .v-avvisa { min-height: 40px; padding: 0 14px; }
@@ -1555,6 +1577,7 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
           <button type="button" data-b="satellite" aria-pressed="false"><i class="anteprima satellite"></i>Satellite</button>
         </div>
         <div class="voci">
+          <button type="button" class="voce" id="tragittoVoce">Pieno lungo il tragitto<small>Dove costa meno sulla tua strada</small></button>
           <button type="button" class="voce" id="autoVoce">La tua auto<small id="autoRiass"></small></button>
           <button type="button" class="voce" id="marchiVoce">Marchi<small id="marchiRiass"></small></button>
           <button type="button" class="voce" id="installaVoce" hidden>Installa Pumpy sul telefono</button>
@@ -1567,6 +1590,7 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
     </div>
   </div>
   <div class="avviso" id="avviso" hidden></div>
+  <div class="tr-chip" id="trChip" hidden><span id="trChipTesto"></span><button type="button" id="trChipLista">Distributori</button><button type="button" id="trChipChiudi" aria-label="Chiudi il tragitto">✕</button></div>
 </div>
 
 <section class="pannello" id="pannello">
@@ -2735,6 +2759,138 @@ function finestraMarchi() {
     el.querySelector(".tutti").addEventListener("click", () => applica([]));
   });
 }
+// --- Pieno lungo il tragitto: da dove parti a dove arrivi, i distributori più convenienti vicino alla strada ---
+const TR_QUI = "La tua posizione";
+const tragitto = { linea: null, pin: [], ris: [], testo: "" };
+function puntoDi(testo) {
+  const t = (testo || "").trim();
+  if (!t) return null;
+  if (t === TR_QUI) { const p = stato.pos || ultimaPos; return p ? { lat: p.lat, lon: p.lon, nome: "la tua posizione" } : null; }
+  const lista = stato.comuni.get(t.toLowerCase());
+  if (!lista) return null;
+  // il centro del comune: la media dei suoi distributori
+  const lat = lista.reduce((a, i) => a + i.lat, 0) / lista.length, lon = lista.reduce((a, i) => a + i.lon, 0) / lista.length;
+  return { lat, lon, nome: lista[0].comune };
+}
+async function percorso(a, b) {
+  // strade vere con OSRM (OpenStreetMap); se non risponde, linea dritta (meno precisa)
+  try {
+    const c = new AbortController(); const t = setTimeout(() => c.abort(), 12000);
+    const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson`, { signal: c.signal });
+    clearTimeout(t);
+    const d = await r.json();
+    const rt = d.routes?.[0];
+    if (!rt) throw new Error("nessun percorso");
+    return { punti: rt.geometry.coordinates.map(([lon, lat]) => ({ lat, lon })), km: rt.distance / 1000, min: rt.duration / 60, vero: true };
+  } catch {
+    return { punti: [a, b], km: km(a, b) * 1.25, min: null, vero: false };
+  }
+}
+function lungoIlPercorso(punti, maxKm) {
+  // ricampiono la strada ogni ~300 m, poi per ogni distributore cerco il punto più vicino
+  const camp = [{ ...punti[0], d: 0 }];
+  let tot = 0;
+  for (let k = 1; k < punti.length; k++) {
+    const p = punti[k - 1], q = punti[k], seg = km(p, q);
+    const n = Math.max(1, Math.ceil(seg / .3));
+    for (let j = 1; j <= n; j++) camp.push({ lat: p.lat + (q.lat - p.lat) * j / n, lon: p.lon + (q.lon - p.lon) * j / n, d: tot + seg * j / n });
+    tot += seg;
+  }
+  const marg = maxKm / 111, coslat = Math.cos(camp[0].lat * Math.PI / 180) || 1;
+  let s = Infinity, n = -Infinity, o = Infinity, e = -Infinity;
+  for (const p of camp) { s = Math.min(s, p.lat); n = Math.max(n, p.lat); o = Math.min(o, p.lon); e = Math.max(e, p.lon); }
+  s -= marg; n += marg; o -= marg / coslat; e += marg / coslat;
+  // griglia di celle da ~2 km per non confrontare ogni distributore con ogni punto
+  const cella = (lat, lon) => `${Math.floor(lat / .02)},${Math.floor(lon / .027)}`;
+  const griglia = new Map();
+  for (const p of camp) { const k = cella(p.lat, p.lon); if (!griglia.has(k)) griglia.set(k, []); griglia.get(k).push(p); }
+  const passi = Math.ceil(maxKm / 2) + 1;
+  const trovati = [];
+  for (const i of stato.impianti) {
+    if (i.lat < s || i.lat > n || i.lon < o || i.lon > e) continue;
+    const ci = Math.floor(i.lat / .02), cj = Math.floor(i.lon / .027);
+    let best = Infinity, lungo = 0;
+    for (let a = -passi; a <= passi; a++) for (let b = -passi; b <= passi; b++) {
+      for (const p of griglia.get(`${ci + a},${cj + b}`) || []) { const d = km(p, i); if (d < best) { best = d; lungo = p.d; } }
+    }
+    if (best <= maxKm) trovati.push({ i, dalla: best, al: lungo });
+  }
+  return trovati;
+}
+function togliTragitto() {
+  if (tragitto.linea) tragitto.linea.remove();
+  tragitto.pin.forEach((m) => m.remove());
+  tragitto.linea = null; tragitto.pin = []; tragitto.ris = [];
+  $("trChip").hidden = true;
+}
+function listaTragitto(ris, c) {
+  return `<div class="tr-ris">${ris.map((r, n) => `<button type="button" data-n="${n}"><span class="tr-n">${n + 1}</span>
+    <span><span class="tr-nome">${esc(r.i.bandiera || nomeBello(r.i.nome))} · ${esc(nomeBello(r.i.comune || ""))}</span>
+    <span class="tr-dove">al km ${Math.round(r.al)} · ${testoKm(r.dalla)} dalla strada</span></span>
+    <span class="tr-prezzo">${euro(r.i.prezzi[c][0])}</span></button>`).join("")}</div>`;
+}
+function apriRisultati() {
+  const c = stato.carb, ris = tragitto.ris;
+  finestra("Lungo il tragitto", `<p class="nota">${esc(tragitto.testo)}. ${NOMI[c]}, i più convenienti vicino alla strada: tocca per i dettagli.</p>
+    ${listaTragitto(ris, c)}<button type="button" class="tutti">Chiudi</button>`, (el, chiudi) => {
+    el.querySelectorAll(".tr-ris button").forEach((b) => b.addEventListener("click", () => { chiudi(); seleziona(ris[+b.dataset.n].i); }));
+    el.querySelector(".tutti").addEventListener("click", chiudi);
+  });
+}
+function finestraTragitto() {
+  const salvato = leggiJSON("tragitto") || {};
+  const haiPos = !!(stato.pos || ultimaPos);
+  const da = salvato.da || (haiPos ? TR_QUI : "");
+  finestra("Pieno lungo il tragitto", `<p class="nota">Scrivi da dove parti e dove arrivi: ti mostriamo dove costa meno ${{ benzina: "la benzina", gasolio: "il gasolio", gpl: "il GPL", metano: "il metano" }[stato.carb]} vicino alla tua strada.</p>
+    <label class="tr-campo">Partenza<input id="trDa" list="comuni" autocomplete="off" placeholder="Comune di partenza" value="${esc(da)}"></label>
+    ${haiPos ? `<div class="tr-qui"><button type="button" id="trQui">Usa la tua posizione</button></div>` : ""}
+    <label class="tr-campo">Arrivo<input id="trA" list="comuni" autocomplete="off" placeholder="Comune di arrivo" value="${esc(salvato.a || "")}"></label>
+    <p class="tr-err" id="trErr" hidden></p>
+    <button type="button" class="salva" id="trVai">Cerca i distributori</button>`, (el, chiudi) => {
+    const err = (t) => { const e = el.querySelector("#trErr"); e.textContent = t || ""; e.hidden = !t; };
+    el.querySelector("#trQui")?.addEventListener("click", () => { el.querySelector("#trDa").value = TR_QUI; });
+    const vai = async () => {
+      const bott = el.querySelector("#trVai");
+      if (!stato.completo) { bott.textContent = "Carico i distributori…"; await caricaTutto(); }
+      const tDa = el.querySelector("#trDa").value, tA = el.querySelector("#trA").value;
+      const a = puntoDi(tDa), b = puntoDi(tA);
+      if (!a) { err(tDa.trim() ? `Non trovo “${tDa.trim()}”: scegli un comune dall'elenco.` : "Scrivi da dove parti."); bott.textContent = "Cerca i distributori"; return; }
+      if (!b) { err(tA.trim() ? `Non trovo “${tA.trim()}”: scegli un comune dall'elenco.` : "Scrivi dove arrivi."); bott.textContent = "Cerca i distributori"; return; }
+      if (km(a, b) < 1) { err("Partenza e arrivo sono quasi nello stesso posto."); bott.textContent = "Cerca i distributori"; return; }
+      err(""); bott.textContent = "Calcolo il percorso…"; bott.disabled = true;
+      try { localStorage.setItem("tragitto", JSON.stringify({ da: tDa.trim(), a: tA.trim() })); } catch {}
+      const p = await percorso(a, b);
+      const c = stato.carb;
+      const ok = (r) => r.i.prezzi[c] && affidabile(r.i) && passaMarchio(r.i);
+      // prima entro 2 km dalla strada; se sono pochi allargo a 5 km
+      let vicini = lungoIlPercorso(p.punti, p.vero ? 5 : 8).filter(ok);
+      let entro = vicini.filter((r) => r.dalla <= (p.vero ? 2 : 4));
+      if (entro.length < 3) entro = vicini;
+      const ris = entro.sort((x, y) => x.i.prezzi[c][0] - y.i.prezzi[c][0] || x.al - y.al).slice(0, 5);
+      bott.disabled = false; bott.textContent = "Cerca i distributori";
+      if (!ris.length) { err(`Nessun distributore con ${c === "gpl" ? "GPL" : NOMI[c].toLowerCase()} trovato vicino a questo percorso.`); return; }
+      chiudi(); togliTragitto();
+      const durata = p.min ? ` · ${p.min >= 60 ? `${Math.floor(p.min / 60)} h ${Math.round(p.min % 60)} min` : `${Math.round(p.min)} min`}` : "";
+      tragitto.testo = `${a.nome === "la tua posizione" ? "Dalla tua posizione" : `Da ${nomeBello(a.nome)}`} a ${nomeBello(b.nome)}, ${Math.round(p.km)} km${durata}${p.vero ? "" : " (in linea d'aria, percorso non disponibile)"}`;
+      tragitto.ris = ris;
+      tragitto.linea = L.polyline(p.punti.map((q) => [q.lat, q.lon]), { color: "#0e9f6e", weight: 5, opacity: .85, dashArray: p.vero ? null : "8 8", interactive: false }).addTo(mappa);
+      tragitto.pin = ris.map((r, n) => L.marker([r.i.lat, r.i.lon], { icon: L.divIcon({ className: "", html: `<div class="tr-pin">${n + 1}</div>`, iconSize: [26, 26], iconAnchor: [13, 13] }), zIndexOffset: 2000, title: `${n + 1}. ${euro(r.i.prezzi[c][0])} €/l` })
+        .on("click", () => seleziona(r.i, undefined, true)).addTo(mappa));
+      $("trChipTesto").textContent = `${a.nome === "la tua posizione" ? "Tu" : nomeBello(a.nome)} → ${nomeBello(b.nome)}`;
+      $("trChip").hidden = false;
+      mossaDaTe = true; if (stato.sel) chiudiDettaglio();
+      mappa.fitBounds(tragitto.linea.getBounds().pad(.12));
+      apriRisultati();
+    };
+    el.querySelector("#trVai").addEventListener("click", vai);
+    el.querySelectorAll("input").forEach((x) => x.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); vai(); } }));
+    if (!stato.completo) caricaTutto();
+  });
+  if (da) setTimeout(() => document.querySelector("#trA")?.focus(), 50);
+}
+$("tragittoVoce").addEventListener("click", () => { chiudiMenu(); finestraTragitto(); });
+$("trChipLista").addEventListener("click", () => { if (tragitto.ris.length) apriRisultati(); });
+$("trChipChiudi").addEventListener("click", togliTragitto);
 // --- pannello in basso (telefono): chiuso (verdetto + consigliato) o aperto (andamento + lista); si trascina col dito ---
 function aperto() { return !$("pannello").classList.contains("chiuso"); }
 function mettiPannello(apri) {
