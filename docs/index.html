@@ -1055,7 +1055,6 @@ body { font-feature-settings: "tnum" 1; -webkit-font-smoothing: antialiased; }
 .storico .punto { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--brand); border: 3px solid var(--surface);
   transform: translate(-50%, -50%); box-shadow: 0 2px 6px rgb(11 31 23 / .3); pointer-events: none; }
 .storico .asse-y { position: absolute; left: 0; font-size: .7rem; color: var(--muted); background: var(--surface-2); padding: 0 4px 0 0; transform: translateY(-50%); pointer-events: none; }
-.storico .asse-y.alto { top: 12px; } .storico .asse-y.basso { top: calc(100% - 18px); }
 .storico .attesa { height: 190px; }
 .storico .assi { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-top: 2px; }
 .dettaglio .vai { display: block; text-align: center; border-radius: 999px; background: var(--fg); color: var(--surface); padding: 13px; font-weight: 700; text-decoration: none; }
@@ -2334,7 +2333,8 @@ function graficoStorico(fig, dati, id, c) {
   if (!punti || !punti.length) { fig.innerHTML = '<p class="vuoto">Storico non ancora disponibile per questo distributore.</p>'; return; }
   const n = dati.giorni, W = 320, H = 150, T = 12, B = 18;
   const val = punti.map((x) => x[1] / 1000);
-  let min = Math.min(...val), max = Math.max(...val);
+  const vMin = Math.min(...val), vMax = Math.max(...val), piatto = vMax - vMin < .0005;
+  let min = vMin, max = vMax;
   if (max - min < .02) { const m = (max + min) / 2; min = m - .01; max = m + .01; }
   const x = (k) => (k / Math.max(n - 1, 1)) * W, y = (v) => T + (1 - (v - min) / (max - min)) * (H - T - B);
   const k0 = punti[0][0];
@@ -2350,15 +2350,14 @@ function graficoStorico(fig, dati, id, c) {
     <div class="lettura" aria-live="polite"><span class="l-g">Oggi</span> <b class="l-p">${euro(ultimo)} €</b></div>
     <div class="area-g">
       <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${descr}">
-        <line class="griglia" x1="0" x2="${W}" y1="${y(max).toFixed(1)}" y2="${y(max).toFixed(1)}" vector-effect="non-scaling-stroke"/>
-        <line class="griglia" x1="0" x2="${W}" y1="${y(min).toFixed(1)}" y2="${y(min).toFixed(1)}" vector-effect="non-scaling-stroke"/>
+        ${(piatto ? [vMin] : [vMax, vMin]).map((v) => `<line class="griglia" x1="0" x2="${W}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" vector-effect="non-scaling-stroke"/>`).join("")}
         <path class="area" d="${d}V${H - B}H${x(k0).toFixed(1)}Z"/>
         <path class="linea" d="${d}" vector-effect="non-scaling-stroke"/>
         ${cambi}
         <line class="cursore" x1="${W}" x2="${W}" y1="${T - 6}" y2="${H - B}" vector-effect="non-scaling-stroke"/>
       </svg>
       <span class="punto" style="left:100%;top:${(y(ultimo) / H * 100).toFixed(2)}%"></span>
-      <span class="asse-y alto">${euro(max)}</span><span class="asse-y basso">${euro(min)}</span>
+      ${(piatto ? [vMin] : [vMax, vMin]).map((v) => `<span class="asse-y" style="top:${(y(v) / H * 100).toFixed(2)}%">${euro(v)}</span>`).join("")}
     </div>
     <div class="assi"><span>${giornoDa(dati.inizio, k0)}</span><span>oggi</span></div>`;
   const area = fig.querySelector(".area-g"), cur = fig.querySelector(".cursore"), pt = fig.querySelector(".punto");

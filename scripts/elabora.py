@@ -377,6 +377,10 @@ def scrivi_storico(impianti, per_giorno):
     giorni = sorted(per_giorno)
     if not giorni:
         return
+    # l'indice è il giorno di calendario dal primo della finestra: se l'archivio ha dei buchi
+    # (es. MIMIT irraggiungibile 16-25 ottobre) date e durate nel grafico restano giuste
+    inizio = date.fromisoformat(giorni[0])
+    indice = {g: (date.fromisoformat(g) - inizio).days for g in giorni}
     cartella = SITE_DATA / "storico"
     cartella.mkdir(parents=True, exist_ok=True)
     per_prov = defaultdict(dict)
@@ -385,7 +389,8 @@ def scrivi_storico(impianti, per_giorno):
         punti_imp = {}
         for carb in imp[9]:
             punti, ultimo = [], None
-            for k, g in enumerate(giorni):
+            for g in giorni:
+                k = indice[g]
                 v = per_giorno[g].get((pid, carb))
                 if v is None:
                     continue
@@ -402,7 +407,7 @@ def scrivi_storico(impianti, per_giorno):
             vecchio.unlink()
     for prov, dati in per_prov.items():
         with open(cartella / f"{prov}.json", "w", encoding="utf-8") as f:
-            json.dump({"inizio": giorni[0], "giorni": len(giorni), "impianti": dati},
+            json.dump({"inizio": giorni[0], "giorni": indice[giorni[-1]] + 1, "impianti": dati},
                       f, ensure_ascii=False, separators=(",", ":"))
     print(f"Storico: {len(per_prov)} province, {len(giorni)} giorni")
 
